@@ -122,11 +122,17 @@ A standalone, cross-platform (Windows/macOS/Linux) asset tool — no game requir
 cd studio && cargo run --release
 ```
 
-It ships its own from-scratch LZO1X decompressor, UE3 package parser and DXT (BC1/BC3)
+It ships its own from-scratch LZO1X decompressor, UE3 package parser and DXT (BC1/BC2/BC3)
 codec. It loads every cooked `.upk`, browses objects, edits int/float/bool/byte properties
-in place, previews and exports textures to PNG (reading streamed mips from `.tfc`), replaces
-textures from PNG, exports and replaces sounds (OGG/WAV), and writes a game-loadable package
-back out.
+in place, decodes struct values (Vector/Rotator/Color/...), previews and exports textures to
+PNG (DXT1/DXT3/DXT5/G8/A8R8G8B8, reading streamed mips from `.tfc`), replaces textures from
+PNG, exports/replaces sounds (OGG/WAV), bulk-exports all textures/sounds, shows a raw hex
+view of any object, and writes a game-loadable package back out.
+
+It also has a **Localization (text) mode**: browse and edit every `Localization/<LANG>/*`
+string file (menus, subtitles, objectives, tutorials...) with byte-exact saves (UTF-16 and
+Latin-1 preserved). Editing these is the most reliable way to mod game text — it takes effect
+in-game immediately, no package rebuild needed.
 
 ## Notes
 

@@ -2,9 +2,13 @@
 mod lzo;
 mod upk;
 mod dxt;
+mod loc;
 
 use std::path::PathBuf;
 use upk::Pkg;
+
+#[derive(PartialEq)]
+enum Mode { Packages, Localization }
 
 const DEFAULT_DIR: &str = "/Users/anna/Library/Application Support/CrossOver/Bottles/Steam/drive_c/Program Files (x86)/EA Games/Alice Madness Returns/Game/Alice2/AliceGame/CookedPC";
 
@@ -26,6 +30,14 @@ struct App {
     audio: Option<(rodio::OutputStream, rodio::OutputStreamHandle)>,
     sink: Option<rodio::Sink>,
     volume: f32,
+    mode: Mode,
+    loc_files: Vec<PathBuf>,
+    loc_root: Option<PathBuf>,
+    loc_filter: String,
+    sel_loc: Option<usize>,
+    loc: Option<loc::Loc>,
+    loc_entry_filter: String,
+    loc_dirty: bool,
 }
 
 impl Default for App {
@@ -37,6 +49,9 @@ impl Default for App {
             tex_handle: None, tex_for: None, tex_px: None,
             props: vec![], props_for: None, dirty: false,
             audio: None, sink: None, volume: 1.0,
+            mode: Mode::Packages,
+            loc_files: vec![], loc_root: None, loc_filter: String::new(),
+            sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
         let d = PathBuf::from(DEFAULT_DIR);
         if d.is_dir() { a.scan(d); }
@@ -67,6 +82,31 @@ impl App {
         self.sel_pkg = None; self.pkg = None; self.sel_obj = None;
     }
 
+    fn scan_loc(&mut self) {
+        let root = self.game_dir.as_ref().and_then(|d| d.parent()).map(|p| p.join("Localization"));
+        self.loc_files.clear();
+        if let Some(r) = &root {
+            fn walk(d: &std::path::Path, out: &mut Vec<PathBuf>) {
+                if let Ok(rd) = std::fs::read_dir(d) {
+                    for e in rd.flatten() {
+                        let p = e.path();
+                        if p.is_dir() { walk(&p, out); } else if p.is_file() { out.push(p); }
+                    }
+                }
+            }
+            walk(r, &mut self.loc_files);
+            self.loc_files.sort();
+            self.status = format!("{} localization files under {}", self.loc_files.len(), r.display());
+        } else {
+            self.status = "open a game CookedPC folder first".into();
+        }
+        self.loc_root = root;
+    }
+
+    fn loc_rel(&self, p: &std::path::Path) -> String {
+        match &self.loc_root { Some(r) => p.strip_prefix(r).unwrap_or(p).to_string_lossy().into_owned(), None => p.to_string_lossy().into_owned() }
+    }
+
     fn load_pkg(&mut self, idx: usize) {
         let path = self.packages[idx].clone();
         let res = std::panic::catch_unwind(|| Pkg::load(&path))
@@ -85,6 +125,7 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _f: &mut eframe::Frame) {
+        if self.mode == Mode::Packages {
         let need = match (&self.pkg, self.sel_pkg, self.sel_obj) {
             (Some(p), Some(pi), Some(oi)) if p.exports[oi].class_name == "Texture2D" => Some((pi, oi)),
             _ => None,
@@ -108,6 +149,7 @@ impl eframe::App for App {
                 _ => vec![],
             };
         }
+        }
 
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -116,10 +158,17 @@ impl eframe::App for App {
                     if let Some(d) = rfd::FileDialog::new().pick_folder() { self.scan(d); }
                 }
                 if let Some(d) = &self.game_dir { ui.label(d.display().to_string()); }
+                ui.separator();
+                if ui.selectable_label(self.mode == Mode::Packages, "Packages").clicked() { self.mode = Mode::Packages; }
+                if ui.selectable_label(self.mode == Mode::Localization, "Localization (text)").clicked() {
+                    self.mode = Mode::Localization;
+                    if self.loc_files.is_empty() { self.scan_loc(); }
+                }
             });
             ui.label(&self.status);
         });
 
+        if self.mode == Mode::Packages {
         egui::SidePanel::left("packages").default_width(320.0).show(ctx, |ui| {
             ui.label(format!("Packages ({})", self.packages.len()));
             ui.text_edit_singleline(&mut self.pkg_filter);
@@ -134,6 +183,36 @@ impl eframe::App for App {
                 if let Some(i) = to_load { self.load_pkg(i); }
             });
         });
+        } else {
+        let root = self.loc_root.clone();
+        let mut to_load = None;
+        egui::SidePanel::left("locfiles").default_width(340.0).show(ctx, |ui| {
+            ui.label(format!("Localization files ({})", self.loc_files.len()));
+            if ui.button("Rescan").clicked() { /* set below */ }
+            ui.text_edit_singleline(&mut self.loc_filter);
+            let filt = self.loc_filter.to_lowercase();
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for (i, p) in self.loc_files.iter().enumerate() {
+                    let rel = root.as_ref().and_then(|r| p.strip_prefix(r).ok())
+                        .map(|x| x.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| p.to_string_lossy().into_owned());
+                    if !filt.is_empty() && !rel.to_lowercase().contains(&filt) { continue; }
+                    if ui.selectable_label(self.sel_loc == Some(i), rel).clicked() { to_load = Some(i); }
+                }
+            });
+        });
+        if let Some(i) = to_load {
+            let p = self.loc_files[i].clone();
+            match loc::Loc::load(&p) {
+                Ok(l) => {
+                    let kv = l.entries.iter().filter(|e| e.key.is_some()).count();
+                    self.loc = Some(l); self.sel_loc = Some(i); self.loc_dirty = false;
+                    self.status = format!("{} — {} editable strings", p.file_name().unwrap().to_string_lossy(), kv);
+                }
+                Err(e) => self.status = format!("load failed: {}", e),
+            }
+        }
+        }
 
         let mut do_apply = false;
         let mut do_save = false;
@@ -143,6 +222,7 @@ impl eframe::App for App {
         let mut do_sndreplace = false;
         let mut do_bulk_tex = false;
         let mut do_bulk_snd = false;
+        if self.mode == Mode::Packages {
         egui::SidePanel::right("details").default_width(360.0).show(ctx, |ui| {
             ui.heading("Object");
             if let (Some(pkg), Some(oi)) = (&self.pkg, self.sel_obj) {
@@ -256,6 +336,7 @@ impl eframe::App for App {
                 });
             }
         });
+        }
         if do_apply {
             if let Some(pkg) = &mut self.pkg {
                 let mut n = 0;
@@ -362,7 +443,9 @@ impl eframe::App for App {
             }
         }
 
+        let mut do_loc_save = false;
         egui::CentralPanel::default().show(ctx, |ui| {
+            if self.mode == Mode::Packages {
             if let Some(pkg) = &self.pkg {
                 ui.horizontal(|ui| { ui.label("Filter objects:"); ui.text_edit_singleline(&mut self.obj_filter); });
                 let filt = self.obj_filter.to_lowercase();
@@ -384,7 +467,43 @@ impl eframe::App for App {
             } else {
                 ui.label("Select a package on the left.");
             }
+            } else if self.loc.is_some() {
+                ui.horizontal(|ui| {
+                    ui.label("Filter:");
+                    ui.text_edit_singleline(&mut self.loc_entry_filter);
+                    if self.loc_dirty { ui.colored_label(egui::Color32::from_rgb(255, 210, 90), "modified"); }
+                    if ui.button("Save (live in-game)").clicked() { do_loc_save = true; }
+                });
+                let filt = self.loc_entry_filter.to_lowercase();
+                let loc = self.loc.as_mut().unwrap();
+                let mut changed = false;
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    egui::Grid::new("locgrid").striped(true).num_columns(2).show(ui, |ui| {
+                        for e in loc.entries.iter_mut() {
+                            if let Some(k) = &e.key {
+                                let kt = k.trim_end().trim_end_matches('=').trim_end();
+                                if !filt.is_empty() && !kt.to_lowercase().contains(&filt) && !e.raw.to_lowercase().contains(&filt) { continue; }
+                                ui.label(kt);
+                                if ui.add(egui::TextEdit::singleline(&mut e.raw).desired_width(400.0)).changed() { changed = true; }
+                                ui.end_row();
+                            }
+                        }
+                    });
+                });
+                if changed { self.loc_dirty = true; }
+            } else {
+                ui.label("Select a localization file on the left (e.g. FRA/GFxUI.fra).");
+            }
         });
+        if do_loc_save {
+            if let (Some(l), Some(i)) = (&self.loc, self.sel_loc) {
+                let p = self.loc_files[i].clone();
+                match l.save(&p) {
+                    Ok(_) => { self.loc_dirty = false; self.status = format!("saved {} (live in-game)", p.file_name().unwrap().to_string_lossy()); }
+                    Err(e) => self.status = format!("save failed: {}", e),
+                }
+            }
+        }
     }
 }
 
@@ -469,6 +588,16 @@ fn main() -> eframe::Result<()> {
         }
         return Ok(());
     }
+    if args.len() > 2 && args[1] == "--loctest" {
+        let l = loc::Loc::load(std::path::Path::new(&args[2])).unwrap();
+        let kv = l.entries.iter().filter(|e| e.key.is_some()).count();
+        l.save(std::path::Path::new("/tmp/loctest.out")).unwrap();
+        let a = std::fs::read(&args[2]).unwrap();
+        let b = std::fs::read("/tmp/loctest.out").unwrap();
+        println!("entries={} editable={} bom={} crlf={} roundtrip_identical={} ({} vs {} bytes)",
+            l.entries.len(), kv, l.bom, l.crlf, a == b, a.len(), b.len());
+        return Ok(());
+    }
     if args.len() > 3 && args[1] == "--props" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
         for e in p.exports.iter().filter(|e| e.name.to_lowercase().contains(&args[3].to_lowercase())).take(3) {
@@ -480,8 +609,8 @@ fn main() -> eframe::Result<()> {
     if args.len() > 1 {
         match Pkg::load(std::path::Path::new(&args[1])) {
             Ok(p) => {
-                println!("ver={} names={} imports={} exports={} ({} bytes)",
-                    p.ver, p.names.len(), p.imports.len(), p.exports.len(), p.buf.len());
+                println!("ver={} names={} imports={} exports={} compressed={} ({} bytes)",
+                    p.ver, p.names.len(), p.imports.len(), p.exports.len(), p.compressed, p.buf.len());
                 for e in p.exports.iter().take(12) {
                     println!("  {:<22} {:<40} {:>9} @ {}", e.class_name, e.name, e.size, e.off);
                 }
