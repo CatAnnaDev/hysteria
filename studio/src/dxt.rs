@@ -137,6 +137,35 @@ pub fn decode_bc1(data: &[u8], w: usize, h: usize) -> Vec<u8> {
     out
 }
 
+pub fn decode_bc2(data: &[u8], w: usize, h: usize) -> Vec<u8> {
+    let mut out = vec![0u8; w * h * 4];
+    let mut p = 0;
+    for by in (0..h).step_by(4) {
+        for bx in (0..w).step_by(4) {
+            if p + 16 > data.len() { return out; }
+            let alpha = [data[p],data[p+1],data[p+2],data[p+3],data[p+4],data[p+5],data[p+6],data[p+7]];
+            let c0 = u16le(data, p + 8); let c1 = u16le(data, p + 10);
+            let bits = u32::from_le_bytes([data[p+12], data[p+13], data[p+14], data[p+15]]);
+            p += 16;
+            let (r0, g0, b0) = c565(c0); let (r1, g1, b1) = c565(c1);
+            let pal = [
+                [r0, g0, b0], [r1, g1, b1],
+                [((2*r0 as u32 + r1 as u32)/3) as u8, ((2*g0 as u32 + g1 as u32)/3) as u8, ((2*b0 as u32 + b1 as u32)/3) as u8],
+                [((r0 as u32 + 2*r1 as u32)/3) as u8, ((g0 as u32 + 2*g1 as u32)/3) as u8, ((b0 as u32 + 2*b1 as u32)/3) as u8],
+            ];
+            for py in 0..4 { for px in 0..4 {
+                let i = py * 4 + px;
+                let ci = ((bits >> (2 * i)) & 3) as usize;
+                let nib = if i % 2 == 0 { alpha[i/2] & 0x0f } else { alpha[i/2] >> 4 };
+                let a = (nib as u32 * 255 / 15) as u8;
+                let (x, y) = (bx + px, by + py);
+                if x < w && y < h { let o = (y*w+x)*4; out[o]=pal[ci][0]; out[o+1]=pal[ci][1]; out[o+2]=pal[ci][2]; out[o+3]=a; }
+            }}
+        }
+    }
+    out
+}
+
 pub fn decode_bc3(data: &[u8], w: usize, h: usize) -> Vec<u8> {
     let mut out = vec![0u8; w * h * 4];
     let mut p = 0;

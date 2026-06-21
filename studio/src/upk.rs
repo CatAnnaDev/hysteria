@@ -3,6 +3,25 @@ use std::io::{Read, Seek, SeekFrom, Write};
 
 fn ri(b: &[u8], o: usize) -> i32 { i32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
 fn ru(b: &[u8], o: usize) -> u32 { u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
+fn rf(b: &[u8], o: usize) -> f32 { f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
+
+fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
+    let f = |i: usize| if i + 4 <= d.len() { rf(d, i) } else { 0.0 };
+    let n = |i: usize| if i + 4 <= d.len() { ri(d, i) } else { 0 };
+    Some(match sn {
+        "Vector" if d.len() >= 12 => format!("({:.2}, {:.2}, {:.2})", f(0), f(4), f(8)),
+        "Vector2D" if d.len() >= 8 => format!("({:.2}, {:.2})", f(0), f(4)),
+        "Vector4" | "Quat" | "Plane" if d.len() >= 16 => format!("({:.2}, {:.2}, {:.2}, {:.2})", f(0), f(4), f(8), f(12)),
+        "Rotator" if d.len() >= 12 => format!("(Pitch {}, Yaw {}, Roll {})", n(0), n(4), n(8)),
+        "Color" if d.len() >= 4 => format!("BGRA({}, {}, {}, {})", d[0], d[1], d[2], d[3]),
+        "LinearColor" if d.len() >= 16 => format!("RGBA({:.3}, {:.3}, {:.3}, {:.3})", f(0), f(4), f(8), f(12)),
+        "Guid" if d.len() >= 16 => format!("{:08X}-{:08X}-{:08X}-{:08X}", ru(d, 0), ru(d, 4), ru(d, 8), ru(d, 12)),
+        "IntPoint" if d.len() >= 8 => format!("({}, {})", n(0), n(4)),
+        "Box" if d.len() >= 24 => format!("min({:.1}, {:.1}, {:.1}) max({:.1}, {:.1}, {:.1})", f(0), f(4), f(8), f(12), f(16), f(20)),
+        "Vector_NetQuantize" if d.len() >= 12 => format!("({:.2}, {:.2}, {:.2})", f(0), f(4), f(8)),
+        _ => return None,
+    })
+}
 
 pub struct Texture { pub w: usize, pub h: usize, pub rgba: Vec<u8>, pub format: String }
 
@@ -137,6 +156,15 @@ impl Pkg {
         self.parse_props(start).0
     }
 
+    pub fn prop_value(&self, start: i32, key: &str) -> Option<String> {
+        self.read_props(start).into_iter().find(|(n, _, _)| n == key).map(|x| x.2)
+    }
+
+    pub fn serial(&self, e: &Export) -> &[u8] {
+        let s = e.off as usize; let end = (e.off + e.size) as usize;
+        if end <= self.buf.len() { &self.buf[s..end] } else { &[] }
+    }
+
     pub fn props_editable(&self, start: i32) -> Vec<PropEdit> {
         let b = &self.buf; let mut o = start as usize + 4; let mut out = Vec::new();
         while o + 16 <= b.len() {
@@ -154,7 +182,7 @@ impl Pkg {
                 "NameProperty" => { let v = self.fname_at(o); o += 8; (0, 0, v) }
                 "StrProperty" => { let n = ri(b, o).max(0) as usize; o += 4; let s = String::from_utf8_lossy(&b[o..(o+n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; (0, 0, s) }
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; (0, 0, self.idx_name(v)) }
-                "StructProperty" => { let sn = self.fname_at(o); o += 8; o += size; (0, 0, format!("<{}>", sn)) }
+                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = &b[o..(o+size).min(b.len())]; let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{} {}B>", sn, size)); o += size; (0, 0, v) }
                 _ => { o += size; (0, 0, format!("<{} {}B>", typ, size)) }
             };
             out.push(PropEdit { name, typ, kind, off: voff, value });
@@ -180,7 +208,7 @@ impl Pkg {
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; self.idx_name(v) }
                 "StrProperty" => { let n = ri(b, o); o += 4; let n = n.max(0) as usize;
                     let s = String::from_utf8_lossy(&b[o..(o + n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; s }
-                "StructProperty" => { let sn = self.fname_at(o); o += 8; o += size; format!("<{}>", sn) }
+                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = &b[o..(o+size).min(b.len())]; let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{}>", sn)); o += size; v }
                 _ => { o += size; format!("<{} {}B>", typ, size) }
             };
             out.push((name, typ, val));
@@ -213,12 +241,20 @@ impl Pkg {
         };
         let rgba = if fmt.contains("DXT1") {
             crate::dxt::decode_bc1(&data, sx, sy)
-        } else if fmt.contains("DXT5") || fmt.contains("DXT3") {
+        } else if fmt.contains("DXT3") {
+            crate::dxt::decode_bc2(&data, sx, sy)
+        } else if fmt.contains("DXT5") {
             crate::dxt::decode_bc3(&data, sx, sy)
         } else if fmt.contains("A8R8G8B8") {
             let mut v = vec![0u8; sx * sy * 4];
             for i in 0..(sx * sy).min(data.len() / 4) {
                 v[i*4] = data[i*4+2]; v[i*4+1] = data[i*4+1]; v[i*4+2] = data[i*4]; v[i*4+3] = data[i*4+3];
+            }
+            v
+        } else if fmt.contains("G8") {
+            let mut v = vec![0u8; sx * sy * 4];
+            for i in 0..(sx * sy).min(data.len()) {
+                v[i*4] = data[i]; v[i*4+1] = data[i]; v[i*4+2] = data[i]; v[i*4+3] = 255;
             }
             v
         } else { return None };

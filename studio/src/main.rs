@@ -25,6 +25,7 @@ struct App {
     dirty: bool,
     audio: Option<(rodio::OutputStream, rodio::OutputStreamHandle)>,
     sink: Option<rodio::Sink>,
+    volume: f32,
 }
 
 impl Default for App {
@@ -35,7 +36,7 @@ impl Default for App {
             status: "Open a game CookedPC folder to begin.".into(),
             tex_handle: None, tex_for: None, tex_px: None,
             props: vec![], props_for: None, dirty: false,
-            audio: None, sink: None,
+            audio: None, sink: None, volume: 1.0,
         };
         let d = PathBuf::from(DEFAULT_DIR);
         if d.is_dir() { a.scan(d); }
@@ -140,6 +141,8 @@ impl eframe::App for App {
         let mut play_data: Option<Vec<u8>> = None;
         let mut do_stop = false;
         let mut do_sndreplace = false;
+        let mut do_bulk_tex = false;
+        let mut do_bulk_snd = false;
         egui::SidePanel::right("details").default_width(360.0).show(ctx, |ui| {
             ui.heading("Object");
             if let (Some(pkg), Some(oi)) = (&self.pkg, self.sel_obj) {
@@ -183,6 +186,10 @@ impl eframe::App for App {
                         }
                         if ui.button("Import PNG (replace)").clicked() { do_replace = true; }
                     });
+                } else if e.class_name == "Texture2D" {
+                    ui.separator();
+                    let f = pkg.prop_value(e.off, "Format").unwrap_or_else(|| "?".into());
+                    ui.label(format!("Texture2D — {} (no preview for this format yet)", f));
                 }
                 if e.class_name == "SoundNodeWave" {
                     ui.separator();
@@ -202,8 +209,27 @@ impl eframe::App for App {
                             } else { self.status = "no embedded audio found".into(); }
                         }
                     });
+                    if ui.add(egui::Slider::new(&mut self.volume, 0.0..=2.0).text("Volume")).changed() {
+                        if let Some(s) = &self.sink { s.set_volume(self.volume); }
+                    }
                 }
                 ui.separator();
+                egui::CollapsingHeader::new("Raw serial (hex)").show(ui, |ui| {
+                    let s = pkg.serial(e);
+                    let n = s.len().min(512);
+                    let mut hex = String::new();
+                    for row in s[..n].chunks(16) {
+                        for byte in row { hex.push_str(&format!("{:02x} ", byte)); }
+                        for _ in row.len()..16 { hex.push_str("   "); }
+                        hex.push(' ');
+                        for byte in row { let c = *byte; hex.push(if (32..127).contains(&c) { c as char } else { '.' }); }
+                        hex.push('\n');
+                    }
+                    if s.len() > n { hex.push_str(&format!("... {} bytes total\n", s.len())); }
+                    egui::ScrollArea::vertical().max_height(200.0).id_salt("hex").show(ui, |ui| {
+                        ui.add(egui::Label::new(egui::RichText::new(hex).monospace().size(11.0)));
+                    });
+                });
                 if ui.button("Dump raw serial data...").clicked() {
                     let off = e.off as usize; let sz = e.size as usize;
                     if off + sz <= pkg.buf.len() {
@@ -222,6 +248,12 @@ impl eframe::App for App {
                 if self.dirty { ui.colored_label(egui::Color32::from_rgb(255, 210, 90), "modified (unsaved)"); }
                 if ui.button("Save package (loads in-game)...").clicked() { do_save = true; }
                 ui.label("(uncompressed .upk with your edits — overwrite the original to deploy)");
+                ui.separator();
+                ui.label("Bulk export to a folder:");
+                ui.horizontal(|ui| {
+                    if ui.button("All textures (PNG)").clicked() { do_bulk_tex = true; }
+                    if ui.button("All sounds").clicked() { do_bulk_snd = true; }
+                });
             }
         });
         if do_apply {
@@ -300,6 +332,36 @@ impl eframe::App for App {
             }
         }
 
+        if do_bulk_tex {
+            if let (Some(pkg), Some(dir)) = (&self.pkg, self.game_dir.clone()) {
+                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
+                    let mut n = 0;
+                    for e in pkg.exports.iter().filter(|e| e.class_name == "Texture2D") {
+                        let t = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| pkg.texture(e, &dir))).ok().flatten();
+                        if let Some(t) = t {
+                            let p = folder.join(format!("{}.png", e.name));
+                            if image::save_buffer(&p, &t.rgba, t.w as u32, t.h as u32, image::ColorType::Rgba8).is_ok() { n += 1; }
+                        }
+                    }
+                    self.status = format!("exported {} textures -> {}", n, folder.display());
+                }
+            }
+        }
+        if do_bulk_snd {
+            if let Some(pkg) = &self.pkg {
+                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
+                    let mut n = 0;
+                    for e in pkg.exports.iter().filter(|e| e.class_name == "SoundNodeWave") {
+                        if let Some((data, ext)) = pkg.sound_data(e) {
+                            let p = folder.join(format!("{}.{}", e.name, ext));
+                            if std::fs::write(&p, &data).is_ok() { n += 1; }
+                        }
+                    }
+                    self.status = format!("exported {} sounds -> {}", n, folder.display());
+                }
+            }
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(pkg) = &self.pkg {
                 ui.horizontal(|ui| { ui.label("Filter objects:"); ui.text_edit_singleline(&mut self.obj_filter); });
@@ -369,7 +431,7 @@ fn main() -> eframe::Result<()> {
     }
     if args.len() > 4 && args[1] == "--testenc" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
-        let cooked = std::path::Path::new(DEFAULT_DIR);
+        let cooked = std::path::Path::new(&args[2]).parent().unwrap_or_else(|| std::path::Path::new(DEFAULT_DIR));
         let e = p.exports.iter().find(|e| e.class_name == "Texture2D" && e.name.to_lowercase().contains(&args[3].to_lowercase())).unwrap();
         let t = p.texture(e, cooked).unwrap();
         let enc = dxt::encode_bc3(&t.rgba, t.w, t.h);
@@ -393,7 +455,7 @@ fn main() -> eframe::Result<()> {
     }
     if args.len() > 4 && args[1] == "--png" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
-        let cooked = std::path::Path::new(DEFAULT_DIR);
+        let cooked = std::path::Path::new(&args[2]).parent().unwrap_or_else(|| std::path::Path::new(DEFAULT_DIR));
         match p.exports.iter().find(|e| e.class_name == "Texture2D" && e.name.to_lowercase().contains(&args[3].to_lowercase())) {
             Some(e) => match p.texture(e, cooked) {
                 Some(t) => {
