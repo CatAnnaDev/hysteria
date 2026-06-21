@@ -10,3 +10,5 @@ target/
 compile_commands.json
 hysteria/hysteria_sdk.h
 hysteria_dump*.txt
+__pycache__/
+*.pyc
