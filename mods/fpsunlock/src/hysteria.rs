@@ -39,8 +39,8 @@ pub fn player_controller() -> Obj { (a().player_controller)() }
 pub fn console(cmd: &str) { (a().console)(player_controller(), cs(cmd).as_ptr()); }
 pub fn key_pressed(vk: i32) -> bool { (a().key_pressed)(vk) != 0 }
 pub fn key_down(vk: i32) -> bool { (a().key_down)(vk) != 0 }
-pub fn world_info() -> Obj { (a().world_info)() }
 pub fn find(name: &str) -> Obj { (a().find_object)(cs(name).as_ptr()) }
+pub fn find_class(name: &str) -> Obj { (a().find_class)(cs(name).as_ptr()) }
 
 static ITER_BUF: Global<Vec<Obj>> = Global(UnsafeCell::new(Vec::new()));
 extern "C" fn iter_collect(o: AObj) { ITER_BUF.get().push(o); }
@@ -49,7 +49,9 @@ pub fn all_of_class(class: &str) -> Vec<Obj> {
     (a().iter_objects)(cs(class).as_ptr(), iter_collect);
     std::mem::take(ITER_BUF.get())
 }
-pub fn find_class(name: &str) -> Obj { (a().find_class)(cs(name).as_ptr()) }
+pub fn find_first(class: &str) -> Obj {
+    all_of_class(class).into_iter().find(|o| !o.is_null()).unwrap_or(std::ptr::null_mut())
+}
 pub fn is_a(o: Obj, c: &str) -> bool { (a().is_a)(o, cs(c).as_ptr()) != 0 }
 pub fn name_of(o: Obj) -> String { rs((a().name_of)(o)) }
 pub fn class_of(o: Obj) -> String { rs((a().class_of)(o)) }

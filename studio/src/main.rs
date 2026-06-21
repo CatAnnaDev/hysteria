@@ -145,7 +145,10 @@ impl eframe::App for App {
         if pneed != self.props_for {
             self.props_for = pneed;
             self.props = match (&self.pkg, self.sel_obj) {
-                (Some(p), Some(oi)) => p.props_editable(p.exports[oi].off),
+                (Some(p), Some(oi)) if oi < p.exports.len() => {
+                    let off = p.exports[oi].off;
+                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.props_editable(off))).unwrap_or_default()
+                }
                 _ => vec![],
             };
         }
@@ -347,9 +350,11 @@ impl eframe::App for App {
                 let mut n = 0;
                 for row in &self.props {
                     let o = row.off;
+                    if o == 0 || o >= pkg.buf.len() { continue; }
+                    let fits4 = o + 4 <= pkg.buf.len();
                     match row.kind {
-                        1 => if let Ok(v) = row.value.trim().parse::<i32>() { pkg.buf[o..o+4].copy_from_slice(&v.to_le_bytes()); n += 1; },
-                        2 => if let Ok(v) = row.value.trim().parse::<f32>() { pkg.buf[o..o+4].copy_from_slice(&v.to_le_bytes()); n += 1; },
+                        1 => if fits4 { if let Ok(v) = row.value.trim().parse::<i32>() { pkg.buf[o..o+4].copy_from_slice(&v.to_le_bytes()); n += 1; } },
+                        2 => if fits4 { if let Ok(v) = row.value.trim().parse::<f32>() { pkg.buf[o..o+4].copy_from_slice(&v.to_le_bytes()); n += 1; } },
                         3 => { pkg.buf[o] = matches!(row.value.trim(), "true" | "True" | "1") as u8; n += 1; },
                         4 => if let Ok(v) = row.value.trim().parse::<u8>() { pkg.buf[o] = v; n += 1; },
                         _ => {}

@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")"
 
-SRC="proxy.c mem.c props.c camera.c render.c cheats.c dump.c entities.c alice.c mod_hook.c mod_api.c console.c ui.c ui_d3d11.c frame.c d3d11hook.c"
+SRC="proxy.c mem.c props.c camera.c render.c cheats.c dump.c entities.c alice.c mod_hook.c mod_api.c console.c ui.c frame.c cfg.c"
 CC=i686-w64-mingw32-gcc
 $CC -O2 -shared -o dinput8.dll $SRC dinput8.def -Wl,--kill-at -lkernel32 -luser32 -lgdi32
 echo "built dinput8.dll ($(ls -la dinput8.dll | awk '{print $5}') bytes)"

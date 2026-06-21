@@ -1,7 +1,7 @@
 #![allow(non_snake_case, dead_code)]
 use std::os::raw::{c_char, c_float, c_int, c_void};
 
-pub const HYSTERIA_API_VERSION: c_int = 8;
+pub const HYSTERIA_API_VERSION: c_int = 9;
 
 pub type AObj = *mut c_void;
 pub type ACall = *mut c_void;
@@ -94,4 +94,11 @@ pub struct HysteriaAPI {
     pub call_arg_rot: extern "C" fn(ACall, *const c_char, *const c_int),
     pub call_arg_raw: extern "C" fn(ACall, *const c_char, *const c_void, c_int),
     pub call_out_vec: extern "C" fn(ACall, *const c_char, *mut c_float) -> c_int,
+    pub cfg_get_int: extern "C" fn(*const c_char, *const c_char, c_int) -> c_int,
+    pub cfg_get_float: extern "C" fn(*const c_char, *const c_char, c_float) -> c_float,
+    pub cfg_get_bool: extern "C" fn(*const c_char, *const c_char, c_int) -> c_int,
+    pub cfg_set_int: extern "C" fn(*const c_char, *const c_char, c_int),
+    pub cfg_set_float: extern "C" fn(*const c_char, *const c_char, c_float),
+    pub cfg_set_bool: extern "C" fn(*const c_char, *const c_char, c_int),
+    pub cfg_save: extern "C" fn(*const c_char),
 }

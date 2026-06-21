@@ -271,6 +271,9 @@ static int api_key_pressed(int vk){
     int e = d && !prev[vk]; prev[vk] = (unsigned char)d; return e;
 }
 
+int g_scrW = 0, g_scrH = 0;
+static int api_screen_size(int *w, int *h){ if(w)*w=g_scrW; if(h)*h=g_scrH; return (g_scrW>0 && g_scrH>0); }
+
 static HysteriaAPI g_api = {
     .version=HYSTERIA_API_VERSION,
     .find_object=api_find_object, .find_class=api_find_class, .iter_objects=api_iter,
@@ -297,28 +300,88 @@ static HysteriaAPI g_api = {
     .on_object=api_on_object, .on_object_post=api_on_object_post,
     .call_arg_vec=api_call_arg_vec, .call_arg_rot=api_call_arg_rot,
     .call_arg_raw=api_call_arg_raw, .call_out_vec=api_call_out_vec,
+    .cfg_get_int=cfg_get_int, .cfg_get_float=cfg_get_float, .cfg_get_bool=cfg_get_bool,
+    .cfg_set_int=cfg_set_int, .cfg_set_float=cfg_set_float, .cfg_set_bool=cfg_set_bool, .cfg_save=cfg_save,
+    .hud_text=api_hud_text, .hud_rect=api_hud_rect,
+    .screen_size=api_screen_size,
 };
 
 static HMODULE g_loaded[64]; static int g_loadedN=0;
+static void err_text(DWORD e, char *buf, int n){
+    DWORD r=FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,NULL,e,0,buf,n,NULL);
+    if(r==0){ wsprintfA(buf,"(no description)"); return; }
+    int len=(int)lstrlenA(buf);
+    while(len>0 && (buf[len-1]=='\r'||buf[len-1]=='\n'||buf[len-1]==' ')){ buf[len-1]=0; len--; }
+}
+// Test-load every mod DLL at attach and report load / ModMain / failure per file, so the
+// user sees exactly why a mod won't load even from the main menu (before any level loads).
+void log_mod_paths(void){
+    char dir[MAX_PATH]; HMODULE self=NULL;
+    GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&log_mod_paths,&self);
+    DWORD n=GetModuleFileNameA(self,dir,MAX_PATH);
+    logmsg("[hysteria][mod] dinput8.dll is at: %s\r\n", dir);
+    while(n>0&&dir[n-1]!='\\'&&dir[n-1]!='/')n--; dir[n]=0;
+    char pat[MAX_PATH]; wsprintfA(pat,"%sMods\\*.dll",dir);
+    logmsg("[hysteria][mod] looking for mods in: %sMods\\\r\n", dir);
+    WIN32_FIND_DATAA fd; HANDLE h=FindFirstFileA(pat,&fd);
+    if(h==INVALID_HANDLE_VALUE){
+        DWORD e=GetLastError(); char et[256]; err_text(e,et,sizeof et);
+        logmsg("[hysteria][mod]   -> NO .dll found there (err=%lu: %s)\r\n", e, et);
+    } else {
+        int c=0, ok=0;
+        do{
+            char full[MAX_PATH]; wsprintfA(full,"%sMods\\%s",dir,fd.cFileName);
+            HMODULE m=LoadLibraryExA(full,NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
+            if(!m){
+                DWORD e=GetLastError(); char et[256]; err_text(e,et,sizeof et);
+                logmsg("[hysteria][mod]   -> %s : LOAD FAILS err=%lu (%s)\r\n", fd.cFileName, e, et);
+            } else {
+                FARPROC mm=GetProcAddress(m,"ModMain");
+                if(mm){ logmsg("[hysteria][mod]   -> %s : OK (loads, ModMain present)\r\n", fd.cFileName); ok++; }
+                else  { logmsg("[hysteria][mod]   -> %s : loads but NO ModMain export\r\n", fd.cFileName); }
+                FreeLibrary(m);
+            }
+            c++;
+        } while(FindNextFileA(h,&fd));
+        FindClose(h);
+        logmsg("[hysteria][mod]   %d dll(s) present, %d load OK (real load happens once IN A LEVEL)\r\n", c, ok);
+    }
+    char exe[MAX_PATH]; DWORD e=GetModuleFileNameA(NULL,exe,MAX_PATH); while(e>0&&exe[e-1]!='\\'&&exe[e-1]!='/')e--; exe[e]=0;
+    if(lstrcmpiA(exe,dir)!=0) logmsg("[hysteria][mod] (fallback if none: %sMods\\)\r\n", exe);
+}
+static int scan_dir(const char *dir){
+    char pat[MAX_PATH]; wsprintfA(pat,"%sMods\\*.dll",dir);
+    WIN32_FIND_DATAA fd; HANDLE h=FindFirstFileA(pat,&fd);
+    if(h==INVALID_HANDLE_VALUE){ DWORD e=GetLastError(); char et[256]; err_text(e,et,sizeof et); logmsg("[hysteria][mod] no Mods dll (%s) err=%lu (%s)\r\n",pat,e,et); return 0; }
+    int loaded=0;
+    do{
+        char full[MAX_PATH]; wsprintfA(full,"%sMods\\%s",dir,fd.cFileName);
+        SetLastError(0);
+        HMODULE m=LoadLibraryExA(full,NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
+        if(!m){ DWORD e=GetLastError(); char et[256]; err_text(e,et,sizeof et); logmsg("[hysteria][mod] load FAIL %s err=%lu (%s)\r\n",fd.cFileName,e,et); continue; }
+        ModMain_t mm=(ModMain_t)GetProcAddress(m,"ModMain");
+        if(!mm){ logmsg("[hysteria][mod] %s: loaded but NO ModMain export\r\n",fd.cFileName); FreeLibrary(m); continue; }
+        if(g_loadedN<64) g_loaded[g_loadedN++]=m; else logmsg("[hysteria][mod] WARNING: >64 mods, %s not tracked for reload\r\n",fd.cFileName);
+        logmsg("[hysteria][mod] loading %s ...\r\n",fd.cFileName);
+        mm(&g_api);
+        logmsg("[hysteria][mod] %s ModMain returned OK\r\n",fd.cFileName);
+        loaded++;
+    } while(FindNextFileA(h,&fd));
+    FindClose(h);
+    return loaded;
+}
 static void scan_and_load(void){
     calib_super();
     char dir[MAX_PATH]; HMODULE self=NULL;
     GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCSTR)&scan_and_load,&self);
     DWORD n=GetModuleFileNameA(self,dir,MAX_PATH); while(n>0&&dir[n-1]!='\\'&&dir[n-1]!='/')n--; dir[n]=0;
-    char pat[MAX_PATH]; wsprintfA(pat,"%sMods\\*.dll",dir);
-    WIN32_FIND_DATAA fd; HANDLE h=FindFirstFileA(pat,&fd);
-    if(h==INVALID_HANDLE_VALUE){ logmsg("[hysteria][mod] no Mods dll (%s)\r\n",pat); return; }
-    do{
-        char full[MAX_PATH]; wsprintfA(full,"%sMods\\%s",dir,fd.cFileName);
-        HMODULE m=LoadLibraryA(full);
-        if(!m){ logmsg("[hysteria][mod] load fail %s err=%lu\r\n",fd.cFileName,GetLastError()); continue; }
-        ModMain_t mm=(ModMain_t)GetProcAddress(m,"ModMain");
-        if(!mm){ logmsg("[hysteria][mod] %s: no ModMain\r\n",fd.cFileName); FreeLibrary(m); continue; }
-        if(g_loadedN<64) g_loaded[g_loadedN++]=m;
-        logmsg("[hysteria][mod] loading %s\r\n",fd.cFileName);
-        mm(&g_api);
-    } while(FindNextFileA(h,&fd));
-    FindClose(h);
+    logmsg("[hysteria][mod] scanning Mods in %s\r\n",dir);
+    int loaded=scan_dir(dir);
+    if(loaded==0){
+        char exe[MAX_PATH]; DWORD e=GetModuleFileNameA(NULL,exe,MAX_PATH); while(e>0&&exe[e-1]!='\\'&&exe[e-1]!='/')e--; exe[e]=0;
+        if(lstrcmpiA(exe,dir)!=0){ logmsg("[hysteria][mod] no mods next to dll, retry in exe dir %s\r\n",exe); loaded=scan_dir(exe); }
+    }
+    logmsg("[hysteria][mod] %d mod(s) loaded\r\n",loaded);
 }
 int editor_list(const char *filter, void **out, int max){
     if(!g_gobjects||!out) return 0;

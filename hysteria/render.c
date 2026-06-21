@@ -78,9 +78,27 @@ static void flush_lines(IDirect3DDevice9 *dev){
     g_nlv=0;
 }
 
-#define MAXTV 8192
+#define MAXTV 32768
 static LVERT g_tv[MAXTV];
 static int g_ntv=0;
+static void rect2d(float x,float y,float w,float h,D3DCOLOR col){
+    if(w<0){x+=w;w=-w;} if(h<0){y+=h;h=-h;}
+    if(g_ntv+6>MAXTV) return;
+    float x1=x+w,y1=y+h;
+    LVERT q[6]={ {x,y,0,1,col},{x1,y,0,1,col},{x,y1,0,1,col}, {x1,y,0,1,col},{x1,y1,0,1,col},{x,y1,0,1,col} };
+    for(int i=0;i<6;i++) g_tv[g_ntv++]=q[i];
+}
+static void rect_outline2d(float x0,float y0,float x1,float y1,float t,D3DCOLOR col){
+    rect2d(x0,y0,x1-x0,t,col); rect2d(x0,y1-t,x1-x0,t,col);
+    rect2d(x0,y0,t,y1-y0,col); rect2d(x1-t,y0,t,y1-y0,col);
+}
+static void corners2d(float x0,float y0,float x1,float y1,float t,D3DCOLOR col){
+    float w=x1-x0,h=y1-y0; float L=(w<h?w:h)*0.30f; if(L<7)L=7; if(L>30)L=30;
+    rect2d(x0,y0,L,t,col); rect2d(x0,y0,t,L,col);
+    rect2d(x1-L,y0,L,t,col); rect2d(x1-t,y0,t,L,col);
+    rect2d(x0,y1-t,L,t,col); rect2d(x0,y1-L,t,L,col);
+    rect2d(x1-L,y1-t,L,t,col); rect2d(x1-t,y1-L,t,L,col);
+}
 static int proj_pt(float *P, float *sx, float *sy){
     double cr,cu,cd; cam_xform(P,&cr,&cu,&cd);
     if(cd<14.0) return 0;
@@ -146,11 +164,43 @@ static void draw_box(float cx,float cy,float cz,float ex,float ey,float ez,D3DCO
         world_line(c[i],c[i+4],col);
     }
 }
+// a 3D edge drawn as a thick screen-space quad (crisp, controllable width), near-plane clipped
+static void world_line_thick(float *A,float *B,D3DCOLOR col,float w){
+    double ar,au,ad, br,bu,bd;
+    cam_xform(A,&ar,&au,&ad); cam_xform(B,&br,&bu,&bd);
+    const double ZN=12.0;
+    if(ad<ZN && bd<ZN) return;
+    if(ad<ZN){ double t=(ZN-ad)/(bd-ad); ar+=(br-ar)*t; au+=(bu-au)*t; ad=ZN; }
+    else if(bd<ZN){ double t=(ZN-bd)/(ad-bd); br+=(ar-br)*t; bu+=(au-bu)*t; bd=ZN; }
+    float x0,y0,x1,y1;
+    cam_screen(ar,au,ad,&x0,&y0); cam_screen(br,bu,bd,&x1,&y1);
+    float dx=x1-x0,dy=y1-y0; float len=sqrtf(dx*dx+dy*dy); if(len<0.001f) return;
+    float nx=-dy/len*(w*0.5f), ny=dx/len*(w*0.5f);
+    if(g_ntv+6>MAXTV) return;
+    LVERT q[6]={ {x0+nx,y0+ny,0,1,col},{x1+nx,y1+ny,0,1,col},{x0-nx,y0-ny,0,1,col},
+                 {x1+nx,y1+ny,0,1,col},{x1-nx,y1-ny,0,1,col},{x0-nx,y0-ny,0,1,col} };
+    for(int i=0;i<6;i++) g_tv[g_ntv++]=q[i];
+}
+// readable 3D box: faint translucent volume fill (shows extent / works from inside) + thick bright edges
+static void draw_box3d(float cx,float cy,float cz,float ex,float ey,float ez,D3DCOLOR edge,D3DCOLOR fill,float w){
+    if(fill) draw_fill_box(cx,cy,cz,ex,ey,ez,fill);
+    float ox[4]={-ex,ex,ex,-ex}, oy[4]={-ey,-ey,ey,ey};
+    float c[8][3];
+    for(int i=0;i<4;i++){
+        c[i][0]=cx+ox[i]; c[i][1]=cy+oy[i]; c[i][2]=cz-ez;
+        c[i+4][0]=cx+ox[i]; c[i+4][1]=cy+oy[i]; c[i+4][2]=cz+ez;
+    }
+    for(int i=0;i<4;i++){ int j=(i+1)&3;
+        world_line_thick(c[i],c[j],edge,w);
+        world_line_thick(c[i+4],c[j+4],edge,w);
+        world_line_thick(c[i],c[i+4],edge,w);
+    }
+}
 
 #define MAXHB 128
-static struct { float cx,cy,cz,ex,ey,ez; int kind; int hp; char name[40]; } g_hb[MAXHB];
+static struct { float cx,cy,cz,ex,ey,ez; int kind; int hp; int hpmax; char name[40]; } g_hb[MAXHB];
 static int g_hbN=0;
-int g_fEnemy=1, g_fTrigger=1, g_fPickup=1, g_fNode=1, g_fWall=1, g_fOther=1, g_labels=1;
+int g_fEnemy=1, g_fTrigger=1, g_fPickup=1, g_fNode=1, g_fWall=1, g_fOther=1, g_labels=1, g_healthbars=1, g_box3d=1;
 int hb_classify(const char *cn, const char *on){
     if((cn&&contains(cn,"Blocking"))||(on&&contains(on,"Blocking"))) return 5;
     if((cn&&contains(cn,"Pickup"))||(on&&contains(on,"Pickup"))) return 3;
@@ -185,7 +235,8 @@ static void scan_hitboxes(float *pl){
             if(dx<-wd||dx>wd||dy<-wd||dy>wd||dz<-wd||dz>wd) continue; }
         g_hb[n].cx=bo[0];g_hb[n].cy=bo[1];g_hb[n].cz=bo[2];
         g_hb[n].ex=be[0];g_hb[n].ey=be[1];g_hb[n].ez=be[2];g_hb[n].kind=kind;
-        g_hb[n].hp = (kind==1 && OFF_HEALTH>0 && mem_ok((char*)o+OFF_HEALTH,4)) ? *(int*)((char*)o+OFF_HEALTH) : -1;
+        g_hb[n].hp = (kind==1 && OFF_HEALTH>0 && mem_ok((char*)o+OFF_HEALTH,8)) ? *(int*)((char*)o+OFF_HEALTH) : -1;
+        g_hb[n].hpmax = (kind==1 && OFF_HEALTH>0 && mem_ok((char*)o+OFF_HEALTH,8)) ? *(int*)((char*)o+OFF_HEALTH+4) : -1;
         lstrcpynA(g_hb[n].name, obj_name(o), sizeof g_hb[n].name);
         n++;
     }
@@ -202,8 +253,22 @@ static D3DCOLOR kind_color(int k){
         default:return D3DCOLOR_XRGB(195,195,195);
     }
 }
+static int box_aabb(float cx,float cy,float cz,float ex,float ey,float ez,int W,int H,float*minx,float*miny,float*maxx,float*maxy){
+    float ox[2]={-ex,ex}, oy[2]={-ey,ey}, oz[2]={-ez,ez};
+    float mnx=1e9f,mny=1e9f,mxx=-1e9f,mxy=-1e9f; int n=0;
+    for(int zi=0;zi<2;zi++)for(int yi=0;yi<2;yi++)for(int xi=0;xi<2;xi++){
+        float P[3]={cx+ox[xi],cy+oy[yi],cz+oz[zi]}; float sx,sy;
+        if(!proj_pt(P,&sx,&sy)) continue;
+        if(sx<mnx)mnx=sx; if(sy<mny)mny=sy; if(sx>mxx)mxx=sx; if(sy>mxy)mxy=sy; n++;
+    }
+    if(n<4) return 0;
+    if(mxx<0||mnx>W||mxy<0||mny>H) return 0;
+    if(mnx<0)mnx=0; if(mny<0)mny=0; if(mxx>W)mxx=(float)W; if(mxy>H)mxy=(float)H;
+    if(mxx-mnx<3||mxy-mny<3) return 0;
+    *minx=mnx;*miny=mny;*maxx=mxx;*maxy=mxy; return 1;
+}
 void render_hitboxes(IDirect3DDevice9 *dev, void *pawn, float *L){
-    if(!g_showHB){ g_hbN=0; return; }
+    if(!g_showHB && !g_healthbars){ g_hbN=0; return; }
     calibrate_camera(g_pc, L);
     D3DVIEWPORT9 vp; IDirect3DDevice9_GetViewport(dev,&vp);
     int W=vp.Width, H=vp.Height;
@@ -212,29 +277,53 @@ void render_hitboxes(IDirect3DDevice9 *dev, void *pawn, float *L){
     if(!(g_view.ok && g_stable>=120)){ flush_lines(dev); return; }
 
     static int tick=0; if(++tick>=10){ tick=0; scan_hitboxes(L); }
-    for(int i=0;i<g_hbN;i++){
-        if(g_hb[i].kind==5){
-            draw_fill_box(g_hb[i].cx,g_hb[i].cy,g_hb[i].cz,g_hb[i].ex,g_hb[i].ey,g_hb[i].ez,D3DCOLOR_ARGB(60,255,80,210));
-            draw_box(g_hb[i].cx,g_hb[i].cy,g_hb[i].cz,g_hb[i].ex,g_hb[i].ey,g_hb[i].ez,D3DCOLOR_ARGB(150,255,120,230));
-        } else {
-            draw_box(g_hb[i].cx,g_hb[i].cy,g_hb[i].cz,g_hb[i].ex,g_hb[i].ey,g_hb[i].ez,kind_color(g_hb[i].kind));
-        }
-    }
     float pr=40,ph=44; void *pcc=(OFF_COLLCOMP>0)?*(void**)((char*)pawn+OFF_COLLCOMP):NULL;
     if(mem_ok(pcc,CYL_R+4)){ float rr=*(float*)((char*)pcc+CYL_R),hh=*(float*)((char*)pcc+CYL_H); if(rr>0&&rr<1200){pr=rr;ph=hh;} }
-    draw_box(L[0],L[1],L[2],pr,pr,ph,D3DCOLOR_XRGB(255,255,0));
+    if(g_showHB && g_box3d){
+        for(int i=0;i<g_hbN;i++){
+            D3DCOLOR col=kind_color(g_hb[i].kind);
+            int fa=(g_hb[i].kind==5)?44:24;
+            D3DCOLOR fill=D3DCOLOR_ARGB(fa,(col>>16)&0xff,(col>>8)&0xff,col&0xff);
+            draw_box3d(g_hb[i].cx,g_hb[i].cy,g_hb[i].cz,g_hb[i].ex,g_hb[i].ey,g_hb[i].ez,col,fill,2.6f);
+        }
+        draw_box3d(L[0],L[1],L[2],pr,pr,ph,D3DCOLOR_XRGB(255,255,0),D3DCOLOR_ARGB(18,255,255,0),2.6f);
+    } else if(g_showHB){
+        // crisp 2D screen-space boxes: faint full outline + bright corner brackets
+        for(int i=0;i<g_hbN;i++){
+            float x0,y0,x1,y1;
+            if(!box_aabb(g_hb[i].cx,g_hb[i].cy,g_hb[i].cz,g_hb[i].ex,g_hb[i].ey,g_hb[i].ez,W,H,&x0,&y0,&x1,&y1)) continue;
+            D3DCOLOR col=kind_color(g_hb[i].kind);
+            D3DCOLOR faint=D3DCOLOR_ARGB(70,(col>>16)&0xff,(col>>8)&0xff,col&0xff);
+            if(g_hb[i].kind==5) rect2d(x0,y0,x1-x0,y1-y0,D3DCOLOR_ARGB(34,255,80,210));
+            rect_outline2d(x0,y0,x1,y1,1.0f,faint);
+            corners2d(x0,y0,x1,y1,2.5f,col);
+        }
+        float x0,y0,x1,y1;
+        if(box_aabb(L[0],L[1],L[2],pr,pr,ph,W,H,&x0,&y0,&x1,&y1)) corners2d(x0,y0,x1,y1,2.5f,D3DCOLOR_XRGB(255,255,0));
+    }
     flush_tris(dev);
     flush_lines(dev);
 
-    if(g_labels) for(int i=0;i<g_hbN;i++){
+    if(g_labels || g_healthbars) for(int i=0;i<g_hbN;i++){
         float top[3]={g_hb[i].cx,g_hb[i].cy,g_hb[i].cz+g_hb[i].ez};
         double cr,cu,cd; cam_xform(top,&cr,&cu,&cd);
         float sx,sy;
         if(cam_screen(cr,cu,cd,&sx,&sy) && sx>-40 && sx<W && sy>-10 && sy<H){
-            char lbl[64];
-            if(g_hb[i].hp>=0) wsprintfA(lbl,"%s  HP:%d",g_hb[i].name,g_hb[i].hp);
-            else lstrcpynA(lbl,g_hb[i].name,sizeof lbl);
-            draw_text(dev,(int)sx-10,(int)sy-20,kind_color(g_hb[i].kind),lbl);
+            if(g_healthbars && g_hb[i].kind==1 && g_hb[i].hp>=0 && g_hb[i].hpmax>0 && g_hb[i].hpmax<1000000){
+                float ratio=(float)g_hb[i].hp/(float)g_hb[i].hpmax;
+                if(ratio<0)ratio=0; if(ratio>1)ratio=1;
+                float bw=54,bh=6,bx=sx-bw*0.5f,by=sy-34;
+                fill_rect(dev,bx-1,by-1,bw+2,bh+2,D3DCOLOR_ARGB(210,0,0,0));
+                fill_rect(dev,bx,by,bw,bh,D3DCOLOR_ARGB(170,45,45,45));
+                int r=(int)(255*(1.0f-ratio)+0.5f), g=(int)(255*ratio+0.5f);
+                fill_rect(dev,bx,by,bw*ratio,bh,D3DCOLOR_ARGB(235,r,g,40));
+            }
+            if(g_labels){
+                char lbl[64];
+                if(g_hb[i].hp>=0) wsprintfA(lbl,"%s  HP:%d",g_hb[i].name,g_hb[i].hp);
+                else lstrcpynA(lbl,g_hb[i].name,sizeof lbl);
+                draw_text(dev,(int)sx-10,(int)sy-20,kind_color(g_hb[i].kind),lbl);
+            }
         }
     }
 }

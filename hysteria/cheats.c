@@ -29,7 +29,6 @@ int key_edge(int vk){
 
 void cheats_update(IDirect3DDevice9 *dev, void *pawn, float *L, float *V, int hp, int pawnFull, int isMenu){
     (void)dev; (void)hp; (void)isMenu;
-    if(key_edge(VK_OEM_3)) g_uiVisible=!g_uiVisible;
 
     {
         static int fixedIdx=-2;

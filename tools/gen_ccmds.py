@@ -16,8 +16,8 @@ def add(f, cxx):
     })
 
 for f in sorted(glob.glob(ROOT + "/hysteria/*.c")): add(f, False)
-for f in sorted(glob.glob(ROOT + "/mods/*/*.c")): add(f, False)
-for f in sorted(glob.glob(ROOT + "/mods/*/*.cpp")): add(f, True)
+for f in sorted(glob.glob(ROOT + "/mods/**/*.c", recursive=True)): add(f, False)
+for f in sorted(glob.glob(ROOT + "/mods/**/*.cpp", recursive=True)): add(f, True)
 
 open(ROOT + "/compile_commands.json", "w").write(json.dumps(cmds, indent=1))
 print("wrote %d entries -> %s/compile_commands.json" % (len(cmds), ROOT))

@@ -27,7 +27,7 @@ void console_push(const char *s){
 
 typedef struct { float x,y,z,rhw; D3DCOLOR c; } TLV;
 
-static void fill_rect(IDirect3DDevice9 *dev,float x,float y,float w,float h,D3DCOLOR col){
+void fill_rect(IDirect3DDevice9 *dev,float x,float y,float w,float h,D3DCOLOR col){
     TLV v[4]={ {x,y,0,1,col},{x+w,y,0,1,col},{x,y+h,0,1,col},{x+w,y+h,0,1,col} };
     DWORD fvf,ab,sb,db,ze,lt;
     IDirect3DDevice9_GetFVF(dev,&fvf);

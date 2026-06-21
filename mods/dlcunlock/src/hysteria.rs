@@ -52,6 +52,13 @@ pub fn get_obj(o: Obj, p: &str) -> Obj { (a().get_obj)(o, cs(p).as_ptr()) }
 pub fn get_vec(o: Obj, p: &str) -> Option<[f32; 3]> { let mut v = [0f32; 3]; if (a().get_vec)(o, cs(p).as_ptr(), v.as_mut_ptr()) != 0 { Some(v) } else { None } }
 pub fn set_vec(o: Obj, p: &str, v: [f32; 3]) { (a().set_vec)(o, cs(p).as_ptr(), v.as_ptr()); }
 pub fn is_null(o: Obj) -> bool { o.is_null() }
+pub fn cfg_get_int(m: &str, k: &str, def: i32) -> i32 { (a().cfg_get_int)(cs(m).as_ptr(), cs(k).as_ptr(), def) }
+pub fn cfg_get_float(m: &str, k: &str, def: f32) -> f32 { (a().cfg_get_float)(cs(m).as_ptr(), cs(k).as_ptr(), def) }
+pub fn cfg_get_bool(m: &str, k: &str, def: bool) -> bool { (a().cfg_get_bool)(cs(m).as_ptr(), cs(k).as_ptr(), def as i32) != 0 }
+pub fn cfg_set_int(m: &str, k: &str, v: i32) { (a().cfg_set_int)(cs(m).as_ptr(), cs(k).as_ptr(), v); }
+pub fn cfg_set_float(m: &str, k: &str, v: f32) { (a().cfg_set_float)(cs(m).as_ptr(), cs(k).as_ptr(), v); }
+pub fn cfg_set_bool(m: &str, k: &str, v: bool) { (a().cfg_set_bool)(cs(m).as_ptr(), cs(k).as_ptr(), v as i32); }
+pub fn cfg_save(m: &str) { (a().cfg_save)(cs(m).as_ptr()); }
 pub fn spawn(class: &str, x: f32, y: f32, z: f32) -> Obj { (a().spawn)(cs(class).as_ptr(), x, y, z) }
 pub fn destroy(o: Obj) { (a().destroy)(o); }
 

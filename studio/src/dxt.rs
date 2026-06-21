@@ -11,7 +11,59 @@ fn enc565(r: u8, g: u8, b: u8) -> u16 {
     (((r as u16) >> 3) << 11) | (((g as u16) >> 2) << 5) | ((b as u16) >> 3)
 }
 
+fn enc_color_block(blk: &[[u8; 4]; 16], out: &mut Vec<u8>) {
+    let mut mn = [255u8; 3]; let mut mx = [0u8; 3];
+    for c in blk { for j in 0..3 { mn[j] = mn[j].min(c[j]); mx[j] = mx[j].max(c[j]); } }
+    let mut c0 = enc565(mx[0], mx[1], mx[2]);
+    let mut c1 = enc565(mn[0], mn[1], mn[2]);
+    if c0 <= c1 { let t = c0; c0 = c1.max(1); c1 = if t > 0 { t - 1 } else { 0 }; if c0 <= c1 { c0 = c1 + 1; } }
+    let (r0, g0, b0) = c565(c0); let (r1, g1, b1) = c565(c1);
+    let pal = [
+        [r0, g0, b0], [r1, g1, b1],
+        [((2*r0 as u32 + r1 as u32)/3) as u8, ((2*g0 as u32 + g1 as u32)/3) as u8, ((2*b0 as u32 + b1 as u32)/3) as u8],
+        [((r0 as u32 + 2*r1 as u32)/3) as u8, ((g0 as u32 + 2*g1 as u32)/3) as u8, ((b0 as u32 + 2*b1 as u32)/3) as u8],
+    ];
+    let mut cbits: u32 = 0;
+    for i in 0..16 {
+        let c = blk[i]; let mut best = 0; let mut bd = i64::MAX;
+        for k in 0..4 {
+            let dr = c[0] as i64 - pal[k][0] as i64; let dg = c[1] as i64 - pal[k][1] as i64; let db = c[2] as i64 - pal[k][2] as i64;
+            let d = dr*dr + dg*dg + db*db; if d < bd { bd = d; best = k; }
+        }
+        cbits |= (best as u32) << (2 * i);
+    }
+    out.extend_from_slice(&c0.to_le_bytes());
+    out.extend_from_slice(&c1.to_le_bytes());
+    out.extend_from_slice(&cbits.to_le_bytes());
+}
+
+fn gather_block(rgba: &[u8], w: usize, h: usize, bx: usize, by: usize) -> [[u8; 4]; 16] {
+    let mut blk = [[0u8; 4]; 16];
+    for py in 0..4 { for px in 0..4 {
+        let x = (bx + px).min(w - 1); let y = (by + py).min(h - 1);
+        let o = (y * w + x) * 4;
+        blk[py * 4 + px] = [rgba.get(o).copied().unwrap_or(0), rgba.get(o+1).copied().unwrap_or(0), rgba.get(o+2).copied().unwrap_or(0), rgba.get(o+3).copied().unwrap_or(255)];
+    }}
+    blk
+}
+
+pub fn encode_bc2(rgba: &[u8], w: usize, h: usize) -> Vec<u8> {
+    if w == 0 || h == 0 { return Vec::new(); }
+    let mut out = Vec::with_capacity(((w + 3) / 4) * ((h + 3) / 4) * 16);
+    for by in (0..h).step_by(4) {
+        for bx in (0..w).step_by(4) {
+            let blk = gather_block(rgba, w, h, bx, by);
+            let mut abits: u64 = 0;
+            for i in 0..16 { let nib = (blk[i][3] as u32 * 15 / 255) as u64; abits |= nib << (4 * i); }
+            for k in 0..8 { out.push(((abits >> (8 * k)) & 0xff) as u8); }
+            enc_color_block(&blk, &mut out);
+        }
+    }
+    out
+}
+
 pub fn encode_bc1(rgba: &[u8], w: usize, h: usize) -> Vec<u8> {
+    if w == 0 || h == 0 { return Vec::new(); }
     let mut out = Vec::with_capacity((w / 4) * (h / 4) * 8);
     let mut blk = [[0u8; 3]; 16];
     for by in (0..h).step_by(4) {
@@ -50,6 +102,7 @@ pub fn encode_bc1(rgba: &[u8], w: usize, h: usize) -> Vec<u8> {
 }
 
 pub fn encode_bc3(rgba: &[u8], w: usize, h: usize) -> Vec<u8> {
+    if w == 0 || h == 0 { return Vec::new(); }
     let mut out = Vec::with_capacity((w / 4) * (h / 4) * 16);
     let mut blk = [[0u8; 4]; 16];
     for by in (0..h).step_by(4) {

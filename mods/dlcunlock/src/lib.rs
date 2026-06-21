@@ -33,11 +33,14 @@ fn panel() {
     ui_checkbox("Unlock all DLC / Complete Edition", EN.get());
     ui_label("Forces GIsSpecialPCEdition + DLC getters true.");
     ui_label("Bonus dresses, weapons, Alice 1 unlocked.");
+    cfg_set_bool("dlcunlock", "on", *EN.get());
+    cfg_save("dlcunlock");
 }
 
 #[no_mangle]
 pub extern "C" fn ModMain(api: *const hysteria_api::HysteriaAPI) {
     hysteria::init(api);
+    *EN.get() = cfg_get_bool("dlcunlock", "on", true);
     log("dlcunlock mod loaded (Rust) — Complete Edition + all DLC");
     for g in GETTERS {
         on_post(g, force_true);

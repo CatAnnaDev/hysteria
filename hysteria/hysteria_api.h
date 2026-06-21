@@ -13,7 +13,7 @@
 //
 // AObj is an opaque game object handle. Getters return non-zero on success.
 
-#define HYSTERIA_API_VERSION 8
+#define HYSTERIA_API_VERSION 12
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,6 +138,26 @@ typedef struct HysteriaAPI {
   void (*call_arg_rot)(ACall c, const char *param, const int v[3]);        // an FRotator param
   void (*call_arg_raw)(ACall c, const char *param, const void *data, int n); // raw bytes (any struct/array)
   int (*call_out_vec)(ACall c, const char *param, float out[3]);           // read an FVector out-param
+
+  // --- v9: per-mod persistent config (a key=value file Mods/<modName>.cfg next to the mod DLL) ---
+  //   at load: int x = api->cfg_get_int("mymod","x",0);
+  //   on change: api->cfg_set_int("mymod","x",x); api->cfg_save("mymod");
+  // get_* return the default if the key is absent; save() only writes when something changed.
+  int   (*cfg_get_int)(const char *modName, const char *key, int def);
+  float (*cfg_get_float)(const char *modName, const char *key, float def);
+  int   (*cfg_get_bool)(const char *modName, const char *key, int def);
+  void  (*cfg_set_int)(const char *modName, const char *key, int v);
+  void  (*cfg_set_float)(const char *modName, const char *key, float v);
+  void  (*cfg_set_bool)(const char *modName, const char *key, int v);
+  void  (*cfg_save)(const char *modName);
+
+  // --- v10: draw your own on-screen HUD text (call each frame from on_tick; cleared every frame) ---
+  // argb = 0xAARRGGBB. Always visible (not tied to the overlay menu). Use for meters/timers/state.
+  void  (*hud_text)(int x, int y, unsigned argb, const char *text);
+  // v11: filled HUD rectangle (for bars/panels). argb = 0xAARRGGBB; alpha blended.
+  void  (*hud_rect)(int x, int y, int w, int h, unsigned argb);
+  // v12: current backbuffer size in pixels (for centering / full-screen overlays). returns 1 on success.
+  int   (*screen_size)(int *w, int *h);
 } HysteriaAPI;
 
 typedef void (*ModMain_t)(HysteriaAPI *api);

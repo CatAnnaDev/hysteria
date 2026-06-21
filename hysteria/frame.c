@@ -7,7 +7,40 @@ char g_uiMap[64];
 int g_uiXP, g_uiWeaponLvl, g_uiUpgHealth, g_uiMemDone;
 int g_uiAddXP=0, g_uiSetWeaponLvl=0;
 
+char g_renderer[80]="";
+
+#define MAXHUD 96
+static struct { int x,y; D3DCOLOR c; char t[96]; } g_hud[MAXHUD];
+static int g_hudN=0;
+void api_hud_text(int x,int y,unsigned argb,const char *t){
+    if(g_hudN>=MAXHUD) return;
+    g_hud[g_hudN].x=x; g_hud[g_hudN].y=y; g_hud[g_hudN].c=(D3DCOLOR)argb;
+    lstrcpynA(g_hud[g_hudN].t, t?t:"", sizeof g_hud[g_hudN].t);
+    g_hudN++;
+}
+#define MAXHUDR 192
+static struct { float x,y,w,h; D3DCOLOR c; } g_hudr[MAXHUDR];
+static int g_hudrN=0;
+void api_hud_rect(int x,int y,int w,int h,unsigned argb){
+    if(g_hudrN>=MAXHUDR) return;
+    g_hudr[g_hudrN].x=(float)x; g_hudr[g_hudrN].y=(float)y; g_hudr[g_hudrN].w=(float)w; g_hudr[g_hudrN].h=(float)h;
+    g_hudr[g_hudrN].c=(D3DCOLOR)argb; g_hudrN++;
+}
+static void detect_renderer(void){
+    if(g_renderer[0]) return;
+    if(GetModuleHandleA("vulkan-1.dll")||GetModuleHandleA("winevulkan.dll"))
+        lstrcpynA(g_renderer,"D3D9 -> Vulkan (DXVK)",sizeof g_renderer);
+    else if(GetModuleHandleA("dgVoodoo.dll")||GetModuleHandleA("d3d11.dll"))
+        lstrcpynA(g_renderer,"D3D9 -> D3D11 (dgVoodoo/wrapper)",sizeof g_renderer);
+    else
+        lstrcpynA(g_renderer,"D3D9 (native DirectX)",sizeof g_renderer);
+    if(GetModuleHandleA("ReShade32.dll")||GetModuleHandleA("ReShade64.dll")||GetModuleHandleA("dxgi.dll"))
+        lstrcatA(g_renderer," + ReShade?");
+    logmsg("[hysteria] renderer: %s\r\n", g_renderer);
+}
+
 void frame_render(IDirect3DDevice9 *dev){
+    if(IDirect3DDevice9_TestCooperativeLevel(dev)!=D3D_OK) return;  // skip overlay during device-lost/reset windows
     { IDirect3DSurface9 *rt=NULL,*bb=NULL;
       if(IDirect3DDevice9_GetRenderTarget(dev,0,&rt)!=D3D_OK) rt=NULL;
       if(IDirect3DDevice9_GetBackBuffer(dev,0,0,D3DBACKBUFFER_TYPE_MONO,&bb)!=D3D_OK) bb=NULL;
@@ -24,10 +57,14 @@ void frame_render(IDirect3DDevice9 *dev){
 
     mem_ok_reset();
     ensure_gfx(dev);
+    detect_renderer();
 
     D3DVIEWPORT9 vp; IDirect3DDevice9_GetViewport(dev,&vp);
     int W=vp.Width, H=vp.Height;
+    extern int g_scrW, g_scrH; g_scrW=W; g_scrH=H;
     ui_init(dev,W,H);
+
+    if(key_edge(VK_OEM_3) || key_edge(VK_INSERT)) g_uiVisible=!g_uiVisible;
 
     char buf[200];
     int hud=g_uiVisible;
@@ -35,8 +72,10 @@ void frame_render(IDirect3DDevice9 *dev){
         D3DRECT bg={14,14,640,170};
         IDirect3DDevice9_Clear(dev,1,&bg,D3DCLEAR_TARGET,D3DCOLOR_ARGB(255,15,15,20),1.0f,0);
         draw_text(dev,22,18,D3DCOLOR_XRGB(150,120,255),"HYSTERIA MODDING TOOLS");
-        wsprintfA(buf,"FPS %d   [ ` = menu ]",(int)(g_fps+0.5f));
+        wsprintfA(buf,"FPS %d   [ Inser ou ` = menu ]",(int)(g_fps+0.5f));
         draw_text(dev,22,42,D3DCOLOR_XRGB(255,230,120),buf);
+    } else {
+        draw_text(dev,14,H-24,D3DCOLOR_ARGB(190,120,220,170),"HYSTERIA actif  -  [Inser] ou [\xb2] = menu");
     }
 
     scan_gnames();
@@ -100,6 +139,10 @@ void frame_render(IDirect3DDevice9 *dev){
     render_hitboxes(dev,pawn,L);
 
 done:
+    for(int i=0;i<g_hudrN;i++) fill_rect(dev,g_hudr[i].x,g_hudr[i].y,g_hudr[i].w,g_hudr[i].h,g_hudr[i].c);
+    g_hudrN=0;
+    for(int i=0;i<g_hudN;i++) draw_text(dev,g_hud[i].x,g_hud[i].y,g_hud[i].c,g_hud[i].t);
+    g_hudN=0;
     console_render(dev);
     ui_render(dev,W,H);
 }

@@ -1,9 +1,10 @@
 use crate::lzo::lzo1x_decompress;
 use std::io::{Read, Seek, SeekFrom, Write};
 
-fn ri(b: &[u8], o: usize) -> i32 { i32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
-fn ru(b: &[u8], o: usize) -> u32 { u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
-fn rf(b: &[u8], o: usize) -> f32 { f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) }
+// total readers: return 0 on out-of-range instead of panicking
+fn ri(b: &[u8], o: usize) -> i32 { if o + 4 <= b.len() { i32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0 } }
+fn ru(b: &[u8], o: usize) -> u32 { if o + 4 <= b.len() { u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0 } }
+fn rf(b: &[u8], o: usize) -> f32 { if o + 4 <= b.len() { f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0.0 } }
 
 fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
     let f = |i: usize| if i + 4 <= d.len() { rf(d, i) } else { 0.0 };
@@ -24,6 +25,8 @@ fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
 }
 
 pub struct Texture { pub w: usize, pub h: usize, pub rgba: Vec<u8>, pub format: String }
+
+struct MipInfo { mhdr: usize, flags: u32, elem: usize, sod: i32, foff: i32, inline_off: usize, msx: usize, msy: usize }
 
 pub struct PropEdit { pub name: String, pub typ: String, pub kind: u8, pub off: usize, pub value: String }
 
@@ -75,11 +78,11 @@ impl<'a> Cur<'a> {
     fn s(&mut self) -> String {
         let n = self.i();
         if n <= 0 { return String::new(); }
-        let n = n as usize;
+        let n = (n as usize).min(self.b.len().saturating_sub(self.o));
         let s = String::from_utf8_lossy(&self.b[self.o..self.o + n]).trim_end_matches('\0').to_string();
         self.o += n; s
     }
-    fn skip(&mut self, n: usize) { self.o += n; }
+    fn skip(&mut self, n: usize) { self.o = (self.o + n).min(self.b.len()); }
 }
 
 pub struct Export {
@@ -119,25 +122,33 @@ fn decompress(raw: &[u8]) -> Result<Vec<u8>, String> {
     for _ in 0..nch {
         chunks.push((c.i() as usize, c.i() as usize, c.i() as usize, c.i() as usize));
     }
-    let total = chunks.iter().map(|x| x.0 + x.1).max().unwrap_or(0);
+    let total = chunks.iter().map(|x| x.0.saturating_add(x.1)).max().unwrap_or(0);
+    if total > raw.len().saturating_mul(256) + (1 << 24) { return Err("implausible uncompressed size".into()); }
     let mut buf = vec![0u8; total];
-    let first = chunks[0].0;
+    let first = chunks[0].0.min(total).min(raw.len());
     buf[0..first].copy_from_slice(&raw[0..first]);
     for (uoff, _usz, coff, _csz) in chunks {
         let bs = ru(raw, coff + 4) as usize;
         let tu = ru(raw, coff + 12) as usize;
+        if bs == 0 { continue; }
         let nblk = (tu + bs - 1) / bs;
         let mut p = coff + 16;
-        let mut binfo = Vec::with_capacity(nblk);
-        for i in 0..nblk { binfo.push((ru(raw, p + i * 8) as usize, ru(raw, p + i * 8 + 4) as usize)); }
+        let mut binfo = Vec::with_capacity(nblk.min(1 << 20));
+        for i in 0..nblk {
+            if p + i * 8 + 8 > raw.len() { break; }
+            binfo.push((ru(raw, p + i * 8) as usize, ru(raw, p + i * 8 + 4) as usize));
+        }
         p += nblk * 8;
         let mut pos = uoff;
         for (cs2, us2) in binfo {
+            if p + cs2 > raw.len() || pos >= buf.len() { break; }
             if cs2 == us2 {
-                buf[pos..pos + us2].copy_from_slice(&raw[p..p + cs2]);
+                let n = us2.min(buf.len() - pos).min(cs2);
+                buf[pos..pos + n].copy_from_slice(&raw[p..p + n]);
             } else {
                 let dec = lzo1x_decompress(&raw[p..p + cs2]);
-                buf[pos..pos + dec.len()].copy_from_slice(&dec);
+                let n = dec.len().min(buf.len() - pos);
+                buf[pos..pos + n].copy_from_slice(&dec[..n]);
             }
             p += cs2;
             pos += us2;
@@ -177,13 +188,13 @@ impl Pkg {
             if name == "None" || name.starts_with('?') { break; }
             let typ = self.fname_at(o); o += 8;
             let size = ri(b, o) as usize; o += 8;
-            if o > b.len() { break; }
+            if o >= b.len() { break; }
             let (kind, voff, value): (u8, usize, String) = match typ.as_str() {
                 "IntProperty" => { let v = ri(b, o); let vo = o; o += 4; (1, vo, v.to_string()) }
-                "FloatProperty" => { let v = f32::from_le_bytes([b[o],b[o+1],b[o+2],b[o+3]]); let vo = o; o += 4; (2, vo, format!("{}", v)) }
-                "BoolProperty" => { let v = b[o] != 0; let vo = o; o += 1; (3, vo, format!("{}", v)) }
+                "FloatProperty" => { let v = rf(b, o); let vo = o; o += 4; (2, vo, format!("{}", v)) }
+                "BoolProperty" => { let v = b.get(o).copied().unwrap_or(0) != 0; let vo = o; o += 1; (3, vo, format!("{}", v)) }
                 "ByteProperty" => { let _e = self.fname_at(o); o += 8;
-                    if size == 8 { let v = self.fname_at(o); o += 8; (0, 0, v) } else { let v = b[o].to_string(); let vo = o; o += size; (4, vo, v) } }
+                    if size == 8 { let v = self.fname_at(o); o += 8; (0, 0, v) } else { let v = b.get(o).copied().unwrap_or(0).to_string(); let vo = o; o += size; (4, vo, v) } }
                 "NameProperty" => { let v = self.fname_at(o); o += 8; (0, 0, v) }
                 "StrProperty" => { let n = ri(b, o).max(0) as usize; o += 4; let s = String::from_utf8_lossy(&b[o..(o+n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; (0, 0, s) }
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; (0, 0, self.idx_name(v)) }
@@ -202,14 +213,14 @@ impl Pkg {
             if name == "None" || name.starts_with('?') { break; }
             let typ = self.fname_at(o); o += 8;
             let size = ri(b, o) as usize; o += 8;
-            if o > b.len() { break; }
+            if o >= b.len() { break; }
             let val = match typ.as_str() {
                 "IntProperty" => { let v = ri(b, o); o += 4; v.to_string() }
-                "FloatProperty" => { let v = f32::from_le_bytes([b[o], b[o+1], b[o+2], b[o+3]]); o += 4; format!("{:.3}", v) }
+                "FloatProperty" => { let v = rf(b, o); o += 4; format!("{:.3}", v) }
                 "ByteProperty" => { let _en = self.fname_at(o); o += 8;
-                    if size == 8 { let v = self.fname_at(o); o += 8; v } else { let v = b[o].to_string(); o += size; v } }
+                    if size == 8 { let v = self.fname_at(o); o += 8; v } else { let v = b.get(o).copied().unwrap_or(0).to_string(); o += size; v } }
                 "NameProperty" => { let v = self.fname_at(o); o += 8; v }
-                "BoolProperty" => { let v = b[o] != 0; o += 1; format!("{}", v) }
+                "BoolProperty" => { let v = b.get(o).copied().unwrap_or(0) != 0; o += 1; format!("{}", v) }
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; self.idx_name(v) }
                 "StrProperty" => { let n = ri(b, o); o += 4; let n = n.max(0) as usize;
                     let s = String::from_utf8_lossy(&b[o..(o + n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; s }
@@ -222,39 +233,60 @@ impl Pkg {
         (out, o)
     }
 
+    // The mip chain (largest-first); the top entries can be streaming placeholders
+    // (foff=-1, flags bit0 set with no inline data). Shared by texture() and replace_texture()
+    // so preview and edit always agree on which mip they target.
+    fn mip_table(&self, props_end: usize) -> Vec<MipInfo> {
+        let b = &self.buf;
+        let mut o = props_end;
+        if o + 16 > b.len() { return Vec::new(); }
+        let sa_flags = ru(b, o); let sa_sod = ri(b, o + 8).max(0) as usize; o += 16;
+        if sa_flags & 0x01 == 0 { o += sa_sod; }
+        if o + 4 > b.len() || o > b.len() { return Vec::new(); }
+        let mipcount = ri(b, o); o += 4;
+        if mipcount <= 0 { return Vec::new(); }
+        let mut mips = Vec::new();
+        for _ in 0..mipcount {
+            if o + 16 > b.len() { break; }
+            let mhdr = o;
+            let flags = ru(b, o); let elem = ri(b, o + 4) as usize; let sod = ri(b, o + 8); let foff = ri(b, o + 12); o += 16;
+            let mut inline_off = 0;
+            if flags & 0x01 == 0 { inline_off = o; o += sod.max(0) as usize; }
+            if o + 8 > b.len() { break; }
+            let msx = ri(b, o) as usize; let msy = ri(b, o + 4) as usize; o += 8;
+            mips.push(MipInfo { mhdr, flags, elem, sod, foff, inline_off, msx, msy });
+        }
+        mips
+    }
+
+    fn choose_mip(mips: &[MipInfo]) -> Option<usize> {
+        mips.iter().position(|m| {
+            let valid = if m.flags & 0x01 != 0 { m.foff >= 0 && m.sod > 0 } else { m.sod > 0 };
+            valid && m.msx > 0 && m.msy > 0
+        })
+    }
+
     pub fn texture(&self, e: &Export, cooked_dir: &std::path::Path) -> Option<Texture> {
         let (props, end) = self.parse_props(e.off);
         let get = |k: &str| props.iter().find(|(n, _, _)| n == k).map(|x| x.2.clone());
         let fmt = get("Format")?;
         let tfcname = get("TextureFileCacheName");
         let b = &self.buf;
-        let mut o = end;
-        let sa_flags = ru(b, o); let sa_sod = ri(b, o + 8) as usize; o += 16;
-        if sa_flags & 0x01 == 0 { o += sa_sod; }
-        let mipcount = ri(b, o); o += 4;
-        if mipcount <= 0 { return None; }
-        let tfc = cooked_dir.join(format!("{}.tfc", tfcname.clone().unwrap_or_default()));
-        let dbg = std::env::var("MIPDBG").is_ok();
-        // mips are largest-first; the top ones can be streaming placeholders (foff=-1) — find the first real one.
-        let mut chosen: Option<(Vec<u8>, usize, usize)> = None;
-        for mi in 0..mipcount {
-            let flags = ru(b, o); let elem = ri(b, o + 4) as usize; let sod = ri(b, o + 8); let foff = ri(b, o + 12); o += 16;
-            let mut inline: Option<Vec<u8>> = None;
-            if flags & 0x01 == 0 {
-                let sodu = sod.max(0) as usize;
-                if o + sodu <= b.len() { inline = Some(b[o..o + sodu].to_vec()); }
-                o += sodu;
+        let mips = self.mip_table(end);
+        if std::env::var("MIPDBG").is_ok() {
+            for (mi, m) in mips.iter().enumerate() {
+                eprintln!("MIPDBG mip{} {}x{} flags={:#x} elem={} sod={} foff={}", mi, m.msx, m.msy, m.flags, m.elem, m.sod, m.foff);
             }
-            if o + 8 > b.len() { break; }
-            let msx = ri(b, o) as usize; let msy = ri(b, o + 4) as usize; o += 8;
-            if dbg { eprintln!("MIPDBG mip{} {}x{} flags={:#x} elem={} sod={} foff={}", mi, msx, msy, flags, elem, sod, foff); }
-            if chosen.is_some() { continue; }
-            let data: Option<Vec<u8>> = if flags & 0x01 != 0 {
-                if foff < 0 || sod <= 0 { None } else { read_tfc_mip(&tfc, foff as i64, sod as usize, elem) }
-            } else { inline };
-            if let (Some(d), true) = (data, msx > 0 && msy > 0) { chosen = Some((d, msx, msy)); }
         }
-        let (data, sx, sy) = chosen?;
+        let ci = Self::choose_mip(&mips)?;
+        let m = &mips[ci];
+        let data: Vec<u8> = if m.flags & 0x01 != 0 {
+            let tfc = cooked_dir.join(format!("{}.tfc", tfcname.clone().unwrap_or_default()));
+            read_tfc_mip(&tfc, m.foff as i64, m.sod as usize, m.elem)?
+        } else {
+            b.get(m.inline_off..m.inline_off + m.sod.max(0) as usize)?.to_vec()
+        };
+        let (sx, sy) = (m.msx, m.msy);
         let rgba = if fmt.contains("DXT1") {
             crate::dxt::decode_bc1(&data, sx, sy)
         } else if fmt.contains("DXT3") {
@@ -360,29 +392,22 @@ impl Pkg {
         let get = |k: &str| props.iter().find(|(n, _, _)| n == k).map(|x| x.2.clone());
         let fmt = get("Format").ok_or("no Format")?;
         let tfcname = get("TextureFileCacheName").ok_or("texture has no .tfc (inline replace not supported yet)")?;
-        let b = &self.buf;
-        let mut o = end;
-        let sa_flags = ru(b, o); let sa_sod = ri(b, o + 8) as usize; o += 16;
-        if sa_flags & 0x01 == 0 { o += sa_sod; }
-        let mipcount = ri(b, o); o += 4;
-        if mipcount <= 0 { return Err("no mips".into()); }
-        // find the first replaceable mip (skip streaming placeholders with foff=-1), matching dims
-        let mut target = None;
-        for _ in 0..mipcount {
-            let mhdr = o;
-            let flags = ru(b, o); let sod = ri(b, o + 8); let foff = ri(b, o + 12); o += 16;
-            if flags & 0x01 == 0 { o += sod.max(0) as usize; }
-            if o + 8 > b.len() { break; }
-            let msx = ri(b, o) as usize; let msy = ri(b, o + 4) as usize; o += 8;
-            if target.is_none() {
-                let valid = if flags & 0x01 != 0 { foff >= 0 && sod > 0 } else { sod > 0 };
-                if valid && msx > 0 && msy > 0 { target = Some((mhdr, msx, msy)); }
-            }
-        }
-        let (mhdr, sx, sy) = target.ok_or("no replaceable mip")?;
+        let mips = self.mip_table(end);
+        let ci = Self::choose_mip(&mips).ok_or("no replaceable mip")?;
+        let m = &mips[ci];
+        let (mhdr, sx, sy, was_tfc) = (m.mhdr, m.msx, m.msy, m.flags & 0x01 != 0);
         if w != sx || h != sy { return Err(format!("image must be {}x{} (got {}x{})", sx, sy, w, h)); }
+        if !was_tfc { return Err("chosen mip is inline (not .tfc-backed); converting it in place would orphan its bytes and desync the mip chain — not supported".into()); }
         let dxt = if fmt.contains("DXT1") { crate::dxt::encode_bc1(rgba, w, h) }
-            else { crate::dxt::encode_bc3(rgba, w, h) };
+            else if fmt.contains("DXT3") { crate::dxt::encode_bc2(rgba, w, h) }
+            else if fmt.contains("DXT5") { crate::dxt::encode_bc3(rgba, w, h) }
+            else if fmt.contains("A8R8G8B8") {
+                let mut v = Vec::with_capacity(w * h * 4);
+                for px in rgba.chunks_exact(4) { v.push(px[2]); v.push(px[1]); v.push(px[0]); v.push(px[3]); }
+                v
+            } else if fmt.contains("G8") {
+                rgba.chunks_exact(4).map(|px| ((px[0] as u32 + px[1] as u32 + px[2] as u32) / 3) as u8).collect()
+            } else { return Err(format!("unsupported texture format for replace: {}", fmt)); };
         let tfc = cooked_dir.join(format!("{}.tfc", tfcname));
         let mut f = std::fs::OpenOptions::new().read(true).append(true).open(&tfc).map_err(|e| e.to_string())?;
         let appoff = f.metadata().map_err(|e| e.to_string())?.len();

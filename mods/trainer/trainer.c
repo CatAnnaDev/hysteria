@@ -3,6 +3,7 @@
 #include <windows.h>
 
 static HysteriaAPI *A;
+static void cfg_store(void);
 
 static int god, fly, noclip, freeze;
 static float flySpeed = 3000.0f, jumpPower = 1200.0f, jumpZ = 0.0f,
@@ -141,7 +142,7 @@ static void tick(void) {
   if (A->key_pressed(VK_F11))
     healReq = 1;
 
-  static int pf = 0, pn = 0, pg = 0, pfr = 0;
+  static int pf = 0, pn = 0, pg = 0, pfr = 0, flyExitGuard = 0;
   if (god && !pg)
     A->get_int(pawn, "Health", &godHP);
   if (freeze && !pfr) {
@@ -149,9 +150,27 @@ static void tick(void) {
     haveFreezePos = 1;
   }
   if (!fly && pf && !noclip) {
-    A->set_byte(pawn, "Physics", 2);
     float z[3] = {0, 0, 0};
+    A->set_byte(pawn, "Physics", 2);
     A->set_vec(pawn, "Velocity", z);
+    A->set_vec(pawn, "Acceleration", z);
+    int ph = -1;
+    A->get_byte(pawn, "Physics", &ph);
+    char b[96];
+    wsprintfA(b, "fly off -> Physics %d (want 2=falling)", ph);
+    A->log(b);
+    flyExitGuard = 240;
+  }
+  if (flyExitGuard > 0 && !fly && !noclip && !freeze) {
+    flyExitGuard--;
+    int ph = 0;
+    if (A->get_byte(pawn, "Physics", &ph) && ph != 1 && ph != 2)
+      A->set_byte(pawn, "Physics", 2);
+    if (flyExitGuard >= 237) {
+      float z[3] = {0, 0, 0};
+      A->set_vec(pawn, "Velocity", z);
+      A->set_vec(pawn, "Acceleration", z);
+    }
   }
   if (!noclip && pn) {
     A->set_bool(pawn, "bCollideWorld", 1);
@@ -280,10 +299,35 @@ static void tick(void) {
   }
   if (fovOn)
     A->write_raw(pc, 0x400, &fov, 4);
+
+  cfg_store();
+}
+
+static void cfg_load(void) {
+  flySpeed = A->cfg_get_float("trainer", "flySpeed", flySpeed);
+  jumpPower = A->cfg_get_float("trainer", "jumpPower", jumpPower);
+  jumpZ = A->cfg_get_float("trainer", "jumpZ", jumpZ);
+  groundSpeed = A->cfg_get_float("trainer", "groundSpeed", groundSpeed);
+  airControl = A->cfg_get_float("trainer", "airControl", airControl);
+  gameSpeed = A->cfg_get_float("trainer", "gameSpeed", gameSpeed);
+  fov = A->cfg_get_float("trainer", "fov", fov);
+  fovOn = A->cfg_get_int("trainer", "fovOn", fovOn);
+}
+static void cfg_store(void) {
+  A->cfg_set_float("trainer", "flySpeed", flySpeed);
+  A->cfg_set_float("trainer", "jumpPower", jumpPower);
+  A->cfg_set_float("trainer", "jumpZ", jumpZ);
+  A->cfg_set_float("trainer", "groundSpeed", groundSpeed);
+  A->cfg_set_float("trainer", "airControl", airControl);
+  A->cfg_set_float("trainer", "gameSpeed", gameSpeed);
+  A->cfg_set_float("trainer", "fov", fov);
+  A->cfg_set_int("trainer", "fovOn", fovOn);
+  A->cfg_save("trainer");
 }
 
 __declspec(dllexport) void ModMain(HysteriaAPI *api) {
   A = api;
+  cfg_load();
   A->log("trainer mod loaded");
   A->ui_panel("Player", player_panel);
   A->ui_panel("World", world_panel);

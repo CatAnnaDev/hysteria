@@ -39,7 +39,7 @@ static int copy_len(unsigned char *p){
     return n;
 }
 
-static void *detour(void *target, void *hook){
+void *detour(void *target, void *hook){
     unsigned char *t=(unsigned char*)target;
     int len=copy_len(t);
     if(!len) return NULL;
