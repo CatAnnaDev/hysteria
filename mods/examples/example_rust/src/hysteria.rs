@@ -40,6 +40,7 @@ pub fn console(cmd: &str) { (a().console)(player_controller(), cs(cmd).as_ptr())
 pub fn key_pressed(vk: i32) -> bool { (a().key_pressed)(vk) != 0 }
 pub fn key_down(vk: i32) -> bool { (a().key_down)(vk) != 0 }
 pub fn find(name: &str) -> Obj { (a().find_object)(cs(name).as_ptr()) }
+pub fn find_class(name: &str) -> Obj { (a().find_class)(cs(name).as_ptr()) }
 pub fn is_a(o: Obj, c: &str) -> bool { (a().is_a)(o, cs(c).as_ptr()) != 0 }
 pub fn name_of(o: Obj) -> String { rs((a().name_of)(o)) }
 pub fn class_of(o: Obj) -> String { rs((a().class_of)(o)) }
@@ -48,6 +49,9 @@ pub fn set_int(o: Obj, p: &str, v: i32) { (a().set_int)(o, cs(p).as_ptr(), v); }
 pub fn set_float(o: Obj, p: &str, v: f32) { (a().set_float)(o, cs(p).as_ptr(), v); }
 pub fn set_bool(o: Obj, p: &str, v: bool) { (a().set_bool)(o, cs(p).as_ptr(), v as i32); }
 pub fn get_obj(o: Obj, p: &str) -> Obj { (a().get_obj)(o, cs(p).as_ptr()) }
+pub fn get_vec(o: Obj, p: &str) -> Option<[f32; 3]> { let mut v = [0f32; 3]; if (a().get_vec)(o, cs(p).as_ptr(), v.as_mut_ptr()) != 0 { Some(v) } else { None } }
+pub fn set_vec(o: Obj, p: &str, v: [f32; 3]) { (a().set_vec)(o, cs(p).as_ptr(), v.as_ptr()); }
+pub fn is_null(o: Obj) -> bool { o.is_null() }
 pub fn spawn(class: &str, x: f32, y: f32, z: f32) -> Obj { (a().spawn)(cs(class).as_ptr(), x, y, z) }
 pub fn destroy(o: Obj) { (a().destroy)(o); }
 
