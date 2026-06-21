@@ -588,6 +588,64 @@ fn main() -> eframe::Result<()> {
         }
         return Ok(());
     }
+    if args.len() > 6 && args[1] == "--recolor" {
+        // --recolor <pkg> <texname> <pink|gothic> <cooked_dir> <out_pkg>
+        let mut p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let idx = p.exports.iter().position(|e| e.class_name == "Texture2D" && e.name.to_lowercase().contains(&args[3].to_lowercase())).expect("texture not found");
+        let cooked = std::path::Path::new(&args[5]);
+        let t = p.texture(&p.exports[idx], cooked).expect("decode failed");
+        let mode = args[4].as_str();
+        let mut rgba = t.rgba.clone();
+        for px in rgba.chunks_mut(4) {
+            let (r, g, b) = (px[0] as f32, px[1] as f32, px[2] as f32);
+            let lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            match mode {
+                "pink" => {
+                    px[0] = (lum * 0.55 + 130.0).min(255.0) as u8;
+                    px[1] = (lum * 0.35 + 40.0).min(255.0) as u8;
+                    px[2] = (lum * 0.50 + 110.0).min(255.0) as u8;
+                }
+                "gothic" => {
+                    let d = lum * 0.30;
+                    px[0] = (d * 0.85) as u8;
+                    px[1] = (d * 0.70) as u8;
+                    px[2] = (d * 1.15).min(255.0) as u8;
+                }
+                _ => {}
+            }
+        }
+        let msg = p.replace_texture(idx, &rgba, t.w, t.h, cooked).unwrap();
+        println!("recolor[{}] {}: {}", mode, p.exports[idx].name, msg);
+        std::fs::write(&args[6], p.to_uncompressed()).unwrap();
+        println!("wrote {} ({} bytes)", args[6], std::fs::metadata(&args[6]).unwrap().len());
+        return Ok(());
+    }
+    if args.len() > 2 && args[1] == "--hdr" {
+        let raw = std::fs::read(&args[2]).unwrap();
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        println!("ver={} compressed={} cflags_off={} name_off={} raw={} buf={}", p.ver, p.compressed, p.cflags_off, p.name_off, raw.len(), p.buf.len());
+        let ru = |b: &[u8], o: usize| u32::from_le_bytes([b[o], b[o+1], b[o+2], b[o+3]]);
+        println!("RAW cflags@{}={} nch@{}={}", p.cflags_off, ru(&raw, p.cflags_off), p.cflags_off+4, ru(&raw, p.cflags_off+4));
+        let dump = |label: &str, b: &[u8]| {
+            println!("--- {} (first 272) ---", label);
+            for o in (0..272.min(b.len())).step_by(16) {
+                let mut h = String::new(); let mut a = String::new();
+                for i in o..(o+16).min(b.len()) { h.push_str(&format!("{:02x} ", b[i])); let c=b[i]; a.push(if (32..127).contains(&c){c as char}else{'.'}); }
+                println!("{:5}  {:<48} {}", o, h, a);
+            }
+        };
+        dump("RAW (on-disk)", &raw);
+        return Ok(());
+    }
+    if args.len() > 2 && args[1] == "--objs" {
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let cf = args.get(3).map(|s| s.to_lowercase());
+        for e in &p.exports {
+            if let Some(f) = &cf { if !e.class_name.to_lowercase().contains(f) && !e.name.to_lowercase().contains(f) { continue; } }
+            println!("{:<22} {:<44} {:>9} @ {}", e.class_name, e.name, e.size, e.off);
+        }
+        return Ok(());
+    }
     if args.len() > 2 && args[1] == "--loctest" {
         let l = loc::Loc::load(std::path::Path::new(&args[2])).unwrap();
         let kv = l.entries.iter().filter(|e| e.key.is_some()).count();

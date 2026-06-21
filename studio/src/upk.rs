@@ -45,6 +45,10 @@ fn read_tfc_mip(tfc: &std::path::Path, off: i64, sod: usize, elem: usize) -> Opt
         }
         i += 1;
     }
+    if std::env::var("MIPDBG").is_ok() {
+        let sigs: Vec<(usize, u32)> = (0..win.len().saturating_sub(16)).filter(|&i| win[i]==0xC1&&win[i+1]==0x83&&win[i+2]==0x2a&&win[i+3]==0x9e).map(|i| (i, ru(&win, i+12))).collect();
+        eprintln!("TFCDBG off={} target={} elem={} winlen={} sigs_found={} first10={:?} hdr={:?}", off, target, elem, win.len(), sigs.len(), &sigs[..sigs.len().min(10)], hdr);
+    }
     let hdr = hdr?;
     let bs = ru(&win, hdr + 4) as usize;
     let tu = ru(&win, hdr + 12) as usize;
@@ -95,6 +99,7 @@ pub struct Pkg {
     pub cflags_off: usize,
     pub name_off: usize,
     pub compressed: bool,
+    pub summary_tail: Vec<u8>,
 }
 
 fn decompress(raw: &[u8]) -> Result<Vec<u8>, String> {
@@ -230,15 +235,28 @@ impl Pkg {
         if sa_flags & 0x01 == 0 { o += sa_sod; }
         let mipcount = ri(b, o); o += 4;
         if mipcount <= 0 { return None; }
-        let flags = ru(b, o); let elem = ri(b, o + 4) as usize; let sod = ri(b, o + 8) as usize; let foff = ri(b, o + 12); o += 16;
-        let data: Vec<u8> = if flags & 0x01 != 0 {
-            let name = tfcname.clone().unwrap_or_default();
-            let tfc = cooked_dir.join(format!("{}.tfc", name));
-            read_tfc_mip(&tfc, foff as i64, sod, elem)?
-        } else {
-            if o + sod > b.len() { return None; }
-            b[o..o + sod].to_vec()
-        };
+        let tfc = cooked_dir.join(format!("{}.tfc", tfcname.clone().unwrap_or_default()));
+        let dbg = std::env::var("MIPDBG").is_ok();
+        // mips are largest-first; the top ones can be streaming placeholders (foff=-1) — find the first real one.
+        let mut chosen: Option<(Vec<u8>, usize, usize)> = None;
+        for mi in 0..mipcount {
+            let flags = ru(b, o); let elem = ri(b, o + 4) as usize; let sod = ri(b, o + 8); let foff = ri(b, o + 12); o += 16;
+            let mut inline: Option<Vec<u8>> = None;
+            if flags & 0x01 == 0 {
+                let sodu = sod.max(0) as usize;
+                if o + sodu <= b.len() { inline = Some(b[o..o + sodu].to_vec()); }
+                o += sodu;
+            }
+            if o + 8 > b.len() { break; }
+            let msx = ri(b, o) as usize; let msy = ri(b, o + 4) as usize; o += 8;
+            if dbg { eprintln!("MIPDBG mip{} {}x{} flags={:#x} elem={} sod={} foff={}", mi, msx, msy, flags, elem, sod, foff); }
+            if chosen.is_some() { continue; }
+            let data: Option<Vec<u8>> = if flags & 0x01 != 0 {
+                if foff < 0 || sod <= 0 { None } else { read_tfc_mip(&tfc, foff as i64, sod as usize, elem) }
+            } else { inline };
+            if let (Some(d), true) = (data, msx > 0 && msy > 0) { chosen = Some((d, msx, msy)); }
+        }
+        let (data, sx, sy) = chosen?;
         let rgba = if fmt.contains("DXT1") {
             crate::dxt::decode_bc1(&data, sx, sy)
         } else if fmt.contains("DXT3") {
@@ -324,7 +342,18 @@ impl Pkg {
             .map(|(ci, nm, sz, off, so)| Export { class_name: class_of(*ci), name: nm.clone(), size: *sz, off: *off, size_off: *so })
             .collect();
 
-        Ok(Pkg { buf, ver, names, imports, exports, cflags_off, name_off, compressed })
+        // For a compressed package the real uncompressed summary tail (PackageSource +
+        // AdditionalPackagesToCook + ...) lives in raw right after the compressed-chunk table,
+        // and must occupy the gap [cflags_off+8 .. name_off] in the uncompressed output.
+        let summary_tail = if compressed {
+            let gs = cflags_off + 8;
+            let nch = ri(&buf, cflags_off + 4).max(0) as usize;
+            let cte = gs + nch * 16;
+            let tl = name_off.saturating_sub(gs);
+            if tl > 0 && cte + tl <= raw.len() { raw[cte..cte + tl].to_vec() } else { vec![] }
+        } else { vec![] };
+
+        Ok(Pkg { buf, ver, names, imports, exports, cflags_off, name_off, compressed, summary_tail })
     }
 
     pub fn replace_texture(&mut self, e_idx: usize, rgba: &[u8], w: usize, h: usize, cooked_dir: &std::path::Path) -> Result<String, String> {
@@ -339,8 +368,20 @@ impl Pkg {
         if sa_flags & 0x01 == 0 { o += sa_sod; }
         let mipcount = ri(b, o); o += 4;
         if mipcount <= 0 { return Err("no mips".into()); }
-        let mip0 = o;
-        let sx = ri(b, mip0 + 16) as usize; let sy = ri(b, mip0 + 20) as usize;
+        // find the first replaceable mip (skip streaming placeholders with foff=-1), matching dims
+        let mut target = None;
+        for _ in 0..mipcount {
+            let mhdr = o;
+            let flags = ru(b, o); let sod = ri(b, o + 8); let foff = ri(b, o + 12); o += 16;
+            if flags & 0x01 == 0 { o += sod.max(0) as usize; }
+            if o + 8 > b.len() { break; }
+            let msx = ri(b, o) as usize; let msy = ri(b, o + 4) as usize; o += 8;
+            if target.is_none() {
+                let valid = if flags & 0x01 != 0 { foff >= 0 && sod > 0 } else { sod > 0 };
+                if valid && msx > 0 && msy > 0 { target = Some((mhdr, msx, msy)); }
+            }
+        }
+        let (mhdr, sx, sy) = target.ok_or("no replaceable mip")?;
         if w != sx || h != sy { return Err(format!("image must be {}x{} (got {}x{})", sx, sy, w, h)); }
         let dxt = if fmt.contains("DXT1") { crate::dxt::encode_bc1(rgba, w, h) }
             else { crate::dxt::encode_bc3(rgba, w, h) };
@@ -349,11 +390,11 @@ impl Pkg {
         let appoff = f.metadata().map_err(|e| e.to_string())?.len();
         f.write_all(&dxt).map_err(|e| e.to_string())?;
         let buf = &mut self.buf;
-        buf[mip0..mip0 + 4].copy_from_slice(&1u32.to_le_bytes());
-        buf[mip0 + 4..mip0 + 8].copy_from_slice(&(dxt.len() as i32).to_le_bytes());
-        buf[mip0 + 8..mip0 + 12].copy_from_slice(&(dxt.len() as i32).to_le_bytes());
-        buf[mip0 + 12..mip0 + 16].copy_from_slice(&(appoff as i32).to_le_bytes());
-        Ok(format!("replaced mip0 ({}x{} {}) -> {} bytes appended to {}.tfc @ {}", w, h, fmt, dxt.len(), tfcname, appoff))
+        buf[mhdr..mhdr + 4].copy_from_slice(&1u32.to_le_bytes());
+        buf[mhdr + 4..mhdr + 8].copy_from_slice(&(dxt.len() as i32).to_le_bytes());
+        buf[mhdr + 8..mhdr + 12].copy_from_slice(&(dxt.len() as i32).to_le_bytes());
+        buf[mhdr + 12..mhdr + 16].copy_from_slice(&(appoff as i32).to_le_bytes());
+        Ok(format!("replaced mip ({}x{} {}) -> {} bytes appended to {}.tfc @ {}", w, h, fmt, dxt.len(), tfcname, appoff))
     }
 
     pub fn resize_export(&mut self, idx: usize, new_serial: &[u8]) {
@@ -408,8 +449,22 @@ impl Pkg {
 
     pub fn to_uncompressed(&self) -> Vec<u8> {
         let mut v = self.buf.clone();
-        if self.compressed && self.cflags_off < self.name_off && self.name_off <= v.len() {
-            for i in self.cflags_off..self.name_off { v[i] = 0; }
+        if self.compressed && self.cflags_off + 8 <= v.len() && self.name_off <= v.len() {
+            // clear PKG_StoreCompressed (0x02000000) in PackageFlags, else the engine still
+            // tries to decompress the now-uncompressed body and crashes
+            let mut c = Cur { b: &v, o: 0 };
+            c.u(); c.u(); c.i(); c.s();
+            let pf_off = c.o;
+            if pf_off + 4 <= v.len() {
+                let pf = ru(&v, pf_off) & !0x02000000u32;
+                v[pf_off..pf_off + 4].copy_from_slice(&pf.to_le_bytes());
+            }
+            let gs = self.cflags_off + 8;
+            for i in self.cflags_off..gs { v[i] = 0; }   // CompressionFlags = 0, NumCompressedChunks = 0
+            // restore the real trailing summary into the chunk-table gap; pad with zeros if short
+            for i in gs..self.name_off { v[i] = 0; }
+            let n = self.summary_tail.len().min(self.name_off.saturating_sub(gs));
+            v[gs..gs + n].copy_from_slice(&self.summary_tail[..n]);
         }
         v
     }
