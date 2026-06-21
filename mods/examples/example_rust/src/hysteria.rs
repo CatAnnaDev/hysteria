@@ -59,9 +59,13 @@ impl Call {
     pub fn bool(self, p: &str, v: bool) -> Self { (a().call_arg_bool)(self.0, cs(p).as_ptr(), v as i32); self }
     pub fn obj(self, p: &str, v: Obj) -> Self { (a().call_arg_obj)(self.0, cs(p).as_ptr(), v); self }
     pub fn str(self, p: &str, v: &str) -> Self { (a().call_arg_str)(self.0, cs(p).as_ptr(), cs(v).as_ptr()); self }
+    pub fn vec(self, p: &str, v: [f32; 3]) -> Self { (a().call_arg_vec)(self.0, cs(p).as_ptr(), v.as_ptr()); self }
+    pub fn rot(self, p: &str, v: [i32; 3]) -> Self { (a().call_arg_rot)(self.0, cs(p).as_ptr(), v.as_ptr()); self }
+    pub fn raw(self, p: &str, d: &[u8]) -> Self { (a().call_arg_raw)(self.0, cs(p).as_ptr(), d.as_ptr() as *const _, d.len() as i32); self }
     pub fn invoke(self) -> Self { (a().call_invoke)(self.0); self }
     pub fn out_int(&self, p: &str) -> Option<i32> { let mut v = 0; if (a().call_out_int)(self.0, cs(p).as_ptr(), &mut v) != 0 { Some(v) } else { None } }
     pub fn out_float(&self, p: &str) -> Option<f32> { let mut v = 0.0; if (a().call_out_float)(self.0, cs(p).as_ptr(), &mut v) != 0 { Some(v) } else { None } }
+    pub fn out_vec(&self, p: &str) -> Option<[f32; 3]> { let mut v = [0f32; 3]; if (a().call_out_vec)(self.0, cs(p).as_ptr(), v.as_mut_ptr()) != 0 { Some(v) } else { None } }
     pub fn ret_int(&self) -> Option<i32> { self.out_int("ReturnValue") }
 }
 
@@ -71,18 +75,22 @@ impl<T> Global<T> {
     fn get(&self) -> &mut T { unsafe { &mut *self.0.get() } }
 }
 
-static PRE: Global<Vec<(String, Box<dyn FnMut(&Event)>)>> = Global(UnsafeCell::new(Vec::new()));
+static PRE: Global<Vec<(String, usize, Box<dyn FnMut(&Event)>)>> = Global(UnsafeCell::new(Vec::new()));
 static TICKS: Global<Vec<Box<dyn FnMut()>>> = Global(UnsafeCell::new(Vec::new()));
 
 extern "C" fn pre_tramp(e: *mut AEvent) {
-    let ev = Event(e); let n = ev.name();
-    for (k, f) in PRE.get().iter_mut() { if *k == n { f(&ev); } }
+    let ev = Event(e); let n = ev.name(); let who = ev.this() as usize;
+    for (k, tgt, f) in PRE.get().iter_mut() { if *k == n && (*tgt == 0 || *tgt == who) { f(&ev); } }
 }
 extern "C" fn tick_tramp() { for f in TICKS.get().iter_mut() { f(); } }
 
 pub fn on(name: &str, cb: impl FnMut(&Event) + 'static) {
-    PRE.get().push((name.to_string(), Box::new(cb)));
+    PRE.get().push((name.to_string(), 0, Box::new(cb)));
     (a().on)(cs(name).as_ptr(), pre_tramp);
+}
+pub fn on_object(target: Obj, name: &str, cb: impl FnMut(&Event) + 'static) {
+    PRE.get().push((name.to_string(), target as usize, Box::new(cb)));
+    (a().on_object)(target, cs(name).as_ptr(), pre_tramp);
 }
 pub fn on_tick(cb: impl FnMut() + 'static) {
     let first = TICKS.get().is_empty();

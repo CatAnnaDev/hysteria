@@ -13,7 +13,7 @@
 //
 // AObj is an opaque game object handle. Getters return non-zero on success.
 
-#define HYSTERIA_API_VERSION 7
+#define HYSTERIA_API_VERSION 8
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,6 +127,17 @@ typedef struct HysteriaAPI {
   // --- raw mouse (captured at the dinput8 proxy, before the game's deadzone/accel/smoothing) ---
   int (*mouse_delta)(int *dx, int *dy);  // accumulated raw delta since last call, then resets; gameplay only
   void (*mouse_capture)(int on);         // 1 = swallow the game's look axis so you drive the camera yourself
+
+  // --- v8: per-object dispatch + struct/vector/array call args ---
+  // hook a function only when it's called ON a specific object (no need to filter e->self yourself):
+  //   api->on_object(myEnemy, "TakeDamage", cb);   // cb fires only for myEnemy
+  void (*on_object)(AObj target, const char *funcName, AEventCb cb);       // pre-hook, filtered to target
+  void (*on_object_post)(AObj target, const char *funcName, AEventCb cb);  // post-hook, filtered to target
+  // fill struct/array params on a call builder by name (FVector, FRotator, or raw bytes):
+  void (*call_arg_vec)(ACall c, const char *param, const float v[3]);      // an FVector param
+  void (*call_arg_rot)(ACall c, const char *param, const int v[3]);        // an FRotator param
+  void (*call_arg_raw)(ACall c, const char *param, const void *data, int n); // raw bytes (any struct/array)
+  int (*call_out_vec)(ACall c, const char *param, float out[3]);           // read an FVector out-param
 } HysteriaAPI;
 
 typedef void (*ModMain_t)(HysteriaAPI *api);

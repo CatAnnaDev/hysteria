@@ -154,9 +154,32 @@ grep -ri 'health'             hysteria_reference.txt   # every health-related me
 - **Assets**: read/edit/replace/export via **Hysteria Studio** (textures, sounds, properties,
   package repack) — separate cross-platform app in `studio/`.
 
+## Targeting one actor + struct/array params (API v8)
+
+`on(func, cb)` fires for every object that calls `func`. To hook **one specific actor**, use
+`on_object` — it only fires when the call is on that object:
+```c
+api->on_object(myEnemy, "TakeDamage", on_enemy_damage);  // only for myEnemy
+```
+```cpp
+on_object(enemy, "TakeDamage", [](Event& e){ e.block(); });
+```
+
+The call builder fills **struct / vector / array** params by name too:
+```c
+ACall c = api->call_begin(pawn, "SetLocation");
+float loc[3] = {x, y, z};
+api->call_arg_vec(c, "NewLocation", loc);     // an FVector
+api->call_arg_rot(c, "NewRotation", rot);     // an FRotator (3 ints)
+api->call_arg_raw(c, "SomeStruct", &bytes, n);// any struct/array, raw bytes by name
+api->call_invoke(c);
+float out[3]; api->call_out_vec(c, "ReturnValue", out);
+```
+```cpp
+call(pawn, "SetLocation").v("NewLocation", loc).invoke();
+```
+
 ## Limits (today)
 
-- Dispatch matches by function name (all objects); filter by `e->self` for one actor.
-- `call_begin`/`call_arg_*` cover scalar params (int/float/bool/object/string) — the common
-  case. Functions taking nested **structs or dynamic arrays** still need a hand-built param
-  block via `call` (use the signature in `hysteria_reference.txt` to lay out the block).
+- `call_arg_raw` places bytes at a named param; you still supply the struct/array layout
+  yourself for exotic types (use the signature in `hysteria_reference.txt`).

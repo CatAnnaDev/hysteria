@@ -183,6 +183,14 @@ static void api_call_arg_str(ACall c,const char*p,const char*v){ CallSlot*s=c; i
     if(!s||!s->used||s->sbN>=4||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+12>1024)return;
     WCHAR*w=s->sb[s->sbN]; int wl=MultiByteToWideChar(CP_ACP,0,v?v:"",-1,w,512); if(wl<=0)return;
     s->sbN++; *(void**)(s->blk+off)=w; *(int*)(s->blk+off+4)=wl; *(int*)(s->blk+off+8)=wl; }
+static void api_call_arg_vec(ACall c,const char*p,const float v[3]){ CallSlot*s=c; int off;char t;unsigned m;
+    if(s&&s->used&&v&&prop_in(s->fn,p,&off,&t,&m)&&off>=0&&off+12<=1024){ float*f=(float*)(s->blk+off); f[0]=v[0];f[1]=v[1];f[2]=v[2]; } }
+static void api_call_arg_rot(ACall c,const char*p,const int v[3]){ CallSlot*s=c; int off;char t;unsigned m;
+    if(s&&s->used&&v&&prop_in(s->fn,p,&off,&t,&m)&&off>=0&&off+12<=1024){ int*r=(int*)(s->blk+off); r[0]=v[0];r[1]=v[1];r[2]=v[2]; } }
+static void api_call_arg_raw(ACall c,const char*p,const void*d,int n){ CallSlot*s=c; int off;char t;unsigned m;
+    if(s&&s->used&&d&&n>0&&prop_in(s->fn,p,&off,&t,&m)&&off>=0&&off+n<=1024){ for(int i=0;i<n;i++)((char*)s->blk)[off+i]=((const char*)d)[i]; } }
+static int api_call_out_vec(ACall c,const char*p,float out[3]){ CallSlot*s=c; int off;char t;unsigned m;
+    if(!s||!s->used||!out||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+12>1024)return 0; float*f=(float*)(s->blk+off); out[0]=f[0];out[1]=f[1];out[2]=f[2]; return 1; }
 static void api_call_invoke(ACall c){ CallSlot*s=c; if(s&&s->used&&g_peTramp)g_peTramp(s->o,0,s->fn,s->blk,0); }
 static int api_call_out_int(ACall c,const char*p,int*out){ CallSlot*s=c; int off;char t;unsigned m;
     if(!s||!s->used||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+4>1024)return 0; *out=*(int*)(s->blk+off); return 1; }
@@ -216,18 +224,20 @@ static AObj api_spawn(const char*className,float x,float y,float z){
     return 0;
 }
 
-typedef struct { char name[64]; int nameId; int phase; AEventCb cb; } Reg;
+typedef struct { char name[64]; int nameId; int phase; AEventCb cb; void *target; } Reg;
 static Reg g_reg[256]; static int g_regN=0;
 static volatile int g_reloading=0;
-static void add_hook(const char*funcName,AEventCb cb,int phase){
+static void add_hook(const char*funcName,AEventCb cb,int phase,void *target){
     if(g_regN>=256||!cb||!funcName)return;
     lstrcpynA(g_reg[g_regN].name,funcName,sizeof g_reg[g_regN].name);
     g_reg[g_regN].nameId=find_name(funcName);
-    g_reg[g_regN].phase=phase; g_reg[g_regN].cb=cb; g_regN++;
+    g_reg[g_regN].phase=phase; g_reg[g_regN].cb=cb; g_reg[g_regN].target=target; g_regN++;
     logmsg("[hysteria][mod] hook %s '%s' (id=%d)\r\n",phase?"post":"pre",funcName,g_reg[g_regN-1].nameId);
 }
-static void api_on(const char*funcName,AEventCb cb){ add_hook(funcName,cb,0); }
-static void api_on_post(const char*funcName,AEventCb cb){ add_hook(funcName,cb,1); }
+static void api_on(const char*funcName,AEventCb cb){ add_hook(funcName,cb,0,0); }
+static void api_on_post(const char*funcName,AEventCb cb){ add_hook(funcName,cb,1,0); }
+static void api_on_object(AObj target,const char*funcName,AEventCb cb){ add_hook(funcName,cb,0,target); }
+static void api_on_object_post(AObj target,const char*funcName,AEventCb cb){ add_hook(funcName,cb,1,target); }
 
 static int dispatch_phase(void *obj, void *fn, void *parms, void *res, int phase){
     if(g_reloading || !g_regN || !mem_ok((char*)fn+O_NAME,4)) return 0;
@@ -239,6 +249,7 @@ static int dispatch_phase(void *obj, void *fn, void *parms, void *res, int phase
         if(g_reg[i].nameId>=0) match=(g_reg[i].nameId==fid);
         else { if(!fname) fname=obj_name(fn); match=(lstrcmpA(g_reg[i].name,fname)==0); if(match) g_reg[i].nameId=fid; }
         if(!match) continue;
+        if(g_reg[i].target && g_reg[i].target!=obj) continue;
         if(!fname) fname=obj_name(fn);
         AEvent e; e.self=obj; e.func=fn; e.params=parms; e.result=res; e.block=0; e.func_name=fname;
         g_reg[i].cb(&e);
@@ -283,6 +294,9 @@ static HysteriaAPI g_api = {
     .get_rot=api_get_rot, .set_rot=api_set_rot, .world_info=api_world_info,
     .read_raw=api_read_raw, .write_raw=api_write_raw,
     .mouse_delta=api_mouse_delta, .mouse_capture=api_mouse_capture,
+    .on_object=api_on_object, .on_object_post=api_on_object_post,
+    .call_arg_vec=api_call_arg_vec, .call_arg_rot=api_call_arg_rot,
+    .call_arg_raw=api_call_arg_raw, .call_out_vec=api_call_out_vec,
 };
 
 static HMODULE g_loaded[64]; static int g_loadedN=0;

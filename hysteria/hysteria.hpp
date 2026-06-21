@@ -49,6 +49,7 @@ inline Obj player_controller() { return api->player_controller(); }
 inline void console(const std::string &cmd) { api->console(api->player_controller(), cmd.c_str()); }
 
 inline void on(const std::string &fn, std::function<void(Event &)> cb) { detail::pre()[fn] = std::move(cb); api->on(fn.c_str(), detail::pre_tramp); }
+inline void on_object(Obj target, const std::string &fn, std::function<void(Event &)> cb) { detail::pre()[fn] = std::move(cb); api->on_object(target, fn.c_str(), detail::pre_tramp); }
 inline void on_post(const std::string &fn, std::function<void(Event &)> cb) { detail::post()[fn] = std::move(cb); api->on_post(fn.c_str(), detail::post_tramp); }
 inline void on_tick(std::function<void()> cb) { static bool reg = false; detail::ticks().push_back(std::move(cb)); if (!reg) { reg = true; api->on_tick(detail::tick_tramp); } }
 
@@ -81,9 +82,13 @@ struct Call {
     Call &b(const char *p, bool v) { api->call_arg_bool(c, p, v ? 1 : 0); return *this; }
     Call &o(const char *p, Obj v) { api->call_arg_obj(c, p, v); return *this; }
     Call &s(const char *p, const std::string &v) { api->call_arg_str(c, p, v.c_str()); return *this; }
+    Call &v(const char *p, const float val[3]) { api->call_arg_vec(c, p, val); return *this; }
+    Call &r(const char *p, const int val[3]) { api->call_arg_rot(c, p, val); return *this; }
+    Call &raw(const char *p, const void *d, int n) { api->call_arg_raw(c, p, d, n); return *this; }
     Call &invoke() { api->call_invoke(c); return *this; }
     bool out_int(const char *p, int &v) { return api->call_out_int(c, p, &v) != 0; }
     bool out_float(const char *p, float &v) { return api->call_out_float(c, p, &v) != 0; }
+    bool out_vec(const char *p, float v[3]) { return api->call_out_vec(c, p, v) != 0; }
     Obj out_obj(const char *p) { return api->call_out_obj(c, p); }
     int ret_int() { int v = 0; api->call_out_int(c, "ReturnValue", &v); return v; }
 };

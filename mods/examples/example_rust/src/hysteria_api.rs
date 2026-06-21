@@ -1,7 +1,7 @@
 #![allow(non_snake_case, dead_code)]
 use std::os::raw::{c_char, c_float, c_int, c_void};
 
-pub const HYSTERIA_API_VERSION: c_int = 7;
+pub const HYSTERIA_API_VERSION: c_int = 8;
 
 pub type AObj = *mut c_void;
 pub type ACall = *mut c_void;
@@ -88,4 +88,10 @@ pub struct HysteriaAPI {
     pub write_raw: extern "C" fn(AObj, c_int, *const c_void, c_int) -> c_int,
     pub mouse_delta: extern "C" fn(*mut c_int, *mut c_int) -> c_int,
     pub mouse_capture: extern "C" fn(c_int),
+    pub on_object: extern "C" fn(AObj, *const c_char, AEventCb),
+    pub on_object_post: extern "C" fn(AObj, *const c_char, AEventCb),
+    pub call_arg_vec: extern "C" fn(ACall, *const c_char, *const c_float),
+    pub call_arg_rot: extern "C" fn(ACall, *const c_char, *const c_int),
+    pub call_arg_raw: extern "C" fn(ACall, *const c_char, *const c_void, c_int),
+    pub call_out_vec: extern "C" fn(ACall, *const c_char, *mut c_float) -> c_int,
 }
