@@ -14,6 +14,7 @@ struct State {
     type_on: bool,
     dmg_on: bool,
     enemy_on: bool,
+    chaos_spawn: bool, // EXPERIMENTAL: loot -> random mob (deferred, may be unstable)
     chaos: f32,
     bust: f32,
     jackpot: f32,
@@ -25,13 +26,22 @@ struct State {
     last_seed: i32,
     rng: u32,
     diag: bool,
+    queue: Vec<[f32; 3]>, // pending spawn locations (drained in on_tick, NOT in the hook)
 }
 static ST: G<State> = G(UnsafeCell::new(State {
     loot_on: true, type_on: true, dmg_on: true, enemy_on: true,
+    chaos_spawn: false,
     chaos: 4.0, bust: 0.10, jackpot: 0.05, type_swap: 0.30,
     dmg_chaos: 2.0, crit: 0.10, enemy_hp: 2.5,
     seed: 0, last_seed: -1, rng: 0x1234567, diag: false,
+    queue: Vec::new(),
 }));
+
+const SPAWN_CLASSES: &[&str] = &[
+    "AliceGameMadcapPawn", "AliceGameBitchBabyPawn", "AliceGameDollBoyPawn",
+    "AliceGameDollGirlPawn", "AliceGameLostSoulPawn", "AliceGameKynapsePawn",
+    "AliceGameSamuraiWaspPawn", "AliceGameCannonCrabPawn", "AliceGameIceSnarkPawn",
+];
 
 fn reseed_if_needed(entropy: u32) {
     let s = ST.get();
@@ -61,6 +71,15 @@ const HP_FIELDS: &[&str] = &["nHPValue", "nHP", "nSmallHP", "nLargeHP", "nManual
 
 fn on_loot(e: &Event) {
     let s = ST.get();
+    // EXPERIMENTAL chaos spawn: suppress loot, queue a spawn for next frame (never spawn inside the hook)
+    if s.chaos_spawn {
+        for f in XP_FIELDS.iter().chain(HP_FIELDS).chain(["Count"].iter()) {
+            if e.get_int(f).is_some() { e.set_int(f, 0); }
+        }
+        let loc = get_vec(e.this(), "Location").or_else(|| get_vec(player_pawn(), "Location"));
+        if let Some(l) = loc { if s.queue.len() < 64 { s.queue.push(l); } }
+        return;
+    }
     if !s.loot_on { return; }
     if s.type_on && rngf() < s.type_swap {
         let to_hp = rngf() < 0.5;
@@ -105,8 +124,21 @@ fn on_init(e: &Event) {
     }
 }
 
+fn spawn_tick() {
+    let s = ST.get();
+    // drain queued spawns OUTSIDE any ProcessEvent hook (avoids re-entrancy crash)
+    if let Some(l) = s.queue.pop() {
+        let c = SPAWN_CLASSES[(rng() as usize) % SPAWN_CLASSES.len()];
+        let off = [(rngf() - 0.5) * 120.0, (rngf() - 0.5) * 120.0, 60.0];
+        let o = spawn(c, l[0] + off[0], l[1] + off[1], l[2] + off[2]);
+        if !s.diag { s.diag = true; log(&format!("rng: deferred spawn '{}' ok={}", c, !is_null(o))); }
+    }
+}
+
 fn panel() {
     let s = ST.get();
+    ui_label("== Chaos spawn (EXPERIMENTAL) ==");
+    ui_checkbox("Loot -> random mob (may crash)", &mut s.chaos_spawn);
     ui_label("== Loot ==");
     ui_checkbox("Loot amount RNG", &mut s.loot_on);
     ui_slider_float("  chaos (max x)", &mut s.chaos, 1.0, 20.0, 0.5);
@@ -135,5 +167,6 @@ pub extern "C" fn ModMain(api: *const hysteria_api::HysteriaAPI) {
     on("DropPickupsForGBA", move |e| { reseed_if_needed(entropy); on_loot(e) });
     on("TakeDamage", move |e| on_damage(e));
     on("PostBeginPlay", move |e| on_init(e));
+    on_tick(spawn_tick);
     ui_panel("RNG", panel);
 }
