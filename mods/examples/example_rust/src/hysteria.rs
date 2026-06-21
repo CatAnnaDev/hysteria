@@ -92,6 +92,16 @@ pub fn on(name: &str, cb: impl FnMut(&Event) + 'static) {
     PRE.get().push((name.to_string(), 0, Box::new(cb)));
     (a().on)(cs(name).as_ptr(), pre_tramp);
 }
+
+static POST: Global<Vec<(String, usize, Box<dyn FnMut(&Event)>)>> = Global(UnsafeCell::new(Vec::new()));
+extern "C" fn post_tramp(e: *mut AEvent) {
+    let ev = Event(e); let n = ev.name(); let who = ev.this() as usize;
+    for (k, tgt, f) in POST.get().iter_mut() { if *k == n && (*tgt == 0 || *tgt == who) { f(&ev); } }
+}
+pub fn on_post(name: &str, cb: impl FnMut(&Event) + 'static) {
+    POST.get().push((name.to_string(), 0, Box::new(cb)));
+    (a().on_post)(cs(name).as_ptr(), post_tramp);
+}
 pub fn on_object(target: Obj, name: &str, cb: impl FnMut(&Event) + 'static) {
     PRE.get().push((name.to_string(), target as usize, Box::new(cb)));
     (a().on_object)(target, cs(name).as_ptr(), pre_tramp);
