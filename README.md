@@ -129,6 +129,11 @@ PNG (DXT1/DXT3/DXT5/G8/A8R8G8B8, reading streamed mips from `.tfc`), replaces te
 PNG, exports/replaces sounds (OGG/WAV), bulk-exports all textures/sounds, shows a raw hex
 view of any object, and writes a game-loadable package back out.
 
+**3D mesh view** is wired to UModel (UE Viewer): select a SkeletalMesh/StaticMesh and click
+"View in 3D (UModel)" to open its interactive 3D viewer (and export OBJ/glTF/textures).
+Drop `umodel_64.exe` into the CrossOver bottle at `C:\umodel\` (from gildor.org); `umodel.command`
+launches the browser standalone.
+
 It also has a **Localization (text) mode**: browse and edit every `Localization/<LANG>/*`
 string file (menus, subtitles, objectives, tutorials...) with byte-exact saves (UTF-16 and
 Latin-1 preserved). Editing these is the most reliable way to mod game text — it takes effect

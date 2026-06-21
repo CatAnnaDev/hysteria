@@ -222,6 +222,7 @@ impl eframe::App for App {
         let mut do_sndreplace = false;
         let mut do_bulk_tex = false;
         let mut do_bulk_snd = false;
+        let mut do_umodel: Option<String> = None; // object name to 3D-view (empty = browse package)
         if self.mode == Mode::Packages {
         egui::SidePanel::right("details").default_width(360.0).show(ctx, |ui| {
             ui.heading("Object");
@@ -292,6 +293,10 @@ impl eframe::App for App {
                     if ui.add(egui::Slider::new(&mut self.volume, 0.0..=2.0).text("Volume")).changed() {
                         if let Some(s) = &self.sink { s.set_volume(self.volume); }
                     }
+                }
+                if e.class_name.contains("Mesh") {
+                    ui.separator();
+                    if ui.button("View in 3D (UModel)").clicked() { do_umodel = Some(e.name.clone()); }
                 }
                 ui.separator();
                 egui::CollapsingHeader::new("Raw serial (hex)").show(ui, |ui| {
@@ -413,6 +418,21 @@ impl eframe::App for App {
             }
         }
 
+        if let Some(obj) = do_umodel {
+            if let (Some(pi), Some(gd)) = (self.sel_pkg, &self.game_dir) {
+                let pkg_stem = self.packages[pi].file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+                let s = gd.to_string_lossy();
+                let ck_wine = match s.find("drive_c/") { Some(i) => format!("C:\\{}", s[i + 8..].replace('/', "\\")), None => s.into_owned() };
+                let cx = "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxstart";
+                let r = std::process::Command::new(cx)
+                    .args(["--bottle", "Steam", "C:\\umodel\\umodel_64.exe", &format!("-path={}", ck_wine), "-game=ue3", &pkg_stem, &obj])
+                    .spawn();
+                self.status = match r {
+                    Ok(_) => format!("UModel: viewing {} / {} (3D window opening...)", pkg_stem, obj),
+                    Err(e) => format!("UModel launch failed: {}", e),
+                };
+            }
+        }
         if do_bulk_tex {
             if let (Some(pkg), Some(dir)) = (&self.pkg, self.game_dir.clone()) {
                 if let Some(folder) = rfd::FileDialog::new().pick_folder() {

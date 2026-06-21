@@ -226,8 +226,6 @@ impl Pkg {
         let (props, end) = self.parse_props(e.off);
         let get = |k: &str| props.iter().find(|(n, _, _)| n == k).map(|x| x.2.clone());
         let fmt = get("Format")?;
-        let sx = get("SizeX")?.parse::<usize>().ok()?;
-        let sy = get("SizeY")?.parse::<usize>().ok()?;
         let tfcname = get("TextureFileCacheName");
         let b = &self.buf;
         let mut o = end;
