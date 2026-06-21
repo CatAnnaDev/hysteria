@@ -1,0 +1,12 @@
+target/
+**/target/
+.cache/
+**/.cache/
+*.dll
+*.o
+*.obj
+.DS_Store
+**/.DS_Store
+compile_commands.json
+hysteria/hysteria_sdk.h
+hysteria_dump*.txt
