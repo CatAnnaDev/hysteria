@@ -1,7 +1,7 @@
 #![allow(non_snake_case, dead_code)]
-use std::os::raw::{c_char, c_float, c_int, c_void};
+use std::os::raw::{c_char, c_float, c_int, c_uint, c_void};
 
-pub const HYSTERIA_API_VERSION: c_int = 9;
+pub const HYSTERIA_API_VERSION: c_int = 14;
 
 pub type AObj = *mut c_void;
 pub type ACall = *mut c_void;
@@ -19,6 +19,8 @@ pub struct AEvent {
 pub type AEventCb = extern "C" fn(*mut AEvent);
 pub type AIterCb = extern "C" fn(AObj);
 pub type ADrawCb = extern "C" fn();
+pub type AUserCb = extern "C" fn(*mut c_void);
+pub type AObjCb = extern "C" fn(AObj, *mut c_void);
 
 #[repr(C)]
 pub struct HysteriaAPI {
@@ -94,6 +96,7 @@ pub struct HysteriaAPI {
     pub call_arg_rot: extern "C" fn(ACall, *const c_char, *const c_int),
     pub call_arg_raw: extern "C" fn(ACall, *const c_char, *const c_void, c_int),
     pub call_out_vec: extern "C" fn(ACall, *const c_char, *mut c_float) -> c_int,
+    // v9: per-mod config
     pub cfg_get_int: extern "C" fn(*const c_char, *const c_char, c_int) -> c_int,
     pub cfg_get_float: extern "C" fn(*const c_char, *const c_char, c_float) -> c_float,
     pub cfg_get_bool: extern "C" fn(*const c_char, *const c_char, c_int) -> c_int,
@@ -101,4 +104,28 @@ pub struct HysteriaAPI {
     pub cfg_set_float: extern "C" fn(*const c_char, *const c_char, c_float),
     pub cfg_set_bool: extern "C" fn(*const c_char, *const c_char, c_int),
     pub cfg_save: extern "C" fn(*const c_char),
+    // v10/v11: HUD
+    pub hud_text: extern "C" fn(c_int, c_int, c_uint, *const c_char),
+    pub hud_rect: extern "C" fn(c_int, c_int, c_int, c_int, c_uint),
+    // v12: screen size
+    pub screen_size: extern "C" fn(*mut c_int, *mut c_int) -> c_int,
+    // v13: scheduling, threads, watchers
+    pub after_ms: extern "C" fn(c_int, AUserCb, *mut c_void) -> c_int,
+    pub every_ms: extern "C" fn(c_int, AUserCb, *mut c_void) -> c_int,
+    pub cancel_timer: extern "C" fn(c_int),
+    pub when_object: extern "C" fn(*const c_char, AObjCb, *mut c_void),
+    pub on_spawn: extern "C" fn(*const c_char, AObjCb, *mut c_void),
+    pub thread_spawn: extern "C" fn(AUserCb, *mut c_void) -> c_int,
+    pub sleep_ms: extern "C" fn(c_int),
+    pub run_on_game_thread: extern "C" fn(AUserCb, *mut c_void),
+    // v13: UI builder
+    pub ui_separator: extern "C" fn(),
+    pub ui_spacing: extern "C" fn(c_int),
+    pub ui_text_colored: extern "C" fn(c_uint, *const c_char),
+    pub ui_progress: extern "C" fn(*const c_char, c_float),
+    pub ui_combo: extern "C" fn(*const c_char, *mut c_int, *const *const c_char, c_int) -> c_int,
+    pub ui_input_int: extern "C" fn(*const c_char, *mut c_int, c_int, c_int, c_int) -> c_int,
+    pub ui_tree: extern "C" fn(*const c_char) -> c_int,
+    // v14: set an object/class param inside an `on` handler
+    pub param_set_obj: extern "C" fn(*mut AEvent, *const c_char, AObj) -> c_int,
 }

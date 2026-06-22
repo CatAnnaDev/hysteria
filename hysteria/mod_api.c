@@ -112,6 +112,8 @@ static int api_pset_float(AEvent*e,const char*n,float v){ int off;char t;unsigne
     if(!e||!e->params||!prop_in(e->func,n,&off,&t,&m)||!mem_ok((char*)e->params+off,4))return 0; *(float*)((char*)e->params+off)=v; return 1; }
 static AObj api_pget_obj(AEvent*e,const char*n){ int off;char t;unsigned m;
     if(!e||!e->params||!prop_in(e->func,n,&off,&t,&m)||!mem_ok((char*)e->params+off,4))return 0; return *(void**)((char*)e->params+off); }
+static int api_pset_obj(AEvent*e,const char*n,AObj v){ int off;char t;unsigned m;
+    if(!e||!e->params||!prop_in(e->func,n,&off,&t,&m)||!mem_ok((char*)e->params+off,4))return 0; *(void**)((char*)e->params+off)=v; return 1; }
 static int api_pget_bool(AEvent*e,const char*n,int*out){ int off;char t;unsigned m;
     if(!e||!e->params||!prop_in(e->func,n,&off,&t,&m)||!m||!mem_ok((char*)e->params+off,4))return 0; *out=(*(unsigned*)((char*)e->params+off)&m)?1:0; return 1; }
 static int api_pset_bool(AEvent*e,const char*n,int v){ int off;char t;unsigned m;
@@ -271,6 +273,101 @@ static int api_key_pressed(int vk){
     int e = d && !prev[vk]; prev[vk] = (unsigned char)d; return e;
 }
 
+// ---- v13: scheduling, threads, game-thread marshalling, object watchers ----
+typedef void (*UserCb)(void *user);
+typedef void (*ObjCb)(AObj o, void *user);
+
+typedef struct { int id, repeat, period, alive; DWORD due; UserCb cb; void *user; } Timer;
+static Timer g_timers[64]; static int g_timerNextId = 1;
+static int alloc_timer(int ms, int repeat, UserCb cb, void *user){
+    for(int i=0;i<64;i++) if(!g_timers[i].alive){
+        g_timers[i].id=g_timerNextId++; g_timers[i].repeat=repeat; g_timers[i].period=ms;
+        g_timers[i].due=GetTickCount()+(DWORD)ms; g_timers[i].cb=cb; g_timers[i].user=user; g_timers[i].alive=1;
+        return g_timers[i].id;
+    }
+    return 0;
+}
+static int api_after_ms(int ms, UserCb cb, void *u){ return cb ? alloc_timer(ms<0?0:ms,0,cb,u) : 0; }
+static int api_every_ms(int ms, UserCb cb, void *u){ return (cb && ms>0) ? alloc_timer(ms,1,cb,u) : 0; }
+static void api_cancel_timer(int id){ for(int i=0;i<64;i++) if(g_timers[i].alive && g_timers[i].id==id) g_timers[i].alive=0; }
+static void timers_pump(void){
+    DWORD now=GetTickCount();
+    for(int i=0;i<64;i++) if(g_timers[i].alive && (long)(now-g_timers[i].due)>=0){
+        UserCb cb=g_timers[i].cb; void *u=g_timers[i].user;
+        if(g_timers[i].repeat) g_timers[i].due=now+(DWORD)g_timers[i].period; else g_timers[i].alive=0;
+        if(cb) cb(u);
+    }
+}
+
+typedef struct { char cls[64]; ObjCb cb; void *user; int once, alive; } Watcher;
+static Watcher g_watch[32]; static int g_watchN=0;
+static AObj g_seen[8192]; static int g_seenN=0;
+static int seen_has(AObj o){ for(int i=0;i<g_seenN;i++) if(g_seen[i]==o) return 1; return 0; }
+static Watcher *g_curWatch;
+static void watch_iter_cb(AObj o){
+    Watcher *w=g_curWatch; if(!w || !w->alive || !o) return;
+    if(w->once){ w->alive=0; if(w->cb) w->cb(o, w->user); }
+    else if(!seen_has(o)){ if(g_seenN<8192) g_seen[g_seenN++]=o; if(w->cb) w->cb(o, w->user); }
+}
+static void watchers_pump(void){
+    if(g_watchN==0) return;
+    static int t=0; if(++t < 20) return; t=0;
+    for(int i=0;i<g_watchN;i++){
+        Watcher *w=&g_watch[i]; if(!w->alive) continue;
+        if(w->cls[0]){ g_curWatch=w; api_iter(w->cls, watch_iter_cb); g_curWatch=0; }
+        else { AObj p=api_pawn(); if(p){ if(w->once) w->alive=0; if(w->cb) w->cb(p, w->user); } }
+    }
+}
+static void api_when_object(const char *cls, ObjCb cb, void *u){
+    if(!cb || g_watchN>=32) return;
+    Watcher *w=&g_watch[g_watchN++]; w->cb=cb; w->user=u; w->once=1; w->alive=1; w->cls[0]=0;
+    if(cls) lstrcpynA(w->cls, cls, sizeof w->cls);
+}
+static void api_on_spawn(const char *cls, ObjCb cb, void *u){
+    if(!cb || !cls || g_watchN>=32) return;
+    Watcher *w=&g_watch[g_watchN++]; w->cb=cb; w->user=u; w->once=0; w->alive=1;
+    lstrcpynA(w->cls, cls, sizeof w->cls);
+}
+
+typedef struct { UserCb cb; void *user; } GTask;
+static GTask g_gq[256]; static int g_gqHead=0, g_gqTail=0;
+static CRITICAL_SECTION g_gqCs; static int g_gqInit=0;
+static void api_run_on_game_thread(UserCb cb, void *user){
+    if(!cb) return; if(!g_gqInit){ InitializeCriticalSection(&g_gqCs); g_gqInit=1; }
+    EnterCriticalSection(&g_gqCs);
+    int nt=(g_gqTail+1)&255; if(nt!=g_gqHead){ g_gq[g_gqTail].cb=cb; g_gq[g_gqTail].user=user; g_gqTail=nt; }
+    LeaveCriticalSection(&g_gqCs);
+}
+static void gq_pump(void){
+    if(!g_gqInit) return;
+    for(;;){
+        GTask tk; EnterCriticalSection(&g_gqCs);
+        if(g_gqHead==g_gqTail){ LeaveCriticalSection(&g_gqCs); break; }
+        tk=g_gq[g_gqHead]; g_gqHead=(g_gqHead+1)&255; LeaveCriticalSection(&g_gqCs);
+        if(tk.cb) tk.cb(tk.user);
+    }
+}
+typedef struct { UserCb fn; void *user; } ThreadStart;
+static DWORD WINAPI thread_tramp(LPVOID p){
+    ThreadStart *ts=(ThreadStart*)p; UserCb fn=ts->fn; void *u=ts->user;
+    HeapFree(GetProcessHeap(),0,ts); if(fn) fn(u); return 0;
+}
+static int api_thread_spawn(UserCb fn, void *user){
+    if(!fn) return 0;
+    ThreadStart *ts=(ThreadStart*)HeapAlloc(GetProcessHeap(),0,sizeof(ThreadStart)); if(!ts) return 0;
+    ts->fn=fn; ts->user=user;
+    HANDLE h=CreateThread(0,0,thread_tramp,ts,0,0); if(!h){ HeapFree(GetProcessHeap(),0,ts); return 0; }
+    CloseHandle(h); return 1;
+}
+static void api_sleep_ms(int ms){ Sleep(ms>0?(DWORD)ms:0); }
+
+void mod_pump(void){ gq_pump(); timers_pump(); watchers_pump(); }
+void mod_pump_reset(void){
+    for(int i=0;i<64;i++) g_timers[i].alive=0;
+    g_watchN=0; g_seenN=0; g_curWatch=0;
+    if(g_gqInit){ EnterCriticalSection(&g_gqCs); g_gqHead=g_gqTail=0; LeaveCriticalSection(&g_gqCs); }
+}
+
 int g_scrW = 0, g_scrH = 0;
 static int api_screen_size(int *w, int *h){ if(w)*w=g_scrW; if(h)*h=g_scrH; return (g_scrW>0 && g_scrH>0); }
 
@@ -284,6 +381,7 @@ static HysteriaAPI g_api = {
     .param_get_int=api_pget_int, .param_set_int=api_pset_int,
     .param_get_float=api_pget_float, .param_set_float=api_pset_float,
     .param_get_bool=api_pget_bool, .param_set_bool=api_pset_bool, .param_get_obj=api_pget_obj,
+    .param_set_obj=api_pset_obj,
     .ret_get_int=api_ret_get_int, .ret_set_int=api_ret_set_int, .ret_set_float=api_ret_set_float,
     .call=api_call, .call_str=api_call_str, .console=api_console, .spawn=api_spawn, .destroy=api_destroy,
     .player_controller=api_pc, .player_pawn=api_pawn, .log=api_log,
@@ -304,6 +402,9 @@ static HysteriaAPI g_api = {
     .cfg_set_int=cfg_set_int, .cfg_set_float=cfg_set_float, .cfg_set_bool=cfg_set_bool, .cfg_save=cfg_save,
     .hud_text=api_hud_text, .hud_rect=api_hud_rect,
     .screen_size=api_screen_size,
+    .after_ms=api_after_ms, .every_ms=api_every_ms, .cancel_timer=api_cancel_timer,
+    .when_object=api_when_object, .on_spawn=api_on_spawn,
+    .thread_spawn=api_thread_spawn, .sleep_ms=api_sleep_ms, .run_on_game_thread=api_run_on_game_thread,
 };
 
 static HMODULE g_loaded[64]; static int g_loadedN=0;
@@ -427,6 +528,7 @@ void mod_do_reload(void){
     g_reloading=1;
     g_regN=0;
     g_ticksN=0;
+    mod_pump_reset();
     ui_panels_clear();
     for(int i=0;i<g_loadedN;i++) if(g_loaded[i]) FreeLibrary(g_loaded[i]);
     g_loadedN=0;

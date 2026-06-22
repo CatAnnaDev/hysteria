@@ -12,7 +12,7 @@
 use crate::hysteria_api::*;
 use std::cell::UnsafeCell;
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::sync::atomic::{AtomicPtr, Ordering};
 
 static API: AtomicPtr<HysteriaAPI> = AtomicPtr::new(std::ptr::null_mut());
@@ -30,6 +30,8 @@ impl Event {
     pub fn block(&self) { unsafe { (*self.0).block = 1; } }
     pub fn get_int(&self, n: &str) -> Option<i32> { let mut v = 0; if (a().param_get_int)(self.0, cs(n).as_ptr(), &mut v) != 0 { Some(v) } else { None } }
     pub fn set_int(&self, n: &str, v: i32) { (a().param_set_int)(self.0, cs(n).as_ptr(), v); }
+    pub fn get_obj(&self, n: &str) -> Obj { (a().param_get_obj)(self.0, cs(n).as_ptr()) }
+    pub fn set_obj(&self, n: &str, v: Obj) -> bool { (a().param_set_obj)(self.0, cs(n).as_ptr(), v) != 0 }
     pub fn ret_int(&self, v: i32) { (a().ret_set_int)(self.0, v); }
 }
 
@@ -145,3 +147,39 @@ pub fn ui_checkbox(label: &str, v: &mut bool) {
 }
 pub fn ui_slider_int(label: &str, v: &mut i32, min: i32, max: i32) { (a().ui_slider_int)(cs(label).as_ptr(), v, min, max); }
 pub fn ui_slider_float(label: &str, v: &mut f32, min: f32, max: f32, step: f32) { (a().ui_slider_float)(cs(label).as_ptr(), v, min, max, step); }
+
+// --- v13: closures marshalled through boxed pointers ---
+fn box_fn(f: impl FnMut() + 'static) -> *mut c_void { Box::into_raw(Box::new(Box::new(f) as Box<dyn FnMut()>)) as *mut c_void }
+fn box_fno(f: impl FnMut(Obj) + 'static) -> *mut c_void { Box::into_raw(Box::new(Box::new(f) as Box<dyn FnMut(Obj)>)) as *mut c_void }
+extern "C" fn once_tramp(p: *mut c_void) { let mut b: Box<Box<dyn FnMut()>> = unsafe { Box::from_raw(p as *mut Box<dyn FnMut()>) }; b(); }
+extern "C" fn keep_tramp(p: *mut c_void) { let f = unsafe { &mut *(p as *mut Box<dyn FnMut()>) }; f(); }
+extern "C" fn obj_once_tramp(o: Obj, p: *mut c_void) { let mut b: Box<Box<dyn FnMut(Obj)>> = unsafe { Box::from_raw(p as *mut Box<dyn FnMut(Obj)>) }; b(o); }
+extern "C" fn obj_keep_tramp(o: Obj, p: *mut c_void) { let f = unsafe { &mut *(p as *mut Box<dyn FnMut(Obj)>) }; f(o); }
+
+// --- timers (run on the game thread) ---
+pub fn after(ms: i32, cb: impl FnMut() + 'static) -> i32 { (a().after_ms)(ms, once_tramp, box_fn(cb)) }
+pub fn every(ms: i32, cb: impl FnMut() + 'static) -> i32 { (a().every_ms)(ms, keep_tramp, box_fn(cb)) }
+pub fn cancel(id: i32) { (a().cancel_timer)(id); }
+
+// --- threads + marshalling back to the game thread ---
+pub fn thread(cb: impl FnMut() + 'static) { (a().thread_spawn)(once_tramp, box_fn(cb)); }
+pub fn on_game_thread(cb: impl FnMut() + 'static) { (a().run_on_game_thread)(once_tramp, box_fn(cb)); }
+pub fn sleep_ms(ms: i32) { (a().sleep_ms)(ms); }
+
+// --- await / spawn listeners ---
+pub fn when_object(class: &str, cb: impl FnMut(Obj) + 'static) { (a().when_object)(cs(class).as_ptr(), obj_once_tramp, box_fno(cb)); }
+pub fn when_ready(cb: impl FnMut(Obj) + 'static) { (a().when_object)(std::ptr::null(), obj_once_tramp, box_fno(cb)); }
+pub fn on_spawn(class: &str, cb: impl FnMut(Obj) + 'static) { (a().on_spawn)(cs(class).as_ptr(), obj_keep_tramp, box_fno(cb)); }
+
+// --- UI builder ---
+pub fn ui_separator() { (a().ui_separator)(); }
+pub fn ui_spacing(px: i32) { (a().ui_spacing)(px); }
+pub fn ui_text(argb: u32, t: &str) { (a().ui_text_colored)(argb, cs(t).as_ptr()); }
+pub fn ui_progress(label: &str, frac: f32) { (a().ui_progress)(cs(label).as_ptr(), frac); }
+pub fn ui_combo(label: &str, idx: &mut i32, opts: &[&str]) -> bool {
+    let owned: Vec<CString> = opts.iter().map(|s| cs(s)).collect();
+    let ptrs: Vec<*const c_char> = owned.iter().map(|c| c.as_ptr()).collect();
+    (a().ui_combo)(cs(label).as_ptr(), idx, ptrs.as_ptr(), ptrs.len() as i32) != 0
+}
+pub fn ui_input_int(label: &str, v: &mut i32, step: i32, min: i32, max: i32) -> bool { (a().ui_input_int)(cs(label).as_ptr(), v, step, min, max) != 0 }
+pub fn ui_tree(label: &str) -> bool { (a().ui_tree)(cs(label).as_ptr()) != 0 }

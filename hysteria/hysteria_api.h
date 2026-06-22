@@ -13,7 +13,7 @@
 //
 // AObj is an opaque game object handle. Getters return non-zero on success.
 
-#define HYSTERIA_API_VERSION 12
+#define HYSTERIA_API_VERSION 14
 
 #ifdef __cplusplus
 extern "C" {
@@ -158,6 +158,34 @@ typedef struct HysteriaAPI {
   void  (*hud_rect)(int x, int y, int w, int h, unsigned argb);
   // v12: current backbuffer size in pixels (for centering / full-screen overlays). returns 1 on success.
   int   (*screen_size)(int *w, int *h);
+
+  // --- v13: scheduling, threads, object-await, spawn listeners ---
+  // Timers run on the GAME thread between frames. Return an id (0 on failure); stop with cancel_timer.
+  int  (*after_ms)(int ms, void (*cb)(void *user), void *user);   // fire cb once after ms
+  int  (*every_ms)(int ms, void (*cb)(void *user), void *user);   // fire cb every ms
+  void (*cancel_timer)(int id);
+  // Fire cb ONCE on the game thread when an instance of className first exists (NULL = when player pawn is ready).
+  void (*when_object)(const char *className, void (*cb)(AObj o, void *user), void *user);
+  // Fire cb on the game thread for every NEW instance of className (deduped by identity).
+  void (*on_spawn)(const char *className, void (*cb)(AObj o, void *user), void *user);
+  // Run fn on a detached background thread. Do NOT touch game objects there; marshal back with
+  // run_on_game_thread. Returns 1 on success. (Avoid reloading mods while a thread is still running.)
+  int  (*thread_spawn)(void (*fn)(void *user), void *user);
+  void (*sleep_ms)(int ms);                                       // sleep, for use inside a thread
+  // Queue cb to run on the next frame on the GAME thread (safe to touch game objects). Thread-safe.
+  void (*run_on_game_thread)(void (*cb)(void *user), void *user);
+
+  // --- v13: fuller UI builder (call inside a ui_panel draw cb) ---
+  void (*ui_separator)(void);
+  void (*ui_spacing)(int px);
+  void (*ui_text_colored)(unsigned argb, const char *text);
+  void (*ui_progress)(const char *label, float frac);            // 0..1 progress bar with a label
+  int  (*ui_combo)(const char *label, int *idx, const char *const *opts, int n); // click cycles; 1 if changed
+  int  (*ui_input_int)(const char *label, int *v, int step, int mn, int mx);     // [-] v [+]; 1 if changed
+  int  (*ui_tree)(const char *label);                            // collapsing sub-header; returns open
+
+  // --- v14: set an object/class param inside an "on" handler (mirror of param_get_obj) ---
+  int  (*param_set_obj)(AEvent *e, const char *name, AObj v);
 } HysteriaAPI;
 
 typedef void (*ModMain_t)(HysteriaAPI *api);

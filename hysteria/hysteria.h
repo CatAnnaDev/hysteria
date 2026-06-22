@@ -65,6 +65,8 @@ extern int g_modFind, g_modLog, g_modFound, g_modReloadReq;
 extern void *g_modPawn;
 void mod_tick(void);
 void mod_run_ticks(void);
+void mod_pump(void);
+void mod_pump_reset(void);
 void log_mod_paths(void);
 void *detour(void *target, void *hook);
 int   cfg_get_int(const char *mod, const char *key, int def);

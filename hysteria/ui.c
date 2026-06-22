@@ -55,6 +55,7 @@ static float g_cy;          // running content y (already includes -scroll)
 static float g_top, g_bot;  // content clip band (screen y)
 static float g_scroll, g_contentTop;
 static int g_secOpen;       // is the current section expanded (widgets emit only if so)
+static int g_panelBase = 1; // is the enclosing mod-panel section open (gate for ui_tree headers)
 static IDirect3DDevice9 *g_dev;
 static int g_W, g_H;
 
@@ -244,6 +245,71 @@ static void hui_textbox(const char *id, char *buf, int *len, int cap) {
 
 void ui_sep(void) { if (!g_secOpen) return; if (row_visible(g_cy, 1)) fill_rect(g_dev, g_wx + PAD, g_cy + 2, g_ww - 2 * PAD, 1, COL_DIM); g_cy += 6; }
 
+// ---------- v13 UI builder widgets ----------
+static void ui_spacing_at(int px) { if (!g_secOpen) return; g_cy += (px > 0 ? px : 6); }
+static void ui_text_colored_at(unsigned argb, const char *t) {
+    if (!g_secOpen) return;
+    float y = g_cy, x = g_wx + PAD;
+    if (row_visible(y, 18)) draw_text(g_dev, (int)(x + 2), (int)y, (D3DCOLOR)argb, t ? t : "");
+    g_cy += 18 + GAP;
+}
+static void ui_progress_at(const char *label, float f) {
+    if (!g_secOpen) return; if (f < 0) f = 0; if (f > 1) f = 1;
+    float y = g_cy, x = g_wx + PAD, w = g_ww - 2 * PAD, h = ROW;
+    if (row_visible(y, h)) {
+        fill_rect(g_dev, x, y, w, h, D3DCOLOR_ARGB(255, 22, 22, 30));
+        fill_rect(g_dev, x + 1, y + 1, (w - 2) * f, h - 2, COL_ACC);
+        draw_text(g_dev, (int)(x + 8), (int)(y + 2), COL_TEXT, label ? label : "");
+    }
+    g_cy += h + GAP;
+}
+static int ui_combo_at(const char *label, int *idx, const char *const *opts, int n) {
+    if (!g_secOpen || !idx || !opts || n <= 0) return 0;
+    if (*idx < 0) *idx = 0; if (*idx >= n) *idx = n - 1;
+    float y = g_cy, x = g_wx + PAD, w = g_ww - 2 * PAD, h = ROW; int changed = 0;
+    if (row_visible(y, h)) {
+        int hot = hit(x, y, w, h);
+        fill_rect(g_dev, x, y, w, h, hot ? COL_HOT : COL_WIDGET);
+        char buf[120]; wsprintfA(buf, "%s: %s", label ? label : "", opts[*idx] ? opts[*idx] : "");
+        draw_text(g_dev, (int)(x + 8), (int)(y + 2), COL_TEXT, buf);
+        draw_text(g_dev, (int)(x + w - 16), (int)(y + 2), COL_ACC2, ">");
+        if (hot && M.clicked) { *idx = (*idx + 1) % n; changed = 1; M.clicked = 0; }
+    }
+    g_cy += h + GAP; return changed;
+}
+static int ui_input_int_at(const char *label, int *v, int step, int mn, int mx) {
+    if (!g_secOpen || !v) return 0;
+    float y = g_cy, x = g_wx + PAD, w = g_ww - 2 * PAD, h = ROW, bw = ROW; int changed = 0;
+    if (row_visible(y, h)) {
+        int hotm = hit(x, y, bw, h), hotp = hit(x + w - bw, y, bw, h);
+        fill_rect(g_dev, x, y, w, h, COL_WIDGET);
+        fill_rect(g_dev, x, y, bw, h, hotm ? COL_HOT : COL_SEC); draw_text(g_dev, (int)(x + bw / 2 - 3), (int)(y + 2), COL_TEXT, "-");
+        fill_rect(g_dev, x + w - bw, y, bw, h, hotp ? COL_HOT : COL_SEC); draw_text(g_dev, (int)(x + w - bw / 2 - 3), (int)(y + 2), COL_TEXT, "+");
+        draw_text(g_dev, (int)(x + bw + 8), (int)(y + 2), COL_TEXT, label ? label : "");
+        char vs[24]; wsprintfA(vs, "%d", *v); draw_text(g_dev, (int)(x + w - bw - 54), (int)(y + 2), COL_ACC2, vs);
+        if (M.clicked && hotm) { *v -= step; changed = 1; M.clicked = 0; }
+        if (M.clicked && hotp) { *v += step; changed = 1; M.clicked = 0; }
+    }
+    if (mx > mn) { if (*v < mn) *v = mn; if (*v > mx) *v = mx; }
+    g_cy += h + GAP; return changed;
+}
+static int ui_tree_at(const char *title) {
+    if (!g_panelBase) { g_secOpen = 0; return 0; }
+    unsigned id = hash_id(title) ^ 0x7e7eu;
+    int *open = sec_state(id);
+    float y = g_cy, x = g_wx + PAD, w = g_ww - 2 * PAD;
+    if (row_visible(y, SEC_H)) {
+        int hot = hit(x, y, w, SEC_H);
+        fill_rect(g_dev, x, y, w, SEC_H, hot ? COL_SECH : COL_SEC);
+        draw_text(g_dev, (int)(x + 8), (int)(y + 3), COL_TEXT, *open ? "-" : "+");
+        draw_text(g_dev, (int)(x + 24), (int)(y + 3), COL_ACC2, title ? title : "");
+        if (hot && M.clicked) { *open = !*open; M.clicked = 0; }
+    }
+    g_cy += SEC_H + GAP;
+    g_secOpen = *open;
+    return *open;
+}
+
 // ---------- mod panel registry + API ----------
 typedef struct { char title[48]; void (*draw)(void); } ModPanel;
 static ModPanel g_panels[32]; static int g_panelN = 0;
@@ -261,6 +327,9 @@ void ui_install_api(void) {
     HysteriaAPI *a = hysteria_api_get(); if (!a) return;
     a->ui_panel = ui_panel_impl; a->ui_button = ui_button_impl; a->ui_checkbox = ui_checkbox_impl;
     a->ui_slider_int = ui_slideri_impl; a->ui_slider_float = ui_sliderf_impl; a->ui_label = ui_label_impl;
+    a->ui_separator = ui_sep; a->ui_spacing = ui_spacing_at; a->ui_text_colored = ui_text_colored_at;
+    a->ui_progress = ui_progress_at; a->ui_combo = ui_combo_at; a->ui_input_int = ui_input_int_at;
+    a->ui_tree = ui_tree_at;
 }
 
 void ui_init(IDirect3DDevice9 *dev, int W, int H) {
@@ -369,7 +438,7 @@ void ui_render(IDirect3DDevice9 *dev, int W, int H) {
     }
 
     for (int i = 0; i < g_panelN; i++)
-        if (hui_section(g_panels[i].title) && g_panels[i].draw) g_panels[i].draw();
+        if (hui_section(g_panels[i].title)) { g_panelBase = g_secOpen; if (g_panels[i].draw) g_panels[i].draw(); g_panelBase = 1; }
 
     hui_end();
     draw_cursor(M.mx, M.my);

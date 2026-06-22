@@ -200,7 +200,7 @@ static void draw_box3d(float cx,float cy,float cz,float ex,float ey,float ez,D3D
 #define MAXHB 128
 static struct { float cx,cy,cz,ex,ey,ez; int kind; int hp; int hpmax; char name[40]; } g_hb[MAXHB];
 static int g_hbN=0;
-int g_fEnemy=1, g_fTrigger=1, g_fPickup=1, g_fNode=1, g_fWall=1, g_fOther=1, g_labels=1, g_healthbars=1, g_box3d=1;
+int g_fEnemy=1, g_fTrigger=1, g_fPickup=1, g_fNode=1, g_fWall=1, g_fOther=1, g_labels=0, g_healthbars=1, g_box3d=1;
 int hb_classify(const char *cn, const char *on){
     if((cn&&contains(cn,"Blocking"))||(on&&contains(on,"Blocking"))) return 5;
     if((cn&&contains(cn,"Pickup"))||(on&&contains(on,"Pickup"))) return 3;
@@ -312,11 +312,12 @@ void render_hitboxes(IDirect3DDevice9 *dev, void *pawn, float *L){
             if(g_healthbars && g_hb[i].kind==1 && g_hb[i].hp>=0 && g_hb[i].hpmax>0 && g_hb[i].hpmax<1000000){
                 float ratio=(float)g_hb[i].hp/(float)g_hb[i].hpmax;
                 if(ratio<0)ratio=0; if(ratio>1)ratio=1;
-                float bw=54,bh=6,bx=sx-bw*0.5f,by=sy-34;
-                fill_rect(dev,bx-1,by-1,bw+2,bh+2,D3DCOLOR_ARGB(210,0,0,0));
-                fill_rect(dev,bx,by,bw,bh,D3DCOLOR_ARGB(170,45,45,45));
-                int r=(int)(255*(1.0f-ratio)+0.5f), g=(int)(255*ratio+0.5f);
-                fill_rect(dev,bx,by,bw*ratio,bh,D3DCOLOR_ARGB(235,r,g,40));
+                float bw=50,bh=6,bx=sx-bw*0.5f,by=sy-16;                          // just above the head
+                fill_rect(dev,bx-2,by-2,bw+4,bh+4,D3DCOLOR_ARGB(205,8,5,11));     // dark gothic frame
+                fill_rect(dev,bx,by,bw,bh,D3DCOLOR_ARGB(235,26,14,28));           // inner track
+                int r=(int)(235*(1.0f-ratio)+20), g=(int)(210*ratio+30);         // green -> red by hp
+                fill_rect(dev,bx,by,bw*ratio,bh,D3DCOLOR_ARGB(240,r,g,46));       // fill
+                fill_rect(dev,bx,by,bw*ratio,1,D3DCOLOR_ARGB(95,255,255,255));    // top highlight
             }
             if(g_labels){
                 char lbl[64];

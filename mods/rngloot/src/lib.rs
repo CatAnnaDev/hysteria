@@ -55,6 +55,12 @@ struct State {
     last_seed: i32,
     rng: u32,
     diag: bool,
+    weapon_rng: bool,
+    weapon_log: bool,
+    weapon_hook: i32,
+    wresolved: bool,
+    wclasses: [Obj; 4],
+    wperm: [usize; 4],
     queue: Vec<[f32; 3]>, // pending spawn locations (drained in on_tick, NOT in the hook)
 }
 static ST: G<State> = G(UnsafeCell::new(State {
@@ -101,8 +107,111 @@ static ST: G<State> = G(UnsafeCell::new(State {
     last_seed: -1,
     rng: 0x1234567,
     diag: false,
+    weapon_rng: false,
+    weapon_log: false,
+    weapon_hook: 2,
+    wresolved: false,
+    wclasses: [core::ptr::null_mut(); 4],
+    wperm: [0, 1, 2, 3],
     queue: Vec::new(),
 }));
+
+const WEAPONS: &[&str] = &["VorpalBlade", "EyeStaff", "HobbyHorse", "TeapotCannon"];
+
+// Build the index permutation once (seeded). No class resolution needed up front.
+fn weapon_tick() {
+    let s = ST.get();
+    if s.wresolved {
+        return;
+    }
+    s.wperm = [0, 1, 2, 3];
+    for i in (1..4).rev() {
+        let j = (rng() as usize) % (i + 1);
+        s.wperm.swap(i, j);
+    }
+    s.wresolved = true;
+    log(&format!(
+        "rngloot: weapon order = {} {} {} {}",
+        WEAPONS[s.wperm[0]], WEAPONS[s.wperm[1]], WEAPONS[s.wperm[2]], WEAPONS[s.wperm[3]]
+    ));
+}
+
+fn weapon_name_index(name: &str) -> Option<usize> {
+    WEAPONS.iter().position(|&w| w == name)
+}
+
+// Resolve a target weapon's UClass lazily (cached) - find_class only runs once per weapon.
+fn weapon_class(s: &mut State, idx: usize) -> Obj {
+    if s.wclasses[idx].is_null() {
+        s.wclasses[idx] = find_class(WEAPONS[idx]);
+    }
+    s.wclasses[idx]
+}
+
+const WEAPON_HOOKS: &[&str] = &["OnGiveInventory", "CreateInventory", "AddNewAliceWeapon", "GiveWeapon"];
+
+// All candidate grant functions are hooked + logged, but the swap fires on ONLY the selected one
+// (idx == weapon_hook) so the permutation is applied exactly once per grant (never double-applied).
+// The source weapon is identified by NAME (always works); the target class is resolved on demand.
+fn weapon_hook_common(e: &Event, idx: usize, params: &[&str]) {
+    let s = ST.get();
+    let mut cls: Obj = core::ptr::null_mut();
+    let mut pname = "";
+    for &p in params {
+        let c = e.get_obj(p);
+        if !c.is_null() {
+            cls = c;
+            pname = p;
+            break;
+        }
+    }
+    if cls.is_null() {
+        return;
+    }
+    let cname = name_of(cls);
+    if s.weapon_log {
+        log(&format!("rngloot[{}] {}", WEAPON_HOOKS[idx], cname));
+    }
+    if !s.weapon_rng || !s.wresolved || s.weapon_hook as usize != idx {
+        return;
+    }
+    if let Some(i) = weapon_name_index(&cname) {
+        let ti = s.wperm[i];
+        if ti != i {
+            let tgt = weapon_class(s, ti);
+            if !tgt.is_null() {
+                let ok = e.set_obj(pname, tgt);
+                if s.weapon_log {
+                    log(&format!("rngloot swap {} -> {} ({})", WEAPONS[i], WEAPONS[ti], ok));
+                }
+            } else if s.weapon_log {
+                log(&format!("rngloot: target class {} not found", WEAPONS[ti]));
+            }
+        }
+    }
+}
+
+fn on_add_inv(e: &Event) {
+    let s = ST.get();
+    if !s.weapon_log {
+        return;
+    }
+    let it = e.get_obj("NewItem");
+    if !it.is_null() {
+        log(&format!("rngloot[AddInventory] {}", class_of(it)));
+    }
+}
+
+fn on_give_to(e: &Event) {
+    let s = ST.get();
+    if !s.weapon_log {
+        return;
+    }
+    let it = e.this();
+    if !it.is_null() {
+        log(&format!("rngloot[GiveTo] {}", class_of(it)));
+    }
+}
 
 const SPAWN_CLASSES: &[&str] = &[
     "AliceGameMadcapPawn",
@@ -494,6 +603,9 @@ fn cfg_load() {
     s.chaos_spawn = cfg_get_bool(M, "chaos_spawn", s.chaos_spawn);
     s.chaos_secs = cfg_get_float(M, "chaos_secs", s.chaos_secs);
     s.seed = cfg_get_int(M, "seed", s.seed);
+    s.weapon_rng = cfg_get_bool(M, "weapon_rng", s.weapon_rng);
+    s.weapon_log = cfg_get_bool(M, "weapon_log", s.weapon_log);
+    s.weapon_hook = cfg_get_int(M, "weapon_hook", s.weapon_hook);
 }
 fn cfg_store() {
     let s = ST.get();
@@ -526,11 +638,29 @@ fn cfg_store() {
     cfg_set_bool(M, "chaos_spawn", s.chaos_spawn);
     cfg_set_float(M, "chaos_secs", s.chaos_secs);
     cfg_set_int(M, "seed", s.seed);
+    cfg_set_bool(M, "weapon_rng", s.weapon_rng);
+    cfg_set_bool(M, "weapon_log", s.weapon_log);
+    cfg_set_int(M, "weapon_hook", s.weapon_hook);
     cfg_save(M);
 }
 
 fn panel() {
     let s = ST.get();
+    ui_label("== Weapon order RNG ==");
+    ui_checkbox("Randomize weapon order", &mut s.weapon_rng);
+    ui_checkbox("Debug log grant events", &mut s.weapon_log);
+    ui_combo("Swap on hook", &mut s.weapon_hook, WEAPON_HOOKS);
+    if s.wresolved {
+        ui_label(&format!(
+            "order: {} {} {} {}",
+            WEAPONS[s.wperm[0]], WEAPONS[s.wperm[1]], WEAPONS[s.wperm[2]], WEAPONS[s.wperm[3]]
+        ));
+    } else {
+        ui_label("order: resolving weapon classes...");
+    }
+    if ui_button("Reshuffle order") {
+        s.wresolved = false;
+    }
     ui_label("== Chaos spawn (EXPERIMENTAL) ==");
     ui_checkbox("Loot -> random mob (may crash)", &mut s.chaos_spawn);
     ui_label("== Loot ==");
@@ -589,9 +719,16 @@ pub extern "C" fn ModMain(api: *const hysteria_api::HysteriaAPI) {
     });
     on("TakeDamage", move |e| on_damage(e));
     on("PostBeginPlay", move |e| on_init(e));
+    on("OnGiveInventory", move |e| weapon_hook_common(e, 0, &["InvClass"]));
+    on("CreateInventory", move |e| weapon_hook_common(e, 1, &["NewInventoryItemClass", "NewInvClass"]));
+    on("AddNewAliceWeapon", move |e| weapon_hook_common(e, 2, &["WeaponClass"]));
+    on("GiveWeapon", move |e| weapon_hook_common(e, 3, &["WeaponClass"]));
+    on("AddInventory", move |e| on_add_inv(e));
+    on("GiveTo", move |e| on_give_to(e));
     on_tick(spawn_tick);
     on_tick(hyst_tick);
     on_tick(chaos_tick);
     on_tick(magnet_tick);
+    on_tick(weapon_tick);
     ui_panel("RNG", panel);
 }

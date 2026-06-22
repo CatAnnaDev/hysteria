@@ -120,6 +120,7 @@ void frame_render(IDirect3DDevice9 *dev){
     g_modPawn=pawn;
     mod_tick();
     mod_run_ticks();
+    mod_pump();
 
     if(key_edge(VK_F1)||g_uiDumpReq||(!g_dumped && g_stable>120 && mp&&mp[0])){ g_uiDumpReq=0; g_dumped=1; dump_all(g_pc,pawn,mp); }
     if(key_edge(VK_F2)||g_uiDumpAllReq){ g_uiDumpAllReq=0; dump_everything_async(); }

@@ -12,3 +12,7 @@ hysteria/hysteria_sdk.h
 hysteria_dump*.txt
 __pycache__/
 *.pyc
+
+# distributable build (dlls bundled on purpose)
+!/dist/dinput8.dll
+!/dist/Mods/*.dll

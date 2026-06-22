@@ -183,3 +183,70 @@ call(pawn, "SetLocation").v("NewLocation", loc).invoke();
 
 - `call_arg_raw` places bytes at a named param; you still supply the struct/array layout
   yourself for exotic types (use the signature in `hysteria_reference.txt`).
+
+## v13: scheduling, threads, await, fuller UI builder
+
+The framework now has logical building blocks beyond per-frame ticks. All callbacks run on the
+**game thread** unless noted, so they may touch game objects freely.
+
+### Timers
+```c
+int id = api->after_ms(500, cb, user);   // fire cb(user) once, 500 ms from now
+int rp = api->every_ms(1000, cb, user);  // fire cb(user) every second
+api->cancel_timer(rp);
+```
+
+### Await an object / spawn listeners
+```c
+api->when_object("AlicePawn", on_ready, 0);  // fire once when an instance first exists
+api->when_object(NULL, on_ready, 0);         // NULL = when the player pawn is ready
+api->on_spawn("Pawn", on_new_pawn, 0);       // fire for every NEW instance (deduped)
+```
+Watchers are polled (~3x/sec). `on_spawn` uses an object scan, so prefer specific classes.
+
+### Background threads + marshalling back
+Do **not** touch game objects from a background thread; hop back with `run_on_game_thread`:
+```c
+void worker(void* u){ api->sleep_ms(200); api->run_on_game_thread(apply, u); }
+api->thread_spawn(worker, user);
+```
+(Avoid reloading mods while a thread is still running - the DLL gets unloaded under it.)
+
+### UI builder (inside a ui_panel draw cb)
+```c
+api->ui_separator();
+api->ui_spacing(6);
+api->ui_text_colored(0xFFB0A0FF, "title");
+api->ui_progress("hp", 0.5f);
+const char* opts[] = {"Off","Low","High"};
+api->ui_combo("Mode", &mode, opts, 3);     // click cycles; returns 1 if changed
+api->ui_input_int("Amount", &n, 5, 0, 100);// [-] n [+]
+if (api->ui_tree("Advanced")) { /* nested widgets */ }
+```
+
+### C++ (`hysteria.hpp`)
+```cpp
+when_ready([](Obj p){ log("ready"); });
+on_spawn("Pawn", [](Obj o){ /* ... */ });
+int id = every(1000, []{ /* ... */ });  cancel(id);
+thread([]{ sleep_ms(200); on_game_thread([]{ /* touch game here */ }); });
+ui::panel("Tab", []{
+    if (ui::button("hit")) { /* ... */ }
+    ui::combo("Mode", mode, {"Off","Low","High"});
+    if (ui::tree("More")) ui::progress("hp", 0.5f);
+});
+```
+`on(...)` now supports **many listeners per function** (not one).
+
+### Rust (`hysteria.rs`)
+```rust
+when_ready(|_p| log("ready"));
+on_spawn("Pawn", |_o| { /* ... */ });
+every(1000, || { /* ... */ });
+thread(|| { sleep_ms(200); on_game_thread(|| { /* touch game here */ }); });
+ui_panel("Tab", || {
+    if ui_button("hit") { /* ... */ }
+    ui_combo("Mode", mode, &["Off","Low","High"]);
+    if ui_tree("More") { ui_progress("hp", 0.5); }
+});
+```
