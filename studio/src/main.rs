@@ -1184,6 +1184,17 @@ fn main() -> eframe::Result<()> {
         } else { println!("no export matching '{}'", args[3]); }
         return Ok(());
     }
+    if args.len() > 2 && args[1] == "--xform" {
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let mut n = 0;
+        for (i, e) in p.exports.iter().enumerate() {
+            if e.class_name != "StaticMeshActor" { continue; }
+            let (loc, rot, s3, s1) = p.actor_transform_fields(i);
+            println!("{:<22} loc={:?} rot={:?} scale3={:?} scale={:?}", e.name, loc, rot, s3, s1);
+            n += 1; if n >= 10 { break; }
+        }
+        return Ok(());
+    }
     if args.len() > 2 && args[1] == "--map" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
         let actors = p.actors();
