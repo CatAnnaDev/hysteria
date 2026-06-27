@@ -3,6 +3,7 @@ mod lzo;
 mod upk;
 mod dxt;
 mod loc;
+mod theme;
 
 use std::path::PathBuf;
 use upk::Pkg;
@@ -24,6 +25,7 @@ struct App {
     tex_handle: Option<egui::TextureHandle>,
     tex_for: Option<(usize, usize)>,
     tex_px: Option<(usize, usize, Vec<u8>)>,
+    tex_chan: u8,
     props: Vec<upk::PropEdit>,
     ptree: Vec<upk::PropNode>,
     props_for: Option<(usize, usize)>,
@@ -31,6 +33,8 @@ struct App {
     audio: Option<(rodio::OutputStream, rodio::OutputStreamHandle)>,
     sink: Option<rodio::Sink>,
     volume: f32,
+    wave: Vec<(f32, f32)>,
+    wave_for: Option<(usize, usize)>,
     mode: Mode,
     map_actors: Vec<upk::MapActor>,
     actor_filter: String,
@@ -49,9 +53,9 @@ impl Default for App {
             game_dir: None, packages: vec![], pkg_filter: String::new(),
             sel_pkg: None, pkg: None, obj_filter: String::new(), sel_obj: None,
             status: "Open a game CookedPC folder to begin.".into(),
-            tex_handle: None, tex_for: None, tex_px: None,
+            tex_handle: None, tex_for: None, tex_px: None, tex_chan: 0,
             props: vec![], ptree: vec![], props_for: None, dirty: false,
-            audio: None, sink: None, volume: 1.0,
+            audio: None, sink: None, volume: 1.0, wave: vec![], wave_for: None,
             mode: Mode::Packages,
             map_actors: vec![], actor_filter: String::new(),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
@@ -59,6 +63,20 @@ impl Default for App {
         };
         let d = PathBuf::from(DEFAULT_DIR);
         if d.is_dir() { a.scan(d); }
+        // optional startup hook (demos/screenshots): HS_OPEN=<pkg substr> HS_SEL=<obj substr> HS_MODE=map
+        if let Ok(want) = std::env::var("HS_OPEN") {
+            let want = want.to_lowercase();
+            if let Some(i) = a.packages.iter().position(|p| p.file_name().map(|n| n.to_string_lossy().to_lowercase().contains(&want)).unwrap_or(false)) {
+                a.load_pkg(i);
+                if let Ok(sel) = std::env::var("HS_SEL") {
+                    let sel = sel.to_lowercase();
+                    if let Some(p) = &a.pkg {
+                        a.sel_obj = p.exports.iter().position(|e| e.name.to_lowercase().contains(&sel) || e.class_name.to_lowercase().contains(&sel));
+                    }
+                }
+            }
+            if std::env::var("HS_MODE").map(|m| m == "map").unwrap_or(false) { a.mode = Mode::Map; }
+        }
         a
     }
 }
@@ -141,8 +159,9 @@ impl eframe::App for App {
             if let (Some(p), Some(oi), Some(dir)) = (&self.pkg, self.sel_obj, &self.game_dir) {
                 let decoded = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.texture(&p.exports[oi], dir))).ok().flatten();
                 if let Some(t) = decoded {
-                    let img = egui::ColorImage::from_rgba_unmultiplied([t.w, t.h], &t.rgba);
-                    self.tex_handle = Some(ctx.load_texture("preview", img, egui::TextureOptions::LINEAR));
+                    let view = channel_view(&t.rgba, self.tex_chan);
+                    let img = egui::ColorImage::from_rgba_unmultiplied([t.w, t.h], &view);
+                    self.tex_handle = Some(ctx.load_texture("preview", img, egui::TextureOptions::NEAREST));
                     self.tex_px = Some((t.w, t.h, t.rgba));
                 }
             }
@@ -161,38 +180,80 @@ impl eframe::App for App {
             };
             self.props = props; self.ptree = ptree;
         }
+        let wneed = match (&self.pkg, self.sel_pkg, self.sel_obj) {
+            (Some(p), Some(pi), Some(oi)) if p.exports[oi].class_name == "SoundNodeWave" => Some((pi, oi)),
+            _ => None,
+        };
+        if wneed != self.wave_for {
+            self.wave_for = wneed;
+            self.wave = match (&self.pkg, self.sel_obj) {
+                (Some(p), Some(oi)) => p.sound_data(&p.exports[oi])
+                    .and_then(|(d, _)| std::panic::catch_unwind(|| decode_waveform(&d)).ok())
+                    .unwrap_or_default(),
+                _ => vec![],
+            };
+        }
         }
 
-        egui::TopBottomPanel::top("top").show(ctx, |ui| {
+        egui::TopBottomPanel::top("top").frame(egui::Frame::none().fill(theme::BG).inner_margin(egui::Margin { left: 14.0, right: 14.0, top: 9.0, bottom: 9.0 })).show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.heading("Hysteria Studio");
-                if ui.button("Open game folder...").clicked() {
-                    if let Some(d) = rfd::FileDialog::new().pick_folder() { self.scan(d); }
-                }
-                if let Some(d) = &self.game_dir { ui.label(d.display().to_string()); }
-                ui.separator();
-                if ui.selectable_label(self.mode == Mode::Packages, "Packages").clicked() { self.mode = Mode::Packages; }
-                let maplbl = if self.map_actors.is_empty() { "Map".to_string() } else { format!("Map ({} actors)", self.map_actors.len()) };
-                if ui.selectable_label(self.mode == Mode::Map, maplbl).clicked() { self.mode = Mode::Map; }
-                if ui.selectable_label(self.mode == Mode::Localization, "Localization (text)").clicked() {
+                ui.label(theme::display("Hysteria", 26.0));
+                ui.add_space(2.0);
+                ui.label(egui::RichText::new("STUDIO").text_style(egui::TextStyle::Name("eyebrow".into())).color(theme::BLOOD).size(13.0));
+                ui.add_space(18.0);
+                let tab = |ui: &mut egui::Ui, on: bool, txt: &str| {
+                    let col = if on { theme::BONE } else { theme::DIM };
+                    let r = ui.add(egui::Label::new(egui::RichText::new(txt).color(col).size(14.0)).sense(egui::Sense::click()));
+                    if on { ui.painter().hline(r.rect.x_range(), r.rect.bottom() + 2.0_f32, egui::Stroke::new(2.0_f32, theme::BLOOD)); }
+                    r.on_hover_cursor(egui::CursorIcon::PointingHand)
+                };
+                if tab(ui, self.mode == Mode::Packages, "Packages").clicked() { self.mode = Mode::Packages; }
+                ui.add_space(14.0);
+                let maplbl = if self.map_actors.is_empty() { "Map".to_string() } else { format!("Map · {}", self.map_actors.len()) };
+                if tab(ui, self.mode == Mode::Map, &maplbl).clicked() { self.mode = Mode::Map; }
+                ui.add_space(14.0);
+                if tab(ui, self.mode == Mode::Localization, "Localization").clicked() {
                     self.mode = Mode::Localization;
                     if self.loc_files.is_empty() { self.scan_loc(); }
                 }
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("Open folder…").clicked() {
+                        if let Some(d) = rfd::FileDialog::new().pick_folder() { self.scan(d); }
+                    }
+                    if let Some(d) = &self.game_dir {
+                        let s = d.to_string_lossy();
+                        let tail: String = s.rsplit('/').take(2).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join("/");
+                        ui.add(egui::Label::new(egui::RichText::new(format!("…/{}", tail)).color(theme::DIM).monospace().size(11.0)).truncate());
+                    }
+                });
             });
-            ui.label(&self.status);
+        });
+        let bg = theme::BLOOD;
+        egui::TopBottomPanel::bottom("status").frame(egui::Frame::none().fill(theme::BG).inner_margin(egui::Margin::symmetric(14.0, 5.0))).show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                let glyph = if self.dirty || self.loc_dirty { ("●", bg) } else { ("·", theme::TEAL) };
+                ui.label(egui::RichText::new(glyph.0).color(glyph.1).size(13.0));
+                ui.add(egui::Label::new(egui::RichText::new(&self.status).color(theme::DIM).size(12.0)).truncate());
+            });
         });
 
         if self.mode != Mode::Localization {
-        egui::SidePanel::left("packages").default_width(320.0).show(ctx, |ui| {
-            ui.label(format!("Packages ({})", self.packages.len()));
-            ui.text_edit_singleline(&mut self.pkg_filter);
+        egui::SidePanel::left("packages").default_width(320.0)
+            .frame(egui::Frame::none().fill(theme::PANEL).inner_margin(egui::Margin { left: 10.0, right: 8.0, top: 10.0, bottom: 6.0 }))
+            .show(ctx, |ui| {
+            theme::eyebrow(ui, format!("PACKAGES · {}", self.packages.len()));
+            ui.add(egui::TextEdit::singleline(&mut self.pkg_filter).hint_text("filter").desired_width(f32::INFINITY));
+            ui.add_space(4.0);
             egui::ScrollArea::vertical().show(ui, |ui| {
                 let filt = self.pkg_filter.to_lowercase();
                 let mut to_load = None;
                 for (i, p) in self.packages.iter().enumerate() {
                     let name = p.file_name().unwrap().to_string_lossy().to_string();
                     if !filt.is_empty() && !name.to_lowercase().contains(&filt) { continue; }
-                    if ui.selectable_label(self.sel_pkg == Some(i), name).clicked() { to_load = Some(i); }
+                    let is_map = name.to_lowercase().ends_with(".umap");
+                    let col = if is_map { theme::TEAL } else { theme::BONE };
+                    let txt = egui::RichText::new(&name).color(col).size(13.0);
+                    if ui.add(egui::SelectableLabel::new(self.sel_pkg == Some(i), txt)).clicked() { to_load = Some(i); }
                 }
                 if let Some(i) = to_load { self.load_pkg(i); }
             });
@@ -240,24 +301,30 @@ impl eframe::App for App {
         let mut do_bulk_snd = false;
         let mut do_umodel: Option<String> = None; // object name to 3D-view (empty = browse package)
         let mut sel_child: Option<usize> = None;
+        let mut do_chan: Option<u8> = None;
         if self.mode != Mode::Localization {
-        egui::SidePanel::right("details").default_width(360.0).show(ctx, |ui| {
-            ui.heading("Object");
+        egui::SidePanel::right("details").default_width(372.0)
+            .frame(egui::Frame::none().fill(theme::PANEL).inner_margin(egui::Margin { left: 12.0, right: 12.0, top: 10.0, bottom: 8.0 }))
+            .show(ctx, |ui| {
+            theme::eyebrow(ui, "OBJECT");
             if let (Some(pkg), Some(oi)) = (&self.pkg, self.sel_obj) {
                 let e = &pkg.exports[oi];
-                ui.label(format!("Name:  {}", e.name));
-                ui.label(format!("Class: {}", e.class_name));
-                ui.label(format!("Serial size: {} bytes", e.size));
+                ui.label(theme::display(&e.name, 19.0));
+                theme::eyebrow(ui, format!("{} · {} B", e.class_name.to_uppercase(), e.size));
                 let kids = pkg.children(oi);
                 if !kids.is_empty() {
-                    egui::CollapsingHeader::new(format!("Sub-objects / components ({})", kids.len())).default_open(true).show(ui, |ui| {
+                    ui.add_space(2.0);
+                    egui::CollapsingHeader::new(egui::RichText::new(format!("Sub-objects · {}", kids.len())).color(theme::DIM).size(12.0)).default_open(true).show(ui, |ui| {
                         for &ci in &kids {
                             let c = &pkg.exports[ci];
-                            if ui.selectable_label(false, format!("{} : {}", c.name, c.class_name)).clicked() { sel_child = Some(ci); }
+                            ui.horizontal(|ui| {
+                                ui.add(egui::Label::new(egui::RichText::new("\u{203A}").color(theme::BLOOD)));
+                                if ui.selectable_label(false, egui::RichText::new(format!("{}  {}", c.name, c.class_name)).size(12.0)).clicked() { sel_child = Some(ci); }
+                            });
                         }
                     });
                 }
-                ui.separator();
+                theme::rule(ui);
                 ui.horizontal(|ui| {
                     ui.strong("Properties (editable)");
                     if ui.button("Apply").clicked() { do_apply = true; }
@@ -287,11 +354,26 @@ impl eframe::App for App {
                     });
                 }
                 if let Some(handle) = &self.tex_handle {
-                    ui.separator();
-                    if let Some((w, h, _)) = &self.tex_px { ui.strong(format!("Texture {}x{}", w, h)); }
+                    theme::rule(ui);
+                    if let Some((w, h, _)) = &self.tex_px {
+                        let fmt = pkg.prop_value(e.off, "Format").unwrap_or_else(|| "?".into());
+                        let fmt = fmt.trim_start_matches("PF_");
+                        theme::eyebrow(ui, format!("TEXTURE · {} · {}×{}", fmt, w, h));
+                    }
                     let s = handle.size_vec2();
-                    let k = (300.0 / s.x).min(300.0 / s.y).min(1.0);
-                    ui.image((handle.id(), s * k));
+                    let avail = ui.available_width().min(330.0);
+                    let k = (avail / s.x).min(avail / s.y).min(1.0);
+                    let dim = s * k;
+                    let (rect, _) = ui.allocate_exact_size(dim, egui::Sense::hover());
+                    theme::checkerboard(ui.painter(), rect, 9.0);
+                    ui.painter().image(handle.id(), rect, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
+                    ui.painter().rect_stroke(rect, 0.0_f32, egui::Stroke::new(1.0_f32, theme::LINE));
+                    ui.horizontal(|ui| {
+                        for (i, (lbl, col)) in [("RGBA", theme::BONE), ("R", egui::Color32::from_rgb(0xC4,0x5A,0x52)), ("G", egui::Color32::from_rgb(0x7A,0xA8,0x6E)), ("B", egui::Color32::from_rgb(0x6E,0x8E,0xC4)), ("A", theme::DIM)].iter().enumerate() {
+                            let on = self.tex_chan == i as u8;
+                            if ui.selectable_label(on, egui::RichText::new(*lbl).color(*col).monospace().size(11.0)).clicked() { do_chan = Some(i as u8); }
+                        }
+                    });
                     ui.horizontal(|ui| {
                         if ui.button("Export PNG").clicked() {
                             if let Some((w, h, rgba)) = &self.tex_px {
@@ -311,8 +393,28 @@ impl eframe::App for App {
                     ui.label(format!("Texture2D — {} (no preview for this format yet)", f));
                 }
                 if e.class_name == "SoundNodeWave" {
-                    ui.separator();
-                    ui.strong("Audio");
+                    theme::rule(ui);
+                    let ext = pkg.sound_data(e).map(|(_, x)| x).unwrap_or("—");
+                    theme::eyebrow(ui, format!("SOUND · {}", ext.to_uppercase()));
+                    let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width().min(330.0), 84.0), egui::Sense::hover());
+                    let p = ui.painter_at(rect);
+                    p.rect_filled(rect, 3.0_f32, theme::BG);
+                    p.rect_stroke(rect, 3.0_f32, egui::Stroke::new(1.0_f32, theme::LINE));
+                    let mid = rect.center().y;
+                    p.hline(rect.x_range(), mid, egui::Stroke::new(1.0_f32, theme::LINE));
+                    if !self.wave.is_empty() {
+                        let n = self.wave.len();
+                        let half = rect.height() * 0.46;
+                        for (i, (mn, mx)) in self.wave.iter().enumerate() {
+                            let x = rect.left() + (i as f32 + 0.5) / n as f32 * rect.width();
+                            let y0 = mid - mx.clamp(-1.0, 1.0) * half;
+                            let y1 = mid - mn.clamp(-1.0, 1.0) * half;
+                            p.vline(x, egui::Rangef::new(y0.min(y1), y0.max(y1) + 0.6), egui::Stroke::new(1.0_f32, theme::TEAL));
+                        }
+                    } else {
+                        p.text(rect.center(), egui::Align2::CENTER_CENTER, "no decodable waveform", egui::FontId::proportional(11.0), theme::DIM);
+                    }
+                    ui.add_space(2.0);
                     ui.horizontal(|ui| {
                         if ui.button("Play").clicked() {
                             if let Some((data, _)) = pkg.sound_data(e) { play_data = Some(data); }
@@ -385,6 +487,7 @@ impl eframe::App for App {
         });
         }
         if let Some(ci) = sel_child { self.sel_obj = Some(ci); }
+        if let Some(c) = do_chan { self.tex_chan = c; self.tex_for = None; }
         if do_apply {
             if let Some(pkg) = &mut self.pkg {
                 let mut n = 0;
@@ -513,7 +616,7 @@ impl eframe::App for App {
         }
 
         let mut do_loc_save = false;
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().frame(egui::Frame::none().fill(theme::BG).inner_margin(egui::Margin::same(12.0))).show(ctx, |ui| {
             if self.mode == Mode::Packages {
             if let Some(pkg) = &self.pkg {
                 ui.horizontal(|ui| { ui.label("Filter objects:"); ui.text_edit_singleline(&mut self.obj_filter); });
@@ -538,30 +641,76 @@ impl eframe::App for App {
             }
             } else if self.mode == Mode::Map {
             if self.pkg.is_none() {
-                ui.label("Open a .umap on the left to inspect its actors.");
+                ui.add_space(48.0);
+                ui.vertical_centered(|ui| { ui.label(egui::RichText::new("Open a Maps/*.umap on the left to read its level.").color(theme::DIM)); });
             } else if self.map_actors.is_empty() {
-                ui.label("This package has no PersistentLevel — open a Maps/*.umap.");
+                ui.add_space(48.0);
+                ui.vertical_centered(|ui| { ui.label(egui::RichText::new("This package has no PersistentLevel.").color(theme::DIM)); });
             } else {
-                let positioned = self.map_actors.iter().filter(|a| a.pos.is_some()).count();
+                let mut pick = None;
+                let placed: Vec<(usize, String, (f32, f32, f32))> = self.map_actors.iter()
+                    .filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
+                theme::eyebrow(ui, format!("PLAN · {} OF {} ACTORS POSITIONED", placed.len(), self.map_actors.len()));
+                if placed.len() >= 2 {
+                    let h = (ui.available_height() * 0.46).clamp(150.0, 380.0);
+                    let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), h), egui::Sense::click());
+                    let p = ui.painter_at(rect);
+                    p.rect_filled(rect, 3.0_f32, theme::BG);
+                    p.rect_stroke(rect, 3.0_f32, egui::Stroke::new(1.0_f32, theme::LINE));
+                    // robust bounds: p4..p96 so a couple of far-flung actors don't collapse the rest
+                    let mut xs: Vec<f32> = placed.iter().map(|(_, _, (x, _, _))| *x).collect();
+                    let mut ys: Vec<f32> = placed.iter().map(|(_, _, (_, y, _))| *y).collect();
+                    xs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                    ys.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                    let pct = |v: &[f32], p: f32| v[(((v.len() - 1) as f32) * p) as usize];
+                    let (minx, maxx) = (pct(&xs, 0.04), pct(&xs, 0.96));
+                    let (miny, maxy) = (pct(&ys, 0.04), pct(&ys, 0.96));
+                    let pad = 22.0_f32;
+                    let s = ((rect.width() - 2.0 * pad) / (maxx - minx).max(1.0)).min((rect.height() - 2.0 * pad) / (maxy - miny).max(1.0));
+                    let (mx, my) = ((minx + maxx) / 2.0, (miny + maxy) / 2.0);
+                    let project = |x: f32, y: f32| egui::pos2(
+                        (rect.center().x + (x - mx) * s).clamp(rect.left() + 5.0, rect.right() - 5.0),
+                        (rect.center().y - (y - my) * s).clamp(rect.top() + 5.0, rect.bottom() - 5.0),
+                    );
+                    if let Some(ptr) = resp.interact_pointer_pos() {
+                        let mut best = 20.0_f32; let mut bi = None;
+                        for (idx, _, (x, y, _)) in &placed { let d = project(*x, *y).distance(ptr); if d < best { best = d; bi = Some(*idx); } }
+                        if bi.is_some() { pick = bi; }
+                    }
+                    for (idx, class, (x, y, _)) in &placed {
+                        let pp = project(*x, *y);
+                        if self.sel_obj == Some(*idx) {
+                            p.circle_filled(pp, 5.5, theme::BLOOD);
+                            p.circle_stroke(pp, 8.5, egui::Stroke::new(1.5_f32, theme::BLOOD_HI));
+                        } else {
+                            p.circle_filled(pp, 2.6, theme::class_color(class));
+                        }
+                    }
+                }
+                ui.add_space(4.0);
+                theme::rule(ui);
                 ui.horizontal(|ui| {
-                    ui.label(format!("{} actors ({} positioned) — filter:", self.map_actors.len(), positioned));
-                    ui.text_edit_singleline(&mut self.actor_filter);
+                    theme::eyebrow(ui, "ACTORS");
+                    ui.add(egui::TextEdit::singleline(&mut self.actor_filter).hint_text("filter").desired_width(180.0));
                 });
                 let filt = self.actor_filter.to_lowercase();
-                let mut pick = None;
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    egui::Grid::new("actors").striped(true).num_columns(4).show(ui, |ui| {
-                        ui.strong("Class"); ui.strong("Actor"); ui.strong("Position (X, Y, Z)"); ui.strong("Comps"); ui.end_row();
+                    egui::Grid::new("actors").striped(true).num_columns(4).spacing([14.0, 4.0]).show(ui, |ui| {
+                        for h in ["Class", "Actor", "Position", "·"] { theme::eyebrow(ui, h); }
+                        ui.end_row();
                         for a in &self.map_actors {
                             if !filt.is_empty() && !a.class.to_lowercase().contains(&filt) && !a.name.to_lowercase().contains(&filt) { continue; }
                             let sel = self.sel_obj == Some(a.idx);
-                            if ui.selectable_label(sel, &a.class).clicked() { pick = Some(a.idx); }
-                            if ui.selectable_label(sel, &a.name).clicked() { pick = Some(a.idx); }
+                            ui.horizontal(|ui| {
+                                ui.add(egui::Label::new(egui::RichText::new("\u{25CF}").color(theme::class_color(&a.class)).size(9.0)));
+                                if ui.selectable_label(sel, &a.class).clicked() { pick = Some(a.idx); }
+                            });
+                            if ui.selectable_label(sel, egui::RichText::new(&a.name).color(theme::BONE)).clicked() { pick = Some(a.idx); }
                             match a.pos {
-                                Some((x, y, z)) => { ui.label(format!("({:.1}, {:.1}, {:.1})", x, y, z)); }
-                                None => { ui.weak("—"); }
+                                Some((x, y, z)) => { ui.add(egui::Label::new(egui::RichText::new(format!("{:.0}, {:.0}, {:.0}", x, y, z)).monospace().size(11.0).color(theme::DIM))); }
+                                None => { ui.label(egui::RichText::new("—").color(theme::LINE)); }
                             }
-                            ui.label(format!("{}", a.components.len()));
+                            ui.label(egui::RichText::new(format!("{}", a.components.len())).color(theme::DIM).size(11.0));
                             ui.end_row();
                         }
                     });
@@ -606,6 +755,30 @@ impl eframe::App for App {
             }
         }
     }
+}
+
+fn decode_waveform(data: &[u8]) -> Vec<(f32, f32)> {
+    use rodio::Source;
+    let dec = match rodio::Decoder::new(std::io::Cursor::new(data.to_vec())) { Ok(d) => d, Err(_) => return Vec::new() };
+    let ch = dec.channels().max(1) as usize;
+    let samples: Vec<f32> = dec.convert_samples::<f32>().step_by(ch).collect();
+    if samples.is_empty() { return Vec::new(); }
+    let buckets = 520usize;
+    let per = (samples.len() / buckets).max(1);
+    samples.chunks(per).map(|c| {
+        (c.iter().cloned().fold(f32::MAX, f32::min), c.iter().cloned().fold(f32::MIN, f32::max))
+    }).collect()
+}
+
+fn channel_view(rgba: &[u8], chan: u8) -> Vec<u8> {
+    if chan == 0 { return rgba.to_vec(); }
+    let mut v = vec![0u8; rgba.len()];
+    for (i, px) in rgba.chunks_exact(4).enumerate() {
+        let g = match chan { 1 => px[0], 2 => px[1], 3 => px[2], _ => px[3] };
+        let o = i * 4;
+        v[o] = g; v[o + 1] = g; v[o + 2] = g; v[o + 3] = 255;
+    }
+    v
 }
 
 fn show_tree(ui: &mut egui::Ui, nodes: &[upk::PropNode]) {
@@ -835,6 +1008,12 @@ fn main() -> eframe::Result<()> {
         }
         return Ok(());
     }
-    let opts = eframe::NativeOptions::default();
-    eframe::run_native("Hysteria Studio", opts, Box::new(|_cc| Ok(Box::new(App::default()))))
+    let opts = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([1280.0, 820.0]).with_min_inner_size([900.0, 600.0]),
+        ..Default::default()
+    };
+    eframe::run_native("Hysteria Studio", opts, Box::new(|cc| {
+        theme::install(&cc.egui_ctx);
+        Ok(Box::new(App::default()))
+    }))
 }
