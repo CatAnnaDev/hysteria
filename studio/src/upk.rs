@@ -6,6 +6,26 @@ fn ri(b: &[u8], o: usize) -> i32 { if o + 4 <= b.len() { i32::from_le_bytes([b[o
 fn ru(b: &[u8], o: usize) -> u32 { if o + 4 <= b.len() { u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0 } }
 fn rf(b: &[u8], o: usize) -> f32 { if o + 4 <= b.len() { f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0.0 } }
 
+// Read a UE3 FString at o: [i32 len][body]. len>0 => ANSI (len bytes incl. null),
+// len<0 => UTF-16LE (2*|len| bytes). Returns (decoded, total bytes consumed incl. the
+// 4-byte count). Always reports the format's declared advance so the property walker
+// stays in sync even when the body is truncated.
+fn read_fstring(b: &[u8], o: usize) -> (String, usize) {
+    let n = ri(b, o);
+    if n == 0 { return (String::new(), 4); }
+    let body = (o + 4).min(b.len());
+    if n < 0 {
+        let bytes = ((-n) as usize).saturating_mul(2);
+        let end = (o + 4 + bytes).min(b.len());
+        let u: Vec<u16> = b[body..end].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        (String::from_utf16_lossy(&u).trim_end_matches('\0').to_string(), 4 + bytes)
+    } else {
+        let bytes = n as usize;
+        let end = (o + 4 + bytes).min(b.len());
+        (String::from_utf8_lossy(&b[body..end]).trim_end_matches('\0').to_string(), 4 + bytes)
+    }
+}
+
 fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
     let f = |i: usize| if i + 4 <= d.len() { rf(d, i) } else { 0.0 };
     let n = |i: usize| if i + 4 <= d.len() { ri(d, i) } else { 0 };
@@ -20,6 +40,10 @@ fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
         "IntPoint" if d.len() >= 8 => format!("({}, {})", n(0), n(4)),
         "Box" if d.len() >= 24 => format!("min({:.1}, {:.1}, {:.1}) max({:.1}, {:.1}, {:.1})", f(0), f(4), f(8), f(12), f(16), f(20)),
         "Vector_NetQuantize" if d.len() >= 12 => format!("({:.2}, {:.2}, {:.2})", f(0), f(4), f(8)),
+        // FMatrix is row-major 4x4; the translation lives in row 3 (floats 12..14).
+        "Matrix" if d.len() >= 64 => format!("pos({:.1}, {:.1}, {:.1}) scale({:.2}, {:.2}, {:.2})",
+            f(48), f(52), f(56),
+            (f(0)*f(0)+f(4)*f(4)+f(8)*f(8)).sqrt(), (f(16)*f(16)+f(20)*f(20)+f(24)*f(24)).sqrt(), (f(32)*f(32)+f(36)*f(36)+f(40)*f(40)).sqrt()),
         _ => return None,
     })
 }
@@ -55,8 +79,8 @@ fn read_tfc_mip(tfc: &std::path::Path, off: i64, sod: usize, elem: usize) -> Opt
     let hdr = hdr?;
     let bs = ru(&win, hdr + 4) as usize;
     let tu = ru(&win, hdr + 12) as usize;
-    if bs == 0 { return None; }
-    let nblk = (tu + bs - 1) / bs;
+    if bs == 0 || bs > (4 << 20) { return None; }
+    let nblk = ((tu + bs - 1) / bs).min(1 << 20);
     let mut p = hdr + 16;
     let mut binfo = Vec::with_capacity(nblk);
     for k in 0..nblk { binfo.push((ru(&win, p + k * 8) as usize, ru(&win, p + k * 8 + 4) as usize)); }
@@ -77,7 +101,14 @@ impl<'a> Cur<'a> {
     fn u(&mut self) -> u32 { let v = ru(self.b, self.o); self.o += 4; v }
     fn s(&mut self) -> String {
         let n = self.i();
-        if n <= 0 { return String::new(); }
+        if n == 0 { return String::new(); }
+        if n < 0 {
+            // UE3 wide (UTF-16LE) FString: |n| code units = 2*|n| bytes on disk.
+            let bytes = ((-n) as usize).saturating_mul(2).min(self.b.len().saturating_sub(self.o));
+            let u: Vec<u16> = self.b[self.o..self.o + bytes].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+            self.o += bytes;
+            return String::from_utf16_lossy(&u).trim_end_matches('\0').to_string();
+        }
         let n = (n as usize).min(self.b.len().saturating_sub(self.o));
         let s = String::from_utf8_lossy(&self.b[self.o..self.o + n]).trim_end_matches('\0').to_string();
         self.o += n; s
@@ -91,6 +122,15 @@ pub struct Export {
     pub size: i32,
     pub off: i32,
     pub size_off: usize,
+    pub outer: i32,      // OuterIndex: package-export index (1-based) of the owning object, 0 = top level
+}
+
+pub struct MapActor {
+    pub idx: usize,
+    pub name: String,
+    pub class: String,
+    pub pos: Option<(f32, f32, f32)>,
+    pub components: Vec<usize>,
 }
 
 pub struct Pkg {
@@ -158,6 +198,100 @@ fn decompress(raw: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 impl Pkg {
+    // Investigation aid: at an export's serial start, try a few leading-skip hypotheses and
+    // report whether each makes the first tag look like a real (name, KindProperty, size).
+    pub fn probe(&self, e: &Export) -> String {
+        let b = &self.buf;
+        let off = e.off as usize;
+        let mut s = format!("== {} ({}) @ {} size {} ==\n", e.name, e.class_name, off, e.size);
+        let n = (e.size.max(0) as usize).min(64);
+        for row in b.get(off..(off + n).min(b.len())).unwrap_or(&[]).chunks(16) {
+            for byte in row { s.push_str(&format!("{:02x} ", byte)); }
+            s.push_str("  ");
+            for byte in row { let c = *byte; s.push(if (32..127).contains(&c) { c as char } else { '.' }); }
+            s.push('\n');
+        }
+        for skip in [0usize, 4, 8, 12] {
+            let o = off + skip;
+            let name = self.fname_at(o);
+            let typ = self.fname_at(o + 8);
+            let size = ri(b, o + 16);
+            s.push_str(&format!("  skip +{:<2}: name='{}' type='{}' size={}\n", skip, name, typ, size));
+        }
+        match self.find_prop_start(e) {
+            Some(start) => s.push_str(&format!("  AUTO prop start: off+{} -> first '{}' '{}'\n", start - off, self.fname_at(start), self.fname_at(start + 8))),
+            None => s.push_str("  AUTO prop start: none found\n"),
+        }
+        // full-serial scan: every offset whose +8 looks like a *Property tag
+        let end = (e.off as i64 + e.size.max(0) as i64) as usize;
+        s.push_str("  all *Property tags in serial:\n");
+        let mut o = off;
+        while o + 24 <= end && o + 24 <= b.len() {
+            let nidx = ri(b, o);
+            let typ = self.fname_at(o + 8);
+            if nidx >= 0 && (nidx as usize) < self.names.len() && typ.ends_with("Property") {
+                s.push_str(&format!("    +{:<3} {:<28} {:<16} size={}\n", o - off, self.fname_at(o), typ, ri(b, o + 16)));
+            }
+            o += 4;
+        }
+        s
+    }
+
+    // The leading data before the tagged-property list varies by object kind (4 bytes for
+    // most objects, more for components/actors that serialize native object refs first).
+    // Scan the first part of the serial for the first offset that looks like a real tag:
+    // a resolvable name, a *Property type, and a sane size — then verify the run reaches a
+    // clean "None" terminator. Returns the offset of the first tag, or None.
+    fn find_prop_start(&self, e: &Export) -> Option<usize> {
+        let b = &self.buf;
+        let off = e.off as usize;
+        let end = (e.off as i64 + e.size.max(0) as i64) as usize;
+        let scan_end = (off + 96).min(end);
+        for o in (off..scan_end).step_by(4) {
+            if o + 24 > b.len() { break; }
+            let nidx = ri(b, o);
+            if nidx < 0 || nidx as usize >= self.names.len() { continue; }
+            let typ = self.fname_at(o + 8);
+            if !typ.ends_with("Property") { continue; }
+            let size = ri(b, o + 16);
+            if size < 0 || (o + 24 + size as usize) > end { continue; }
+            if self.props_terminate(o, end) { return Some(o); }
+        }
+        None
+    }
+
+    // Walk tags from `start` using the same advance rules as parse_props; return true if the
+    // run ends at a "None" terminator within `end` (i.e. `start` is a real tag-list head).
+    fn props_terminate(&self, start: usize, end: usize) -> bool {
+        let b = &self.buf;
+        let mut o = start;
+        for _ in 0..512 {
+            if o + 8 > end || o + 8 > b.len() { return false; }
+            let name = self.fname_at(o);
+            if name == "None" { return true; }
+            if name.starts_with('?') { return false; }
+            o += 8;
+            let typ = self.fname_at(o);
+            if !typ.ends_with("Property") { return false; }
+            o += 8;
+            let size = ri(b, o) as usize; o += 8;
+            o += self.prop_body_len(&typ, size);
+            if o > end { return false; }
+        }
+        false
+    }
+
+    // Bytes consumed by a property value of `typ` with declared `size`, starting at `o`
+    // (the byte after the 16-byte name/type/size tag header has already been passed).
+    fn prop_body_len(&self, typ: &str, size: usize) -> usize {
+        match typ {
+            "BoolProperty" => 1,
+            "ByteProperty" => 8 + if size == 8 { 8 } else { size }, // enum name + (enum value | byte)
+            "StructProperty" => 8 + size,                            // struct type name + body
+            _ => size,
+        }
+    }
+
     fn fname_at(&self, o: usize) -> String {
         let idx = ri(&self.buf, o); let num = ri(&self.buf, o + 4);
         let base = self.names.get(idx as usize).cloned().unwrap_or_else(|| format!("?{}", idx));
@@ -181,14 +315,37 @@ impl Pkg {
         if end <= self.buf.len() { &self.buf[s..end] } else { &[] }
     }
 
+    // Upper bound for a property walk that starts at an export's serial offset: the
+    // export's own end, so a desynced walk can never spill into the next export's bytes.
+    fn export_end(&self, start: i32) -> usize {
+        self.exports.iter()
+            .filter(|e| e.off == start)
+            .map(|e| (e.off as i64 + e.size.max(0) as i64) as usize)
+            .max()
+            .map(|v| v.min(self.buf.len()))
+            .unwrap_or(self.buf.len())
+    }
+
+    // Where an export's tagged-property list begins. The leading native data varies by
+    // object kind (textures +4, components/most objects +8, some none), so auto-detect by
+    // scanning for the first terminating tag run; fall back to the +4 NetIndex skip.
+    fn prop_start_at(&self, start: i32) -> usize {
+        if let Some(e) = self.exports.iter().find(|e| e.off == start) {
+            if let Some(o) = self.find_prop_start(e) { return o; }
+        }
+        start as usize + 4
+    }
+
     pub fn props_editable(&self, start: i32) -> Vec<PropEdit> {
-        let b = &self.buf; let mut o = start as usize + 4; let mut out = Vec::new();
-        while o + 16 <= b.len() {
+        let b = &self.buf; let bound = self.export_end(start);
+        let mut o = self.prop_start_at(start); let mut out = Vec::new();
+        while o + 16 <= b.len() && o < bound {
             let name = self.fname_at(o); o += 8;
             if name == "None" || name.starts_with('?') { break; }
             let typ = self.fname_at(o); o += 8;
+            if !typ.ends_with("Property") { break; }
             let size = ri(b, o) as usize; o += 8;
-            if o >= b.len() { break; }
+            if o > b.len() { break; }
             let (kind, voff, value): (u8, usize, String) = match typ.as_str() {
                 "IntProperty" => { let v = ri(b, o); let vo = o; o += 4; (1, vo, v.to_string()) }
                 "FloatProperty" => { let v = rf(b, o); let vo = o; o += 4; (2, vo, format!("{}", v)) }
@@ -196,9 +353,9 @@ impl Pkg {
                 "ByteProperty" => { let _e = self.fname_at(o); o += 8;
                     if size == 8 { let v = self.fname_at(o); o += 8; (0, 0, v) } else { let v = b.get(o).copied().unwrap_or(0).to_string(); let vo = o; o += size; (4, vo, v) } }
                 "NameProperty" => { let v = self.fname_at(o); o += 8; (0, 0, v) }
-                "StrProperty" => { let n = ri(b, o).max(0) as usize; o += 4; let s = String::from_utf8_lossy(&b[o..(o+n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; (0, 0, s) }
+                "StrProperty" => { let (s, adv) = read_fstring(b, o); o += adv; (0, 0, s) }
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; (0, 0, self.idx_name(v)) }
-                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = &b[o..(o+size).min(b.len())]; let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{} {}B>", sn, size)); o += size; (0, 0, v) }
+                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = b.get(o..(o+size).min(b.len())).unwrap_or(&[]); let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{} {}B>", sn, size)); o += size; (0, 0, v) }
                 _ => { o += size; (0, 0, format!("<{} {}B>", typ, size)) }
             };
             out.push(PropEdit { name, typ, kind, off: voff, value });
@@ -206,14 +363,95 @@ impl Pkg {
         }
         out
     }
-    fn parse_props(&self, start: i32) -> (Vec<(String, String, String)>, usize) {
-        let b = &self.buf; let mut o = start as usize + 4; let mut out = Vec::new();
-        while o + 16 <= b.len() {
+
+    // Locate a single tagged property by name in an export's serial and return its
+    // (struct-or-property type, body offset, body length). The body offset already skips
+    // the struct-type FName for StructProperty / the enum FName for ByteProperty.
+    fn find_prop_raw(&self, start: i32, key: &str) -> Option<(String, usize, usize)> {
+        let b = &self.buf; let bound = self.export_end(start);
+        let mut o = self.prop_start_at(start);
+        while o + 16 <= b.len() && o < bound {
             let name = self.fname_at(o); o += 8;
             if name == "None" || name.starts_with('?') { break; }
             let typ = self.fname_at(o); o += 8;
+            if !typ.ends_with("Property") { break; }
             let size = ri(b, o) as usize; o += 8;
-            if o >= b.len() { break; }
+            let (body_off, body_len, label) = match typ.as_str() {
+                "BoolProperty" => (o, 1usize, typ.clone()),
+                "ByteProperty" => (o + 8, if size == 8 { 8 } else { size }, typ.clone()),
+                "StructProperty" => { let sn = self.fname_at(o); (o + 8, size, sn) }
+                _ => (o, size, typ.clone()),
+            };
+            if name == key { return Some((label, body_off, body_len)); }
+            o += self.prop_body_len(&typ, size);
+            if o > bound { break; }
+        }
+        None
+    }
+
+    // The f32 values inside a named (Struct) property's body — e.g. a Vector (3) or a
+    // Matrix (16). Used to pull transforms out of actors/components.
+    fn struct_floats(&self, start: i32, key: &str) -> Option<Vec<f32>> {
+        let (_, off, len) = self.find_prop_raw(start, key)?;
+        let b = &self.buf;
+        let mut v = Vec::new();
+        let mut o = off;
+        while o + 4 <= off + len && o + 4 <= b.len() { v.push(rf(b, o)); o += 4; }
+        Some(v)
+    }
+
+    pub fn level_export(&self) -> Option<usize> {
+        self.exports.iter().position(|e| e.class_name == "Level")
+    }
+
+    // Export indices whose Outer is the given export (its sub-objects / components).
+    pub fn children(&self, idx: usize) -> Vec<usize> {
+        let r = (idx + 1) as i32;
+        self.exports.iter().enumerate().filter(|(_, c)| c.outer == r).map(|(i, _)| i).collect()
+    }
+
+    // The actors placed in this map, via the export OuterIndex hierarchy: an actor's Outer is
+    // the PersistentLevel; a component's Outer is its actor. Position comes from the actor's
+    // own Location, else a child primitive component's CachedParentToWorld / Translation.
+    pub fn actors(&self) -> Vec<MapActor> {
+        let level = match self.level_export() { Some(l) => l, None => return Vec::new() };
+        let level_ref = (level + 1) as i32;
+        let mut out = Vec::new();
+        for (i, e) in self.exports.iter().enumerate() {
+            if e.outer != level_ref { continue; }
+            let components: Vec<usize> = self.exports.iter().enumerate()
+                .filter(|(_, c)| c.outer == (i + 1) as i32).map(|(ci, _)| ci).collect();
+            let pos = self.actor_pos(i, &components);
+            out.push(MapActor { idx: i, name: e.name.clone(), class: e.class_name.clone(), pos, components });
+        }
+        out
+    }
+
+    fn actor_pos(&self, actor: usize, comps: &[usize]) -> Option<(f32, f32, f32)> {
+        if let Some(v) = self.struct_floats(self.exports[actor].off, "Location") {
+            if v.len() >= 3 { return Some((v[0], v[1], v[2])); }
+        }
+        for &c in comps {
+            if let Some(m) = self.struct_floats(self.exports[c].off, "CachedParentToWorld") {
+                if m.len() >= 15 { return Some((m[12], m[13], m[14])); }
+            }
+            if let Some(v) = self.struct_floats(self.exports[c].off, "Translation") {
+                if v.len() >= 3 { return Some((v[0], v[1], v[2])); }
+            }
+        }
+        None
+    }
+
+    fn parse_props(&self, start: i32) -> (Vec<(String, String, String)>, usize) {
+        let b = &self.buf; let bound = self.export_end(start);
+        let mut o = self.prop_start_at(start); let mut out = Vec::new();
+        while o + 16 <= b.len() && o < bound {
+            let name = self.fname_at(o); o += 8;
+            if name == "None" || name.starts_with('?') { break; }
+            let typ = self.fname_at(o); o += 8;
+            if !typ.ends_with("Property") { break; }
+            let size = ri(b, o) as usize; o += 8;
+            if o > b.len() { break; }
             let val = match typ.as_str() {
                 "IntProperty" => { let v = ri(b, o); o += 4; v.to_string() }
                 "FloatProperty" => { let v = rf(b, o); o += 4; format!("{:.3}", v) }
@@ -222,9 +460,8 @@ impl Pkg {
                 "NameProperty" => { let v = self.fname_at(o); o += 8; v }
                 "BoolProperty" => { let v = b.get(o).copied().unwrap_or(0) != 0; o += 1; format!("{}", v) }
                 "ObjectProperty" | "ClassProperty" | "ComponentProperty" => { let v = ri(b, o); o += 4; self.idx_name(v) }
-                "StrProperty" => { let n = ri(b, o); o += 4; let n = n.max(0) as usize;
-                    let s = String::from_utf8_lossy(&b[o..(o + n).min(b.len())]).trim_end_matches('\0').to_string(); o += n; s }
-                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = &b[o..(o+size).min(b.len())]; let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{}>", sn)); o += size; v }
+                "StrProperty" => { let (s, adv) = read_fstring(b, o); o += adv; s }
+                "StructProperty" => { let sn = self.fname_at(o); o += 8; let d = b.get(o..(o+size).min(b.len())).unwrap_or(&[]); let v = decode_struct(&sn, d).unwrap_or_else(|| format!("<{}>", sn)); o += size; v }
                 _ => { o += size; format!("<{} {}B>", typ, size) }
             };
             out.push((name, typ, val));
@@ -353,7 +590,9 @@ impl Pkg {
         let mut raw_exports = Vec::new();
         let mut o3 = export_off;
         for _ in 0..export_count {
-            let ci = ri(&buf, o3); o3 += 12;
+            let ci = ri(&buf, o3);          // ClassIndex
+            let outer = ri(&buf, o3 + 8);   // OuterIndex (SuperIndex at +4 skipped)
+            o3 += 12;
             let nm = fname(&buf, o3); o3 += 8;
             o3 += 4 + 8;
             let size_off = o3;
@@ -361,7 +600,7 @@ impl Pkg {
             o3 += 4;
             let nc = ri(&buf, o3); o3 += 4 + nc as usize * 4;
             o3 += 16 + 4;
-            raw_exports.push((ci, nm, sz, off, size_off));
+            raw_exports.push((ci, nm, sz, off, size_off, outer));
         }
         let class_of = |ci: i32| -> String {
             if ci == 0 { "Class".into() }
@@ -369,7 +608,7 @@ impl Pkg {
             else { raw_exports.get((ci - 1) as usize).map(|e| e.1.clone()).unwrap_or_else(|| "?exp".into()) }
         };
         let exports = raw_exports.iter()
-            .map(|(ci, nm, sz, off, so)| Export { class_name: class_of(*ci), name: nm.clone(), size: *sz, off: *off, size_off: *so })
+            .map(|(ci, nm, sz, off, so, outer)| Export { class_name: class_of(*ci), name: nm.clone(), size: *sz, off: *off, size_off: *so, outer: *outer })
             .collect();
 
         // For a compressed package the real uncompressed summary tail (PackageSource +
@@ -450,8 +689,14 @@ impl Pkg {
         let serial = self.buf[off..off + sz].to_vec();
         let oggpos = serial.windows(4).position(|w| w == b"OggS" || w == b"RIFF").ok_or("no embedded audio")?;
         if oggpos < 16 { return Err("unexpected sound layout".into()); }
+        // The FByteBulkData header before the audio holds SizeOnDisk at oggpos-8; the bytes
+        // after the old payload are the trailing platform bulk headers (Xbox360/PS3) the PC
+        // cook still serializes — they must survive the splice or the serial is truncated.
+        let old_len = ri(&serial, oggpos - 8).max(0) as usize;
+        let tail_start = (oggpos + old_len).min(serial.len());
         let mut ns = serial[..oggpos].to_vec();
         ns.extend_from_slice(new_audio);
+        ns.extend_from_slice(&serial[tail_start..]);
         let nl = new_audio.len() as i32;
         ns[oggpos - 12..oggpos - 8].copy_from_slice(&nl.to_le_bytes());
         ns[oggpos - 8..oggpos - 4].copy_from_slice(&nl.to_le_bytes());
@@ -464,8 +709,12 @@ impl Pkg {
         if end > self.buf.len() { return None; }
         let d = &self.buf[s..end];
         for i in 0..d.len().saturating_sub(4) {
-            if &d[i..i + 4] == b"OggS" { return Some((d[i..].to_vec(), "ogg")); }
-            if &d[i..i + 4] == b"RIFF" { return Some((d[i..].to_vec(), "wav")); }
+            let ext = match &d[i..i + 4] { b"OggS" => "ogg", b"RIFF" => "wav", _ => continue };
+            // Bound the payload to SizeOnDisk (FByteBulkData header at i-8) so the trailing
+            // platform bulk headers are not appended to the exported/played audio.
+            let len = if i >= 8 { ri(d, i - 8).max(0) as usize } else { 0 };
+            let fin = if len > 0 && i + len <= d.len() { i + len } else { d.len() };
+            return Some((d[i..fin].to_vec(), ext));
         }
         None
     }
@@ -484,10 +733,14 @@ impl Pkg {
             }
             let gs = self.cflags_off + 8;
             for i in self.cflags_off..gs { v[i] = 0; }   // CompressionFlags = 0, NumCompressedChunks = 0
-            // restore the real trailing summary into the chunk-table gap; pad with zeros if short
-            for i in gs..self.name_off { v[i] = 0; }
-            let n = self.summary_tail.len().min(self.name_off.saturating_sub(gs));
-            v[gs..gs + n].copy_from_slice(&self.summary_tail[..n]);
+            // restore the real trailing summary into the chunk-table gap; pad with zeros if
+            // short. Only touch the gap when a tail was actually recovered in load() — zeroing
+            // it on an extraction miss would blank PackageSource/AdditionalPackagesToCook.
+            if !self.summary_tail.is_empty() {
+                for i in gs..self.name_off { v[i] = 0; }
+                let n = self.summary_tail.len().min(self.name_off.saturating_sub(gs));
+                v[gs..gs + n].copy_from_slice(&self.summary_tail[..n]);
+            }
         }
         v
     }
