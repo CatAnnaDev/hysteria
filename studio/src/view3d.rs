@@ -137,11 +137,16 @@ impl Raster {
         for t in &scene.tris {
             let (a, b, cc) = (t.p[0], t.p[1], t.p[2]);
             let n = norm(cross(sub(b, a), sub(cc, a)));
-            let shade = 0.30 + 0.70 * dot(n, light).abs();
+            // hemisphere ambient (brighter from above) + a two-sided key light, so untextured
+            // grey geometry still reads its form. Warm the lit side slightly.
+            let key = dot(n, light).abs();
+            let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
+            let shade = (0.20 + 0.46 * hemi + 0.40 * key).min(1.15);
+            let warm = 1.0 + 0.06 * key;
             let col = [
-                (t.color[0] as f32 * shade) as u8,
-                (t.color[1] as f32 * shade) as u8,
-                (t.color[2] as f32 * shade) as u8,
+                ((t.color[0] as f32 * shade * warm).min(255.0)) as u8,
+                ((t.color[1] as f32 * shade).min(255.0)) as u8,
+                ((t.color[2] as f32 * shade * (2.0 - warm)).min(255.0)) as u8,
             ];
             let (pa, pb, pc) = match (project(a), project(b), project(cc)) {
                 (Some(x), Some(y), Some(z)) => (x, y, z),

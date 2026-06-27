@@ -579,7 +579,12 @@ impl Pkg {
                 if let Some(ps) = o.checked_sub(n * 12) {
                     if ps >= start && (0..n).step_by((n / 24).max(1)).all(|i| fv(ps + i * 12).is_some()) {
                         let verts: Vec<[f32; 3]> = (0..n).map(|i| { let vo = ps + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
-                        if let Some(indices) = self.find_indices(o, end, n) {
+                        let indices = self.find_indices(o, end, n);
+                        if std::env::var("MESHDBG").is_ok() {
+                            let frac = indices.as_ref().map(|ix| filter_spikes(&verts, ix).1).unwrap_or(-1.0);
+                            eprintln!("MESHDBG hdr off+{} ntc={} stride={} n={} idx={:?} frac={:.2}", o - start, ntc, stride, n, indices.as_ref().map(|ix| ix.len() / 3), frac);
+                        }
+                        if let Some(indices) = indices {
                             let (kept, frac) = filter_spikes(&verts, &indices);
                             if frac > 0.6 && kept.len() >= 3 {
                                 return Some(Mesh { verts, indices: kept });
