@@ -534,11 +534,11 @@ impl Pkg {
         }
         runs.sort_by(|a, b| b.1.cmp(&a.1));
         for (vstart, nverts) in runs {
+            if nverts < 12 { continue; } // skip tiny coincidental runs; real LODs have many verts
+            if std::env::var("MESHDBG").is_ok() {
+                eprintln!("MESHDBG run vstart={} (off+{}) nverts={}", vstart, vstart - start, nverts);
+            }
             if let Some(indices) = self.find_indices(vstart + nverts * 12, end, nverts) {
-                // the index buffer must reference most of the run's vertices, else this run is
-                // a coincidental block (e.g. RawTriangles) sitting before a real index buffer.
-                let maxi = indices.iter().copied().max().unwrap_or(0) as usize;
-                if maxi + 1 < nverts / 2 { continue; }
                 let verts = (0..nverts).map(|i| { let vo = vstart + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
                 return Some(Mesh { verts, indices });
             }
@@ -548,9 +548,8 @@ impl Pkg {
 
     fn find_indices(&self, from: usize, end: usize, nverts: usize) -> Option<Vec<u32>> {
         let b = &self.buf;
-        let stop = (from + 8192).min(end);
         let mut o = from;
-        while o + 8 < stop {
+        while o + 8 < end {
             let stride = ru(b, o);
             let nidx = ru(b, o + 4) as usize;
             let idata = o + 8;
@@ -559,8 +558,12 @@ impl Pkg {
                     if stride == 2 { u16::from_le_bytes([b[idata + i * 2], b[idata + i * 2 + 1]]) as usize }
                     else { ru(b, idata + i * 4) as usize }
                 };
-                if (0..nidx.min(192)).all(|i| rd(i) < nverts) {
-                    return Some((0..nidx).map(|i| rd(i) as u32).collect());
+                if (0..nidx.min(256)).all(|i| rd(i) < nverts) {
+                    let idx: Vec<u32> = (0..nidx).map(|i| rd(i) as u32).collect();
+                    // require the buffer to reference most of the run's vertices, else it is a
+                    // coincidental stride-2 block before the real index buffer — keep scanning.
+                    let maxi = idx.iter().copied().max().unwrap_or(0) as usize;
+                    if maxi + 1 >= nverts / 2 { return Some(idx); }
                 }
             }
             o += 1;
