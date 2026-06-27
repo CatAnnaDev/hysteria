@@ -142,6 +142,11 @@ pub struct PropNode {
     pub children: Vec<PropNode>,
 }
 
+pub struct Mesh {
+    pub verts: Vec<[f32; 3]>,
+    pub indices: Vec<u32>,
+}
+
 impl PropNode {
     fn leaf(name: String, typ: &str, value: String) -> PropNode {
         PropNode { name, typ: typ.to_string(), value, children: Vec::new() }
@@ -419,6 +424,96 @@ impl Pkg {
         self.exports.iter().position(|e| e.class_name == "Level")
     }
 
+    // The component's 16-float world matrix (row-major) from CachedParentToWorld. The cooked
+    // struct body has a 4-byte lead, so the matrix is body floats 1..17; translation lands at
+    // m[12],m[13],m[14] in the returned array (standard indexing).
+    pub fn world_matrix(&self, start: i32) -> Option<[f32; 16]> {
+        let f = self.struct_floats(start, "CachedParentToWorld")?;
+        if f.len() < 17 { return None; }
+        let mut m = [0.0f32; 16];
+        m.copy_from_slice(&f[1..17]);
+        Some(m)
+    }
+
+    // Raw object index stored by a named ObjectProperty (>0 export 1-based, <0 import, 0 none).
+    pub fn object_ref(&self, start: i32, key: &str) -> Option<i32> {
+        let (_, off, len) = self.find_prop_raw(start, key)?;
+        if len >= 4 { Some(ri(&self.buf, off)) } else { None }
+    }
+
+    // Decode a cooked StaticMesh LOD into positions + triangle indices by locating the
+    // render buffers heuristically: a PositionVertexBuffer is [u32 stride=12][u32 numVerts]
+    // [numVerts*FVector]; the IndexBuffer is [u32 stride=2][u32 numIdx][numIdx*u16]. We accept
+    // the first stride-12 block whose vectors are finite/in-range AND that is followed by a
+    // stride-2 block of triangle indices all < numVerts — that joint constraint rejects
+    // coincidental matches.
+    pub fn static_mesh(&self, e: &Export) -> Option<Mesh> {
+        let b = &self.buf;
+        let start = e.off as usize;
+        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
+        let fv = |o: usize| -> Option<[f32; 3]> {
+            if o + 12 > end { return None; }
+            let v = [rf(b, o), rf(b, o + 4), rf(b, o + 8)];
+            if v.iter().all(|f| f.is_finite() && f.abs() < 1.0e5) { Some(v) } else { None }
+        };
+        // The PositionVertexBuffer is a clean run of N consecutive FVectors. RawTriangles and
+        // the packed tangent/UV buffer break such a run, so the longest non-degenerate run is
+        // the position buffer. Collect candidates, then accept the longest one that is followed
+        // by a valid u16 index buffer (indices < N) — that joint test rejects false matches.
+        let mut runs: Vec<(usize, usize)> = Vec::new();
+        let mut o = start;
+        while o + 12 <= end {
+            if fv(o).is_some() {
+                let (mut p, mut n) = (o, 0usize);
+                let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
+                while let Some(v) = fv(p) {
+                    for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); }
+                    n += 1; p += 12;
+                    if n > (1 << 21) { break; }
+                }
+                let extent = (mx[0] - mn[0]).max(mx[1] - mn[1]).max(mx[2] - mn[2]);
+                if n >= 4 && extent > 1.0 { runs.push((o, n)); }
+                o = if n >= 4 { p } else { o + 1 };
+            } else {
+                o += 1; // buffers can be byte-misaligned (a 1-byte bUseFullPrecisionUVs flag)
+            }
+        }
+        runs.sort_by(|a, b| b.1.cmp(&a.1));
+        for (vstart, nverts) in runs {
+            if let Some(indices) = self.find_indices(vstart + nverts * 12, end, nverts) {
+                // the index buffer must reference most of the run's vertices, else this run is
+                // a coincidental block (e.g. RawTriangles) sitting before a real index buffer.
+                let maxi = indices.iter().copied().max().unwrap_or(0) as usize;
+                if maxi + 1 < nverts / 2 { continue; }
+                let verts = (0..nverts).map(|i| { let vo = vstart + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
+                return Some(Mesh { verts, indices });
+            }
+        }
+        None
+    }
+
+    fn find_indices(&self, from: usize, end: usize, nverts: usize) -> Option<Vec<u32>> {
+        let b = &self.buf;
+        let stop = (from + 8192).min(end);
+        let mut o = from;
+        while o + 8 < stop {
+            let stride = ru(b, o);
+            let nidx = ru(b, o + 4) as usize;
+            let idata = o + 8;
+            if (stride == 2 || stride == 4) && nidx >= 3 && nidx % 3 == 0 && nidx < (1 << 22) && idata + nidx * stride as usize <= end {
+                let rd = |i: usize| -> usize {
+                    if stride == 2 { u16::from_le_bytes([b[idata + i * 2], b[idata + i * 2 + 1]]) as usize }
+                    else { ru(b, idata + i * 4) as usize }
+                };
+                if (0..nidx.min(192)).all(|i| rd(i) < nverts) {
+                    return Some((0..nidx).map(|i| rd(i) as u32).collect());
+                }
+            }
+            o += 1;
+        }
+        None
+    }
+
     // Export indices whose Outer is the given export (its sub-objects / components).
     pub fn children(&self, idx: usize) -> Vec<usize> {
         let r = (idx + 1) as i32;
@@ -519,7 +614,39 @@ impl Pkg {
             let pos = self.actor_pos(i, &components);
             out.push(MapActor { idx: i, name: e.name.clone(), class: e.class_name.clone(), pos, components });
         }
+        // Second pass: actors whose transform lives in native serial bytes (StaticMeshActor,
+        // Brush, ...) have no tagged Location. Use the region established by the actors we did
+        // place (lights/KActors) to scan each unplaced actor's serial for an FVector inside the
+        // level bounds — the large, specific level coordinates make false matches near-impossible.
+        let placed: Vec<(f32, f32, f32)> = out.iter().filter_map(|a| a.pos).collect();
+        if placed.len() >= 3 {
+            let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
+            for p in &placed { let v = [p.0, p.1, p.2]; for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); } }
+            let ext = (mx[0] - mn[0]).max(mx[1] - mn[1]).max(mx[2] - mn[2]).max(1000.0);
+            let lo = [mn[0] - ext, mn[1] - ext, mn[2] - ext];
+            let hi = [mx[0] + ext, mx[1] + ext, mx[2] + ext];
+            for a in out.iter_mut() {
+                if a.pos.is_none() { a.pos = self.scan_location(a.idx, lo, hi); }
+            }
+        }
         out
+    }
+
+    fn scan_location(&self, idx: usize, lo: [f32; 3], hi: [f32; 3]) -> Option<(f32, f32, f32)> {
+        let e = &self.exports[idx];
+        let b = &self.buf;
+        let start = e.off as usize;
+        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
+        let mut o = start;
+        while o + 12 <= end {
+            let v = [rf(b, o), rf(b, o + 4), rf(b, o + 8)];
+            if (0..3).all(|k| v[k] >= lo[k] && v[k] <= hi[k]) {
+                // require a non-trivial position (not all near a boundary corner / zeros)
+                if v.iter().any(|f| f.abs() > 1.0) { return Some((v[0], v[1], v[2])); }
+            }
+            o += 1;
+        }
+        None
     }
 
     fn actor_pos(&self, actor: usize, comps: &[usize]) -> Option<(f32, f32, f32)> {

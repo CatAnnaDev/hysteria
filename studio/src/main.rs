@@ -44,6 +44,9 @@ struct App {
     view_dirty: bool,
     view_cam_for: Option<usize>,
     view_size: (usize, usize),
+    scene: view3d::Scene,
+    scene_key: Option<(usize, Option<usize>)>,
+    mesh_cache: std::collections::HashMap<usize, Option<upk::Mesh>>,
     loc_files: Vec<PathBuf>,
     loc_root: Option<PathBuf>,
     loc_filter: String,
@@ -66,6 +69,7 @@ impl Default for App {
             map_actors: vec![], actor_filter: String::new(),
             cam: view3d::Cam { target: [0.0, 0.0, 0.0], yaw: 0.9, pitch: 0.6, dist: 1000.0 },
             view_tex: None, view_dirty: true, view_cam_for: None, view_size: (0, 0),
+            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
             sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
@@ -678,13 +682,21 @@ impl eframe::App for App {
                         self.cam.dist = (self.cam.dist * (1.0 - scroll * 0.0015)).clamp(10.0, 5_000_000.0);
                         self.view_dirty = true;
                     }
+                    let key = (self.sel_pkg.unwrap_or(0), self.sel_obj);
+                    if self.scene_key != Some(key) {
+                        if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); }
+                        self.scene = if let Some(pkg) = &self.pkg {
+                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache)
+                        } else { view3d::Scene::new() };
+                        self.scene_key = Some(key);
+                        self.view_dirty = true;
+                    }
                     let pw = (rect.width() as usize).max(32);
                     let ph = (rect.height() as usize).max(32);
                     if self.view_dirty || self.view_size != (pw, ph) {
                         self.view_size = (pw, ph);
-                        let scene = build_scene(&placed, self.sel_obj);
                         let mut r = view3d::Raster::new(pw, ph);
-                        r.render(&scene, &self.cam.view_proj(pw as f32 / ph as f32), [18, 16, 13]);
+                        r.render(&self.scene, &self.cam.view_proj(pw as f32 / ph as f32), [18, 16, 13]);
                         let img = egui::ColorImage::from_rgba_unmultiplied([pw, ph], &r.col);
                         self.view_tex = Some(ctx.load_texture("view3d", img, egui::TextureOptions::NEAREST));
                         self.view_dirty = false;
@@ -807,29 +819,68 @@ fn fit_cam(cam: &mut view3d::Cam, placed: &[Placed]) {
 
 fn class_rgb(class: &str) -> [u8; 3] { let c = theme::class_color(class); [c.r(), c.g(), c.b()] }
 
-fn build_scene(placed: &[Placed], sel: Option<usize>) -> view3d::Scene {
+fn swz3(w: [f32; 3]) -> [f32; 3] { [w[0], w[2], w[1]] }
+
+// Transform a mesh's local triangles to world (component matrix if present, else translate by
+// the actor position) and append them, swizzled UE Z-up -> render Y-up.
+fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]>, pos: Option<(f32, f32, f32)>, color: [u8; 3]) {
+    let xf = |lp: [f32; 3]| -> [f32; 3] {
+        let w = match mat {
+            Some(m) => [
+                lp[0] * m[0] + lp[1] * m[4] + lp[2] * m[8] + m[12],
+                lp[0] * m[1] + lp[1] * m[5] + lp[2] * m[9] + m[13],
+                lp[0] * m[2] + lp[1] * m[6] + lp[2] * m[10] + m[14],
+            ],
+            None => match pos { Some(p) => [lp[0] + p.0, lp[1] + p.1, lp[2] + p.2], None => lp },
+        };
+        swz3(w)
+    };
+    let nv = mesh.verts.len();
+    for t in mesh.indices.chunks_exact(3) {
+        let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
+        if a < nv && b < nv && c < nv {
+            sc.tris.push(view3d::Tri { p: [xf(mesh.verts[a]), xf(mesh.verts[b]), xf(mesh.verts[c])], color });
+        }
+    }
+}
+
+// Build the renderable world: real StaticMesh geometry where it decodes, a box otherwise.
+fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize>, cache: &mut std::collections::HashMap<usize, Option<upk::Mesh>>) -> view3d::Scene {
     let mut sc = view3d::Scene::new();
+    let placed: Vec<Placed> = actors.iter().filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
     if placed.is_empty() { return sc; }
-    let (mn, mx) = scene_bounds(placed);
+    let (mn, mx) = scene_bounds(&placed);
     let ext = (mx[0] - mn[0]).max(mx[1] - mn[1]).max(mx[2] - mn[2]).max(1.0);
     let hs = ext / 150.0;
-    // ground grid at the lowest actor, just under the boxes
     let gy = mn[1] - hs;
     let n = 16;
     let (gx0, gx1, gz0, gz1) = (mn[0] - hs, mx[0] + hs, mn[2] - hs, mx[2] + hs);
     for i in 0..=n {
         let f = i as f32 / n as f32;
-        let tx = gx0 + (gx1 - gx0) * f;
-        let tz = gz0 + (gz1 - gz0) * f;
-        sc.lines.push(([tx, gy, gz0], [tx, gy, gz1], [44, 39, 32]));
-        sc.lines.push(([gx0, gy, tz], [gx1, gy, tz], [44, 39, 32]));
+        sc.lines.push(([gx0 + (gx1 - gx0) * f, gy, gz0], [gx0 + (gx1 - gx0) * f, gy, gz1], [44, 39, 32]));
+        sc.lines.push(([gx0, gy, gz0 + (gz1 - gz0) * f], [gx1, gy, gz0 + (gz1 - gz0) * f], [44, 39, 32]));
     }
-    for (idx, class, p) in placed {
-        let c = swz(*p);
-        if sel == Some(*idx) {
-            sc.box_solid(c, [hs * 1.5; 3], [206, 58, 50]);
-        } else {
-            sc.box_solid(c, [hs; 3], class_rgb(class));
+    for a in actors {
+        let col = if sel == Some(a.idx) { [206, 58, 50] } else { class_rgb(&a.class) };
+        let smc = a.components.iter().copied().find(|&c| pkg.exports[c].class_name.contains("StaticMeshComponent"));
+        let mut drew_mesh = false;
+        if let Some(smc) = smc {
+            let off = pkg.exports[smc].off;
+            if let Some(r) = pkg.object_ref(off, "StaticMesh") {
+                if r > 0 {
+                    let ei = (r - 1) as usize;
+                    let mesh = cache.entry(ei).or_insert_with(|| {
+                        pkg.exports.get(ei).filter(|e| e.class_name == "StaticMesh").and_then(|e| pkg.static_mesh(e))
+                    });
+                    if let Some(m) = mesh {
+                        add_mesh_tris(&mut sc, m, pkg.world_matrix(off), a.pos, col);
+                        drew_mesh = true;
+                    }
+                }
+            }
+        }
+        if !drew_mesh {
+            if let Some(p) = a.pos { sc.box_solid(swz(p), [hs; 3], col); }
         }
     }
     sc
@@ -1023,6 +1074,30 @@ fn main() -> eframe::Result<()> {
         let b = std::fs::read("/tmp/loctest.out").unwrap();
         println!("entries={} editable={} bom={} crlf={} roundtrip_identical={} ({} vs {} bytes)",
             l.entries.len(), kv, l.bom, l.crlf, a == b, a.len(), b.len());
+        return Ok(());
+    }
+    if args.len() > 3 && args[1] == "--mesh" {
+        // --mesh <pkg> <namesubstr> [obj.out] : decode a StaticMesh and report / export OBJ
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let want = args[3].to_lowercase();
+        for e in p.exports.iter().filter(|e| e.class_name == "StaticMesh" && e.name.to_lowercase().contains(&want)).take(8) {
+            match p.static_mesh(e) {
+                Some(m) => {
+                    let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
+                    for v in &m.verts { for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); } }
+                    println!("{:<26} verts={:<6} tris={:<6} bbox=({:.0}..{:.0}, {:.0}..{:.0}, {:.0}..{:.0})",
+                        e.name, m.verts.len(), m.indices.len() / 3, mn[0], mx[0], mn[1], mx[1], mn[2], mx[2]);
+                    if let Some(out) = args.get(4) {
+                        let mut s = String::new();
+                        for v in &m.verts { s.push_str(&format!("v {} {} {}\n", v[0], v[1], v[2])); }
+                        for t in m.indices.chunks_exact(3) { s.push_str(&format!("f {} {} {}\n", t[0] + 1, t[1] + 1, t[2] + 1)); }
+                        std::fs::write(out, s).unwrap();
+                        println!("  wrote OBJ -> {}", out);
+                    }
+                }
+                None => println!("{:<26} decode failed", e.name),
+            }
+        }
         return Ok(());
     }
     if args.len() > 3 && args[1] == "--rawat" {
