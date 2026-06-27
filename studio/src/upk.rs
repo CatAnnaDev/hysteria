@@ -41,9 +41,11 @@ fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
         "Box" if d.len() >= 24 => format!("min({:.1}, {:.1}, {:.1}) max({:.1}, {:.1}, {:.1})", f(0), f(4), f(8), f(12), f(16), f(20)),
         "Vector_NetQuantize" if d.len() >= 12 => format!("({:.2}, {:.2}, {:.2})", f(0), f(4), f(8)),
         // FMatrix is row-major 4x4; the translation lives in row 3 (floats 12..14).
+        // The cooked FMatrix struct body carries a 4-byte lead, so the 16 matrix floats sit at
+        // body floats 1..16 and the translation row (matrix M[3]) lands at body floats 13..15.
         "Matrix" if d.len() >= 64 => format!("pos({:.1}, {:.1}, {:.1}) scale({:.2}, {:.2}, {:.2})",
-            f(48), f(52), f(56),
-            (f(0)*f(0)+f(4)*f(4)+f(8)*f(8)).sqrt(), (f(16)*f(16)+f(20)*f(20)+f(24)*f(24)).sqrt(), (f(32)*f(32)+f(36)*f(36)+f(40)*f(40)).sqrt()),
+            f(52), f(56), f(60),
+            (f(4)*f(4)+f(8)*f(8)+f(12)*f(12)).sqrt(), (f(20)*f(20)+f(24)*f(24)+f(28)*f(28)).sqrt(), (f(36)*f(36)+f(40)*f(40)+f(44)*f(44)).sqrt()),
         _ => return None,
     })
 }
@@ -526,7 +528,7 @@ impl Pkg {
         }
         for &c in comps {
             if let Some(m) = self.struct_floats(self.exports[c].off, "CachedParentToWorld") {
-                if m.len() >= 15 { return Some((m[12], m[13], m[14])); }
+                if m.len() >= 16 { return Some((m[13], m[14], m[15])); }
             }
             if let Some(v) = self.struct_floats(self.exports[c].off, "Translation") {
                 if v.len() >= 3 { return Some((v[0], v[1], v[2])); }

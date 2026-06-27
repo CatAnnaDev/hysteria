@@ -4,6 +4,7 @@ mod upk;
 mod dxt;
 mod loc;
 mod theme;
+mod view3d;
 
 use std::path::PathBuf;
 use upk::Pkg;
@@ -38,6 +39,11 @@ struct App {
     mode: Mode,
     map_actors: Vec<upk::MapActor>,
     actor_filter: String,
+    cam: view3d::Cam,
+    view_tex: Option<egui::TextureHandle>,
+    view_dirty: bool,
+    view_cam_for: Option<usize>,
+    view_size: (usize, usize),
     loc_files: Vec<PathBuf>,
     loc_root: Option<PathBuf>,
     loc_filter: String,
@@ -58,6 +64,8 @@ impl Default for App {
             audio: None, sink: None, volume: 1.0, wave: vec![], wave_for: None,
             mode: Mode::Packages,
             map_actors: vec![], actor_filter: String::new(),
+            cam: view3d::Cam { target: [0.0, 0.0, 0.0], yaw: 0.9, pitch: 0.6, dist: 1000.0 },
+            view_tex: None, view_dirty: true, view_cam_for: None, view_size: (0, 0),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
             sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
@@ -650,40 +658,52 @@ impl eframe::App for App {
                 let mut pick = None;
                 let placed: Vec<(usize, String, (f32, f32, f32))> = self.map_actors.iter()
                     .filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
-                theme::eyebrow(ui, format!("PLAN · {} OF {} ACTORS POSITIONED", placed.len(), self.map_actors.len()));
-                if placed.len() >= 2 {
-                    let h = (ui.available_height() * 0.46).clamp(150.0, 380.0);
-                    let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), h), egui::Sense::click());
-                    let p = ui.painter_at(rect);
-                    p.rect_filled(rect, 3.0_f32, theme::BG);
-                    p.rect_stroke(rect, 3.0_f32, egui::Stroke::new(1.0_f32, theme::LINE));
-                    // robust bounds: p4..p96 so a couple of far-flung actors don't collapse the rest
-                    let mut xs: Vec<f32> = placed.iter().map(|(_, _, (x, _, _))| *x).collect();
-                    let mut ys: Vec<f32> = placed.iter().map(|(_, _, (_, y, _))| *y).collect();
-                    xs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-                    ys.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-                    let pct = |v: &[f32], p: f32| v[(((v.len() - 1) as f32) * p) as usize];
-                    let (minx, maxx) = (pct(&xs, 0.04), pct(&xs, 0.96));
-                    let (miny, maxy) = (pct(&ys, 0.04), pct(&ys, 0.96));
-                    let pad = 22.0_f32;
-                    let s = ((rect.width() - 2.0 * pad) / (maxx - minx).max(1.0)).min((rect.height() - 2.0 * pad) / (maxy - miny).max(1.0));
-                    let (mx, my) = ((minx + maxx) / 2.0, (miny + maxy) / 2.0);
-                    let project = |x: f32, y: f32| egui::pos2(
-                        (rect.center().x + (x - mx) * s).clamp(rect.left() + 5.0, rect.right() - 5.0),
-                        (rect.center().y - (y - my) * s).clamp(rect.top() + 5.0, rect.bottom() - 5.0),
-                    );
-                    if let Some(ptr) = resp.interact_pointer_pos() {
-                        let mut best = 20.0_f32; let mut bi = None;
-                        for (idx, _, (x, y, _)) in &placed { let d = project(*x, *y).distance(ptr); if d < best { best = d; bi = Some(*idx); } }
-                        if bi.is_some() { pick = bi; }
+                theme::eyebrow(ui, format!("WORLD · {} OF {} ACTORS PLACED · drag to orbit · scroll to zoom", placed.len(), self.map_actors.len()));
+                if !placed.is_empty() {
+                    if self.view_cam_for != self.sel_pkg {
+                        self.view_cam_for = self.sel_pkg;
+                        fit_cam(&mut self.cam, &placed);
+                        self.view_dirty = true;
                     }
-                    for (idx, class, (x, y, _)) in &placed {
-                        let pp = project(*x, *y);
-                        if self.sel_obj == Some(*idx) {
-                            p.circle_filled(pp, 5.5, theme::BLOOD);
-                            p.circle_stroke(pp, 8.5, egui::Stroke::new(1.5_f32, theme::BLOOD_HI));
-                        } else {
-                            p.circle_filled(pp, 2.6, theme::class_color(class));
+                    let h = (ui.available_height() * 0.60).clamp(220.0, 660.0);
+                    let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), h), egui::Sense::click_and_drag());
+                    if resp.dragged() {
+                        let d = resp.drag_delta();
+                        self.cam.yaw -= d.x * 0.008;
+                        self.cam.pitch = (self.cam.pitch + d.y * 0.008).clamp(-1.5, 1.5);
+                        self.view_dirty = true;
+                    }
+                    let scroll = ui.input(|i| i.raw_scroll_delta.y);
+                    if resp.hovered() && scroll.abs() > 0.0 {
+                        self.cam.dist = (self.cam.dist * (1.0 - scroll * 0.0015)).clamp(10.0, 5_000_000.0);
+                        self.view_dirty = true;
+                    }
+                    let pw = (rect.width() as usize).max(32);
+                    let ph = (rect.height() as usize).max(32);
+                    if self.view_dirty || self.view_size != (pw, ph) {
+                        self.view_size = (pw, ph);
+                        let scene = build_scene(&placed, self.sel_obj);
+                        let mut r = view3d::Raster::new(pw, ph);
+                        r.render(&scene, &self.cam.view_proj(pw as f32 / ph as f32), [18, 16, 13]);
+                        let img = egui::ColorImage::from_rgba_unmultiplied([pw, ph], &r.col);
+                        self.view_tex = Some(ctx.load_texture("view3d", img, egui::TextureOptions::NEAREST));
+                        self.view_dirty = false;
+                    }
+                    if let Some(t) = &self.view_tex {
+                        ui.painter().image(t.id(), rect, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
+                    }
+                    ui.painter().rect_stroke(rect, 3.0_f32, egui::Stroke::new(1.0_f32, theme::LINE));
+                    if resp.clicked() {
+                        if let Some(ptr) = resp.interact_pointer_pos() {
+                            let vp = self.cam.view_proj(pw as f32 / ph as f32);
+                            let mut best = 16.0_f32; let mut bi = None;
+                            for (idx, _, p) in &placed {
+                                if let Some((sx, sy)) = view3d::project_screen(&vp, swz(*p), pw as f32, ph as f32) {
+                                    let d = (rect.min + egui::vec2(sx, sy)).distance(ptr);
+                                    if d < best { best = d; bi = Some(*idx); }
+                                }
+                            }
+                            if bi.is_some() { pick = bi; }
                         }
                     }
                 }
@@ -715,7 +735,7 @@ impl eframe::App for App {
                         }
                     });
                 });
-                if let Some(i) = pick { self.sel_obj = Some(i); }
+                if let Some(i) = pick { self.sel_obj = Some(i); self.view_dirty = true; }
             }
             } else if self.loc.is_some() {
                 ui.horizontal(|ui| {
@@ -755,6 +775,64 @@ impl eframe::App for App {
             }
         }
     }
+}
+
+type Placed = (usize, String, (f32, f32, f32));
+
+// UE is Z-up; the software renderer is Y-up, so swizzle (x, y, z) -> (x, z, y).
+fn swz(p: (f32, f32, f32)) -> view3d::V3 { [p.0, p.2, p.1] }
+
+// Robust per-axis bounds (p6..p94) so a handful of mis-extracted outlier positions don't
+// blow up the framing. Returns (min, max) of the trimmed range.
+fn scene_bounds(placed: &[Placed]) -> ([f32; 3], [f32; 3]) {
+    let mut mn = [0.0f32; 3]; let mut mx = [0.0f32; 3];
+    for k in 0..3 {
+        let mut v: Vec<f32> = placed.iter().map(|(_, _, p)| swz(*p)[k]).collect();
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let lo = v[(((v.len() - 1) as f32) * 0.06) as usize];
+        let hi = v[(((v.len() - 1) as f32) * 0.94) as usize];
+        mn[k] = lo; mx[k] = hi;
+    }
+    (mn, mx)
+}
+
+fn fit_cam(cam: &mut view3d::Cam, placed: &[Placed]) {
+    if placed.is_empty() { return; }
+    let (mn, mx) = scene_bounds(placed);
+    cam.target = [(mn[0] + mx[0]) / 2.0, (mn[1] + mx[1]) / 2.0, (mn[2] + mx[2]) / 2.0];
+    let ext = ((mx[0] - mn[0]).powi(2) + (mx[1] - mn[1]).powi(2) + (mx[2] - mn[2]).powi(2)).sqrt().max(100.0);
+    cam.dist = ext * 0.75 + 200.0;
+    cam.yaw = 0.9; cam.pitch = 0.55;
+}
+
+fn class_rgb(class: &str) -> [u8; 3] { let c = theme::class_color(class); [c.r(), c.g(), c.b()] }
+
+fn build_scene(placed: &[Placed], sel: Option<usize>) -> view3d::Scene {
+    let mut sc = view3d::Scene::new();
+    if placed.is_empty() { return sc; }
+    let (mn, mx) = scene_bounds(placed);
+    let ext = (mx[0] - mn[0]).max(mx[1] - mn[1]).max(mx[2] - mn[2]).max(1.0);
+    let hs = ext / 150.0;
+    // ground grid at the lowest actor, just under the boxes
+    let gy = mn[1] - hs;
+    let n = 16;
+    let (gx0, gx1, gz0, gz1) = (mn[0] - hs, mx[0] + hs, mn[2] - hs, mx[2] + hs);
+    for i in 0..=n {
+        let f = i as f32 / n as f32;
+        let tx = gx0 + (gx1 - gx0) * f;
+        let tz = gz0 + (gz1 - gz0) * f;
+        sc.lines.push(([tx, gy, gz0], [tx, gy, gz1], [44, 39, 32]));
+        sc.lines.push(([gx0, gy, tz], [gx1, gy, tz], [44, 39, 32]));
+    }
+    for (idx, class, p) in placed {
+        let c = swz(*p);
+        if sel == Some(*idx) {
+            sc.box_solid(c, [hs * 1.5; 3], [206, 58, 50]);
+        } else {
+            sc.box_solid(c, [hs; 3], class_rgb(class));
+        }
+    }
+    sc
 }
 
 fn decode_waveform(data: &[u8]) -> Vec<(f32, f32)> {
