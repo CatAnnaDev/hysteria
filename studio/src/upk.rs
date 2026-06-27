@@ -26,6 +26,40 @@ fn read_fstring(b: &[u8], o: usize) -> (String, usize) {
     }
 }
 
+fn tri_edge(a: [f32; 3], b: [f32; 3]) -> f32 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
+// Drop "spike" triangles — a mostly-correct decode has a few triangles referencing a stray
+// vertex (run over/under-extension), giving edges far longer than the bulk. Returns the kept
+// indices and the fraction kept (a near-garbage decode loses most triangles).
+fn filter_spikes(verts: &[[f32; 3]], indices: &[u32]) -> (Vec<u32>, f32) {
+    let tris: Vec<&[u32]> = indices.chunks_exact(3).collect();
+    if tris.len() < 2 { return (indices.to_vec(), 1.0); }
+    let nv = verts.len();
+    let mut edges: Vec<f32> = Vec::new();
+    for t in &tris {
+        if (t[0] as usize) < nv && (t[1] as usize) < nv && (t[2] as usize) < nv {
+            edges.push(tri_edge(verts[t[0] as usize], verts[t[1] as usize]));
+        }
+    }
+    if edges.is_empty() { return (Vec::new(), 0.0); }
+    let mut s = edges.clone();
+    s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let med = s[s.len() / 2].max(1e-3);
+    let limit = med * 8.0;
+    let mut kept = Vec::with_capacity(indices.len());
+    for t in &tris {
+        if (t[0] as usize) >= nv || (t[1] as usize) >= nv || (t[2] as usize) >= nv { continue; }
+        let (a, b, c) = (verts[t[0] as usize], verts[t[1] as usize], verts[t[2] as usize]);
+        if tri_edge(a, b) <= limit && tri_edge(b, c) <= limit && tri_edge(c, a) <= limit {
+            kept.extend_from_slice(t);
+        }
+    }
+    let frac = (kept.len() / 3) as f32 / tris.len() as f32;
+    (kept, frac)
+}
+
 fn decode_struct(sn: &str, d: &[u8]) -> Option<String> {
     let f = |i: usize| if i + 4 <= d.len() { rf(d, i) } else { 0.0 };
     let n = |i: usize| if i + 4 <= d.len() { ri(d, i) } else { 0 };
@@ -534,38 +568,27 @@ impl Pkg {
             let v = [rf(b, o), rf(b, o + 4), rf(b, o + 8)];
             if v.iter().all(|f| f.is_finite() && f.abs() < 1.0e5) { Some(v) } else { None }
         };
-        // The PositionVertexBuffer is a clean run of N consecutive FVectors. RawTriangles and
-        // the packed tangent/UV buffer break such a run, so the longest non-degenerate run is
-        // the position buffer. Collect candidates, then accept the longest one that is followed
-        // by a valid u16 index buffer (indices < N) — that joint test rejects false matches.
-        let mut runs: Vec<(usize, usize)> = Vec::new();
+        // Anchor on the FStaticMeshVertexBuffer header [NumTexCoords 1..4][Stride 8..64][N]: it
+        // gives the *exact* vertex count N, and the PositionVertexBuffer's N FVectors sit
+        // immediately before it. Reading exactly N from that exact offset avoids the over/under-
+        // extension that gave spiky surfaces. Validate with an index buffer (indices < N).
         let mut o = start;
         while o + 12 <= end {
-            if fv(o).is_some() {
-                let (mut p, mut n) = (o, 0usize);
-                let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
-                while let Some(v) = fv(p) {
-                    for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); }
-                    n += 1; p += 12;
-                    if n > (1 << 21) { break; }
+            let ntc = ru(b, o); let stride = ru(b, o + 4); let n = ru(b, o + 8) as usize;
+            if (1..=4).contains(&ntc) && (8..=64).contains(&stride) && n >= 12 && n < (1 << 21) {
+                if let Some(ps) = o.checked_sub(n * 12) {
+                    if ps >= start && (0..n).step_by((n / 24).max(1)).all(|i| fv(ps + i * 12).is_some()) {
+                        let verts: Vec<[f32; 3]> = (0..n).map(|i| { let vo = ps + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
+                        if let Some(indices) = self.find_indices(o, end, n) {
+                            let (kept, frac) = filter_spikes(&verts, &indices);
+                            if frac > 0.6 && kept.len() >= 3 {
+                                return Some(Mesh { verts, indices: kept });
+                            }
+                        }
+                    }
                 }
-                let extent = (mx[0] - mn[0]).max(mx[1] - mn[1]).max(mx[2] - mn[2]);
-                if n >= 4 && extent > 1.0 { runs.push((o, n)); }
-                o = if n >= 4 { p } else { o + 1 };
-            } else {
-                o += 1; // buffers can be byte-misaligned (a 1-byte bUseFullPrecisionUVs flag)
             }
-        }
-        runs.sort_by(|a, b| b.1.cmp(&a.1));
-        for (vstart, nverts) in runs {
-            if nverts < 12 { continue; } // skip tiny coincidental runs; real LODs have many verts
-            if std::env::var("MESHDBG").is_ok() {
-                eprintln!("MESHDBG run vstart={} (off+{}) nverts={}", vstart, vstart - start, nverts);
-            }
-            if let Some(indices) = self.find_indices(vstart + nverts * 12, end, nverts) {
-                let verts = (0..nverts).map(|i| { let vo = vstart + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
-                return Some(Mesh { verts, indices });
-            }
+            o += 1;
         }
         None
     }

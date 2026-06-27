@@ -1184,6 +1184,27 @@ fn main() -> eframe::Result<()> {
         } else { println!("no export matching '{}'", args[3]); }
         return Ok(());
     }
+    if args.len() > 4 && args[1] == "--render" {
+        // --render <pkg> <meshname> <out.png> : decode one StaticMesh and render it isolated
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let e = p.exports.iter().find(|e| e.class_name == "StaticMesh" && e.name.to_lowercase().contains(&args[3].to_lowercase())).expect("mesh not found");
+        let m = p.static_mesh(e).expect("decode failed");
+        let mut sc = view3d::Scene::new();
+        let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
+        for v in &m.verts { let w = swz3(*v); for k in 0..3 { mn[k] = mn[k].min(w[k]); mx[k] = mx[k].max(w[k]); } }
+        for t in m.indices.chunks_exact(3) {
+            sc.tris.push(view3d::Tri { p: [swz3(m.verts[t[0] as usize]), swz3(m.verts[t[1] as usize]), swz3(m.verts[t[2] as usize])], color: [180, 170, 160] });
+        }
+        let center = [(mn[0] + mx[0]) / 2.0, (mn[1] + mx[1]) / 2.0, (mn[2] + mx[2]) / 2.0];
+        let diag = ((mx[0] - mn[0]).powi(2) + (mx[1] - mn[1]).powi(2) + (mx[2] - mn[2]).powi(2)).sqrt().max(1.0);
+        let cam = view3d::Cam { target: center, yaw: 0.7, pitch: 0.5, dist: diag * 1.3 };
+        let (w, h) = (700usize, 700usize);
+        let mut r = view3d::Raster::new(w, h);
+        r.render(&sc, &cam.view_proj(1.0), [22, 20, 16]);
+        image::save_buffer(&args[4], &r.col, w as u32, h as u32, image::ColorType::Rgba8).unwrap();
+        println!("rendered {} ({} verts, {} tris) -> {}", e.name, m.verts.len(), m.indices.len() / 3, args[4]);
+        return Ok(());
+    }
     if args.len() > 2 && args[1] == "--xform" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
         let actors = p.actors();
