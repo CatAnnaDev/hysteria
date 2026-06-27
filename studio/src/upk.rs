@@ -133,6 +133,19 @@ pub struct MapActor {
     pub components: Vec<usize>,
 }
 
+pub struct PropNode {
+    pub name: String,
+    pub typ: String,
+    pub value: String,
+    pub children: Vec<PropNode>,
+}
+
+impl PropNode {
+    fn leaf(name: String, typ: &str, value: String) -> PropNode {
+        PropNode { name, typ: typ.to_string(), value, children: Vec::new() }
+    }
+}
+
 pub struct Pkg {
     pub buf: Vec<u8>,
     pub ver: u16,
@@ -408,6 +421,86 @@ impl Pkg {
     pub fn children(&self, idx: usize) -> Vec<usize> {
         let r = (idx + 1) as i32;
         self.exports.iter().enumerate().filter(|(_, c)| c.outer == r).map(|(i, _)| i).collect()
+    }
+
+    // Full recursive property tree for an export: scalars are leaves, non-atomic structs
+    // recurse into their tagged sub-properties, and ArrayProperty bodies are decoded
+    // (object/name arrays expand into entries; other element layouts are summarized).
+    pub fn prop_tree(&self, start: i32) -> Vec<PropNode> {
+        let o = self.prop_start_at(start);
+        self.walk_tree(o, self.export_end(start), 0)
+    }
+
+    fn walk_tree(&self, start: usize, end: usize, depth: usize) -> Vec<PropNode> {
+        let b = &self.buf;
+        let mut o = start;
+        let mut out = Vec::new();
+        while o + 16 <= b.len() && o < end {
+            let name = self.fname_at(o);
+            if name == "None" || name.starts_with('?') { break; }
+            o += 8;
+            let typ = self.fname_at(o); o += 8;
+            if !typ.ends_with("Property") { break; }
+            let size = ri(b, o) as usize; o += 8;
+            if o > b.len() { break; }
+            let node = match typ.as_str() {
+                "IntProperty" => { let v = ri(b, o); o += 4; PropNode::leaf(name, &typ, v.to_string()) }
+                "FloatProperty" => { let v = rf(b, o); o += 4; PropNode::leaf(name, &typ, format!("{}", v)) }
+                "BoolProperty" => { let v = b.get(o).copied().unwrap_or(0) != 0; o += 1; PropNode::leaf(name, &typ, v.to_string()) }
+                "ByteProperty" => { let _en = self.fname_at(o); o += 8;
+                    if size == 8 { let v = self.fname_at(o); o += 8; PropNode::leaf(name, "Enum", v) }
+                    else { let v = b.get(o).copied().unwrap_or(0); o += size; PropNode::leaf(name, &typ, v.to_string()) } }
+                "NameProperty" => { let v = self.fname_at(o); o += 8; PropNode::leaf(name, &typ, v) }
+                "StrProperty" => { let (s, adv) = read_fstring(b, o); o += adv; PropNode::leaf(name, &typ, s) }
+                "ObjectProperty" | "ClassProperty" | "ComponentProperty" | "InterfaceProperty" => { let v = ri(b, o); o += 4; PropNode::leaf(name, &typ, self.idx_name(v)) }
+                "StructProperty" => {
+                    let sn = self.fname_at(o); o += 8;
+                    let bodyend = (o + size).min(end);
+                    let node = match decode_struct(&sn, b.get(o..bodyend.min(b.len())).unwrap_or(&[])) {
+                        Some(v) => PropNode::leaf(name, &sn, v),
+                        None => {
+                            let kids = if depth < 8 { self.walk_tree(o, bodyend, depth + 1) } else { Vec::new() };
+                            if kids.is_empty() { PropNode::leaf(name, &sn, format!("<{} {}B>", sn, size)) }
+                            else { PropNode { name, typ: sn, value: format!("{} fields", kids.len()), children: kids } }
+                        }
+                    };
+                    o += size; node
+                }
+                "ArrayProperty" => {
+                    let count = if size >= 4 { ri(b, o).max(0) as usize } else { 0 };
+                    let (val, kids) = self.decode_array(o + 4, count, size.saturating_sub(4));
+                    o += size;
+                    PropNode { name, typ: format!("Array[{}]", count), value: val, children: kids }
+                }
+                _ => { o += size; PropNode::leaf(name, &typ, format!("<{} {}B>", typ, size)) }
+            };
+            out.push(node);
+            if o > end || out.len() > 600 { break; }
+        }
+        out
+    }
+
+    fn decode_array(&self, off: usize, count: usize, rem: usize) -> (String, Vec<PropNode>) {
+        let b = &self.buf;
+        if count == 0 { return ("(empty)".into(), Vec::new()); }
+        if rem == count.saturating_mul(4) {
+            // object-ref array (Components, Materials, Expressions, ...) or a numeric array
+            let mut kids = Vec::new();
+            for i in 0..count.min(256) {
+                let v = ri(b, off + i * 4);
+                let nm = self.idx_name(v);
+                let val = if nm.starts_with('?') { v.to_string() } else { nm };
+                kids.push(PropNode::leaf(format!("[{}]", i), "", val));
+            }
+            return (format!("{} entries", count), kids);
+        }
+        if rem == count.saturating_mul(8) {
+            let mut kids = Vec::new();
+            for i in 0..count.min(256) { kids.push(PropNode::leaf(format!("[{}]", i), "Name", self.fname_at(off + i * 8))); }
+            return (format!("{} names", count), kids);
+        }
+        let per = rem / count.max(1);
+        (format!("{} x {}B (raw)", count, per), Vec::new())
     }
 
     // The actors placed in this map, via the export OuterIndex hierarchy: an actor's Outer is

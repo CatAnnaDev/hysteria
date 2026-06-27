@@ -25,6 +25,7 @@ struct App {
     tex_for: Option<(usize, usize)>,
     tex_px: Option<(usize, usize, Vec<u8>)>,
     props: Vec<upk::PropEdit>,
+    ptree: Vec<upk::PropNode>,
     props_for: Option<(usize, usize)>,
     dirty: bool,
     audio: Option<(rodio::OutputStream, rodio::OutputStreamHandle)>,
@@ -49,7 +50,7 @@ impl Default for App {
             sel_pkg: None, pkg: None, obj_filter: String::new(), sel_obj: None,
             status: "Open a game CookedPC folder to begin.".into(),
             tex_handle: None, tex_for: None, tex_px: None,
-            props: vec![], props_for: None, dirty: false,
+            props: vec![], ptree: vec![], props_for: None, dirty: false,
             audio: None, sink: None, volume: 1.0,
             mode: Mode::Packages,
             map_actors: vec![], actor_filter: String::new(),
@@ -149,13 +150,16 @@ impl eframe::App for App {
         let pneed = match (self.sel_pkg, self.sel_obj) { (Some(pi), Some(oi)) => Some((pi, oi)), _ => None };
         if pneed != self.props_for {
             self.props_for = pneed;
-            self.props = match (&self.pkg, self.sel_obj) {
+            let (props, ptree) = match (&self.pkg, self.sel_obj) {
                 (Some(p), Some(oi)) if oi < p.exports.len() => {
                     let off = p.exports[oi].off;
-                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.props_editable(off))).unwrap_or_default()
+                    let pe = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.props_editable(off))).unwrap_or_default();
+                    let pt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.prop_tree(off))).unwrap_or_default();
+                    (pe, pt)
                 }
-                _ => vec![],
+                _ => (vec![], vec![]),
             };
+            self.props = props; self.ptree = ptree;
         }
         }
 
@@ -275,6 +279,13 @@ impl eframe::App for App {
                         if self.props.is_empty() { ui.label("(none)"); ui.end_row(); }
                     });
                 });
+                if !self.ptree.is_empty() {
+                    egui::CollapsingHeader::new(format!("Full property tree ({})", self.ptree.len())).id_salt("ptree").show(ui, |ui| {
+                        egui::ScrollArea::vertical().max_height(280.0).id_salt("ptreescroll").show(ui, |ui| {
+                            show_tree(ui, &self.ptree);
+                        });
+                    });
+                }
                 if let Some(handle) = &self.tex_handle {
                     ui.separator();
                     if let Some((w, h, _)) = &self.tex_px { ui.strong(format!("Texture {}x{}", w, h)); }
@@ -597,6 +608,23 @@ impl eframe::App for App {
     }
 }
 
+fn show_tree(ui: &mut egui::Ui, nodes: &[upk::PropNode]) {
+    for (i, n) in nodes.iter().enumerate() {
+        ui.push_id(i, |ui| {
+            if n.children.is_empty() {
+                ui.horizontal(|ui| {
+                    ui.strong(&n.name);
+                    if !n.typ.is_empty() { ui.weak(&n.typ); }
+                    ui.label(&n.value);
+                });
+            } else {
+                let head = if n.typ.is_empty() { format!("{}  {}", n.name, n.value) } else { format!("{} [{}]  {}", n.name, n.typ, n.value) };
+                egui::CollapsingHeader::new(head).show(ui, |ui| { show_tree(ui, &n.children); });
+            }
+        });
+    }
+}
+
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 && args[1] == "--all" {
@@ -760,6 +788,22 @@ fn main() -> eframe::Result<()> {
             if let Some(f) = &filt { if !a.class.to_lowercase().contains(f) && !a.name.to_lowercase().contains(f) { continue; } }
             let (x, y, z) = a.pos.unwrap();
             println!("  {:<26} {:<24} ({:>9.1},{:>9.1},{:>9.1})  {} comps", a.class, a.name, x, y, z, a.components.len());
+        }
+        return Ok(());
+    }
+    if args.len() > 3 && args[1] == "--tree" {
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        fn print_tree(nodes: &[upk::PropNode], depth: usize) {
+            for n in nodes {
+                let pad = "  ".repeat(depth + 1);
+                let ty = if n.typ.is_empty() { String::new() } else { format!("[{}] ", n.typ) };
+                println!("{}{} {}{}", pad, n.name, ty, n.value);
+                if !n.children.is_empty() { print_tree(&n.children, depth + 1); }
+            }
+        }
+        for e in p.exports.iter().filter(|e| e.name.to_lowercase().contains(&args[3].to_lowercase()) || e.class_name.to_lowercase().contains(&args[3].to_lowercase())).take(3) {
+            println!("== {} ({}) ==", e.name, e.class_name);
+            print_tree(&p.prop_tree(e.off), 0);
         }
         return Ok(());
     }
