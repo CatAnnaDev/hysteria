@@ -47,6 +47,7 @@ struct App {
     scene: view3d::Scene,
     scene_key: Option<(usize, Option<usize>)>,
     mesh_cache: std::collections::HashMap<usize, Option<upk::Mesh>>,
+    mat_cache: std::collections::HashMap<usize, [u8; 3]>,
     loc_files: Vec<PathBuf>,
     loc_root: Option<PathBuf>,
     loc_filter: String,
@@ -69,7 +70,7 @@ impl Default for App {
             map_actors: vec![], actor_filter: String::new(),
             cam: view3d::Cam { target: [0.0, 0.0, 0.0], yaw: 0.9, pitch: 0.6, dist: 1000.0 },
             view_tex: None, view_dirty: true, view_cam_for: None, view_size: (0, 0),
-            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(),
+            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(), mat_cache: std::collections::HashMap::new(),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
             sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
@@ -684,9 +685,10 @@ impl eframe::App for App {
                     }
                     let key = (self.sel_pkg.unwrap_or(0), self.sel_obj);
                     if self.scene_key != Some(key) {
-                        if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); }
+                        if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); self.mat_cache.clear(); }
+                        let cooked = self.game_dir.clone();
                         self.scene = if let Some(pkg) = &self.pkg {
-                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache)
+                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache, &mut self.mat_cache, cooked.as_deref())
                         } else { view3d::Scene::new() };
                         self.scene_key = Some(key);
                         self.view_dirty = true;
@@ -844,8 +846,12 @@ fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]
     }
 }
 
-// Build the renderable world: real StaticMesh geometry where it decodes, a box otherwise.
-fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize>, cache: &mut std::collections::HashMap<usize, Option<upk::Mesh>>) -> view3d::Scene {
+// Build the renderable world: real StaticMesh geometry (coloured by its material's diffuse
+// texture where resolvable) and small markers for lights and other non-mesh actors.
+fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize>,
+    meshc: &mut std::collections::HashMap<usize, Option<upk::Mesh>>,
+    matc: &mut std::collections::HashMap<usize, [u8; 3]>,
+    cooked: Option<&std::path::Path>) -> view3d::Scene {
     let mut sc = view3d::Scene::new();
     let placed: Vec<Placed> = actors.iter().filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
     if placed.is_empty() { return sc; }
@@ -861,7 +867,7 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
         sc.lines.push(([gx0, gy, gz0 + (gz1 - gz0) * f], [gx1, gy, gz0 + (gz1 - gz0) * f], [44, 39, 32]));
     }
     for a in actors {
-        let col = if sel == Some(a.idx) { [206, 58, 50] } else { class_rgb(&a.class) };
+        let is_sel = sel == Some(a.idx);
         let smc = a.components.iter().copied().find(|&c| pkg.exports[c].class_name.contains("StaticMeshComponent"));
         let mut drew_mesh = false;
         if let Some(smc) = smc {
@@ -869,10 +875,14 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
             if let Some(r) = pkg.object_ref(off, "StaticMesh") {
                 if r > 0 {
                     let ei = (r - 1) as usize;
-                    let mesh = cache.entry(ei).or_insert_with(|| {
+                    let mesh = meshc.entry(ei).or_insert_with(|| {
                         pkg.exports.get(ei).filter(|e| e.class_name == "StaticMesh").and_then(|e| pkg.static_mesh(e))
                     });
                     if let Some(m) = mesh {
+                        let base = *matc.entry(ei).or_insert_with(|| {
+                            cooked.and_then(|c| pkg.diffuse_color(smc, c)).unwrap_or([150, 140, 130])
+                        });
+                        let col = if is_sel { [206, 58, 50] } else { base };
                         add_mesh_tris(&mut sc, m, pkg.world_matrix(off), a.pos, col);
                         drew_mesh = true;
                     }
@@ -880,7 +890,14 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
             }
         }
         if !drew_mesh {
-            if let Some(p) = a.pos { sc.box_solid(swz(p), [hs; 3], col); }
+            if let Some(p) = a.pos {
+                let lc = a.class.to_lowercase();
+                let (sz, col) = if is_sel { (hs * 1.4, [206, 58, 50]) }
+                    else if lc.contains("light") { (hs * 0.4, [220, 200, 120]) }
+                    else if lc.contains("spawn") || lc.contains("playerstart") { (hs * 0.6, [120, 200, 130]) }
+                    else { (hs * 0.6, class_rgb(&a.class)) };
+                sc.box_solid(swz(p), [sz; 3], col);
+            }
         }
     }
     sc

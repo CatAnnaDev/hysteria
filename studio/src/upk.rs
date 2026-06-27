@@ -435,6 +435,60 @@ impl Pkg {
         Some(m)
     }
 
+    // All object indices referenced by an export's tagged properties (ObjectProperty values and
+    // object arrays). Used to walk Material -> MaterialExpression -> Texture2D graphs.
+    pub fn collect_refs(&self, start: i32) -> Vec<i32> {
+        let b = &self.buf; let bound = self.export_end(start);
+        let mut o = self.prop_start_at(start); let mut out = Vec::new();
+        while o + 16 <= b.len() && o < bound {
+            let name = self.fname_at(o); if name == "None" || name.starts_with('?') { break; } o += 8;
+            let typ = self.fname_at(o); if !typ.ends_with("Property") { break; } o += 8;
+            let size = ri(b, o) as usize; o += 8;
+            match typ.as_str() {
+                "ObjectProperty" | "ClassProperty" | "ComponentProperty" | "InterfaceProperty" => { out.push(ri(b, o)); o += 4; }
+                "ArrayProperty" => {
+                    let count = if size >= 4 { ri(b, o).max(0) as usize } else { 0 };
+                    if count > 0 && size.saturating_sub(4) == count * 4 {
+                        for i in 0..count { out.push(ri(b, o + 4 + i * 4)); }
+                    }
+                    o += size;
+                }
+                "BoolProperty" => o += 1,
+                "ByteProperty" => { let _ = self.fname_at(o); o += 8; o += if size == 8 { 8 } else { size }; }
+                "StructProperty" => { let _ = self.fname_at(o); o += 8; o += size; }
+                _ => o += size,
+            }
+            if out.len() > 600 || o > bound { break; }
+        }
+        out
+    }
+
+    // Average diffuse colour of an object's material: BFS its reference graph
+    // (Material -> Expressions -> Texture2D), decode the first local Texture2D, average it.
+    pub fn diffuse_color(&self, root: usize, cooked: &std::path::Path) -> Option<[u8; 3]> {
+        let mut seen = std::collections::HashSet::new();
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back(root);
+        let mut steps = 0;
+        while let Some(ei) = queue.pop_front() {
+            if !seen.insert(ei) || steps > 64 { steps += 1; continue; }
+            steps += 1;
+            let e = match self.exports.get(ei) { Some(e) => e, None => continue };
+            if e.class_name.contains("Texture") {
+                if let Some(t) = self.texture(e, cooked) {
+                    let (mut r, mut g, mut bl, mut n) = (0u64, 0u64, 0u64, 0u64);
+                    for px in t.rgba.chunks_exact(4) {
+                        if px[3] < 16 { continue; }
+                        r += px[0] as u64; g += px[1] as u64; bl += px[2] as u64; n += 1;
+                    }
+                    if n > 0 { return Some([(r / n) as u8, (g / n) as u8, (bl / n) as u8]); }
+                }
+            }
+            for re in self.collect_refs(e.off) { if re > 0 { queue.push_back((re - 1) as usize); } }
+        }
+        None
+    }
+
     // Raw object index stored by a named ObjectProperty (>0 export 1-based, <0 import, 0 none).
     pub fn object_ref(&self, start: i32, key: &str) -> Option<i32> {
         let (_, off, len) = self.find_prop_raw(start, key)?;
