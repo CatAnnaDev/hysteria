@@ -713,32 +713,6 @@ impl Pkg {
         out
     }
 
-    // Scan an actor's native serial for named transform fields (Location/Rotation/DrawScale3D/
-    // DrawScale written as [FName][raw value]). Returns whatever is found.
-    pub fn actor_transform_fields(&self, idx: usize) -> (Option<[f32; 3]>, Option<[i32; 3]>, Option<[f32; 3]>, Option<f32>) {
-        let e = &self.exports[idx];
-        let b = &self.buf;
-        let start = e.off as usize;
-        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
-        let (mut loc, mut rot, mut s3, mut s1) = (None, None, None, None);
-        let mut o = start;
-        while o + 8 <= end {
-            let nidx = ri(b, o);
-            if nidx >= 0 && (nidx as usize) < self.names.len() {
-                let vo = o + 8;
-                match self.names[nidx as usize].as_str() {
-                    "Location" if vo + 12 <= end => loc = Some([rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)]),
-                    "Rotation" if vo + 12 <= end => rot = Some([ri(b, vo), ri(b, vo + 4), ri(b, vo + 8)]),
-                    "DrawScale3D" if vo + 12 <= end => s3 = Some([rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)]),
-                    "DrawScale" if vo + 4 <= end => s1 = Some(rf(b, vo)),
-                    _ => {}
-                }
-            }
-            o += 4;
-        }
-        (loc, rot, s3, s1)
-    }
-
     fn scan_location(&self, idx: usize, lo: [f32; 3], hi: [f32; 3]) -> Option<(f32, f32, f32)> {
         let e = &self.exports[idx];
         let b = &self.buf;
