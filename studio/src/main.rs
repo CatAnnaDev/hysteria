@@ -917,7 +917,7 @@ fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]
         let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
         if a < nv && b < nv && c < nv {
             let uv = if huv { [mesh.uvs[a], mesh.uvs[b], mesh.uvs[c]] } else { [[0.0; 2]; 3] };
-            sc.tris.push(view3d::Tri { p: [xf(mesh.verts[a]), xf(mesh.verts[b]), xf(mesh.verts[c])], uv, tex, color });
+            sc.tris.push(view3d::Tri { p: [xf(mesh.verts[a]), xf(mesh.verts[b]), xf(mesh.verts[c])], uv, tex, color, light: [1.0; 3] });
         }
     }
 }
@@ -947,6 +947,22 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
     }
     for a in actors {
         let is_sel = sel == Some(a.idx);
+        // collect real point lights from the map (PointLight / SpotLight) to light the scene
+        if a.class.contains("Light") {
+            if let Some(&lc) = a.components.iter().find(|&&c| pkg.exports[c].class_name.contains("LightComponent")) {
+                let loff = pkg.exports[lc].off;
+                let radius = pkg.float_prop(loff, "Radius").unwrap_or(2000.0).max(50.0);
+                let bright = pkg.float_prop(loff, "Brightness").unwrap_or(1.0).clamp(0.0, 10.0);
+                let col = pkg.color_prop(loff, "LightColor").unwrap_or([255, 240, 220]);
+                if let Some(p) = a.pos {
+                    sc.lights.push(view3d::Light {
+                        pos: swz(p),
+                        color: [(col[0] as f32 / 255.0).powf(2.2), (col[1] as f32 / 255.0).powf(2.2), (col[2] as f32 / 255.0).powf(2.2)],
+                        brightness: bright * 1.4, radius,
+                    });
+                }
+            }
+        }
         let smc = a.components.iter().copied().find(|&c| pkg.exports[c].class_name.contains("StaticMeshComponent"));
         let mut drew_mesh = false;
         if let Some(smc) = smc {
@@ -1001,9 +1017,10 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
             }
         }
     }
+    sc.bake_lighting();
     if std::env::var("TEXDBG").is_ok() {
         let textured = sc.tris.iter().filter(|t| t.tex >= 0).count();
-        eprintln!("TEXDBG textures={} tris={} textured_tris={}", sc.textures.len(), sc.tris.len(), textured);
+        eprintln!("TEXDBG textures={} lights={} tris={} textured_tris={}", sc.textures.len(), sc.lights.len(), sc.tris.len(), textured);
     }
     sc
 }
@@ -1288,7 +1305,7 @@ fn main() -> eframe::Result<()> {
         for t in m.indices.chunks_exact(3) {
             let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
             let uv = if huv { [m.uvs[a], m.uvs[b], m.uvs[c]] } else { [[0.0; 2]; 3] };
-            sc.tris.push(view3d::Tri { p: [swz3(m.verts[a]), swz3(m.verts[b]), swz3(m.verts[c])], uv, tex, color: [180, 170, 160] });
+            sc.tris.push(view3d::Tri { p: [swz3(m.verts[a]), swz3(m.verts[b]), swz3(m.verts[c])], uv, tex, color: [180, 170, 160], light: [1.0; 3] });
         }
         let center = [(mn[0] + mx[0]) / 2.0, (mn[1] + mx[1]) / 2.0, (mn[2] + mx[2]) / 2.0];
         let diag = ((mx[0] - mn[0]).powi(2) + (mx[1] - mn[1]).powi(2) + (mx[2] - mn[2]).powi(2)).sqrt().max(1.0);

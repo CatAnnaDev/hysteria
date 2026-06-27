@@ -78,18 +78,47 @@ impl Cam {
     }
 }
 
-pub struct Tri { pub p: [V3; 3], pub uv: [[f32; 2]; 3], pub tex: i32, pub color: [u8; 3] }
+pub struct Tri { pub p: [V3; 3], pub uv: [[f32; 2]; 3], pub tex: i32, pub color: [u8; 3], pub light: [f32; 3] }
 
 pub struct Tex { pub w: usize, pub h: usize, pub rgba: Vec<u8> }
+
+// A point light from the map (position pre-swizzled to render Y-up; colour linear).
+pub struct Light { pub pos: V3, pub color: [f32; 3], pub brightness: f32, pub radius: f32 }
 
 pub struct Scene {
     pub tris: Vec<Tri>,
     pub lines: Vec<(V3, V3, [u8; 3])>,
     pub textures: Vec<Tex>,
+    pub lights: Vec<Light>,
 }
 
 impl Scene {
-    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new(), textures: Vec::new() } }
+    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new(), textures: Vec::new(), lights: Vec::new() } }
+
+    // Bake per-triangle lighting once (cheap, at scene build): a small sky/ground ambient plus
+    // every point light attenuated by distance and N·L. Stored in Tri.light as a linear
+    // multiplier on the albedo — recreates Alice's localized, coloured, moody lighting.
+    pub fn bake_lighting(&mut self) {
+        for t in self.tris.iter_mut() {
+            let (a, b, c) = (t.p[0], t.p[1], t.p[2]);
+            let n = norm(cross(sub(b, a), sub(c, a)));
+            let ctr = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0];
+            let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
+            let mut acc = [0.16 + 0.12 * hemi; 3];          // cool sky/ground ambient
+            acc[2] += 0.03;                                  // faint cool tint in shadow
+            for l in &self.lights {
+                let d = sub(l.pos, ctr);
+                let dist = dot(d, d).sqrt().max(1.0);
+                if dist > l.radius { continue; }
+                let atten = (1.0 - (dist / l.radius)).clamp(0.0, 1.0);
+                let atten = atten * atten;
+                let ndl = (dot(n, scl(d, 1.0 / dist))).abs();
+                let e = l.brightness * ndl * atten;
+                for k in 0..3 { acc[k] += l.color[k] * e; }
+            }
+            t.light = acc;
+        }
+    }
 
     // Axis-aligned box (8 corners) as 12 shaded triangles, centred at c with half-extents h.
     pub fn box_solid(&mut self, c: V3, h: V3, color: [u8; 3]) {
@@ -102,10 +131,18 @@ impl Scene {
         let faces = [[0,1,2,3],[4,6,5,4],[4,5,1,0],[6,7,3,2],[5,6,2,1],[7,4,0,3]];
         let z = [[0.0f32; 2]; 3];
         for f in faces {
-            self.tris.push(Tri { p: [v[f[0]], v[f[1]], v[f[2]]], uv: z, tex: -1, color });
-            self.tris.push(Tri { p: [v[f[0]], v[f[2]], v[f[3]]], uv: z, tex: -1, color });
+            self.tris.push(Tri { p: [v[f[0]], v[f[1]], v[f[2]]], uv: z, tex: -1, color, light: [1.0; 3] });
+            self.tris.push(Tri { p: [v[f[0]], v[f[2]], v[f[3]]], uv: z, tex: -1, color, light: [1.0; 3] });
         }
     }
+}
+
+const EXPOSURE: f32 = 1.5;
+
+fn lin_to_srgb(x: f32) -> u8 {
+    let x = (x / (1.0 + x)).clamp(0.0, 1.0);                  // Reinhard tonemap then encode
+    let s = if x <= 0.0031308 { x * 12.92 } else { 1.055 * x.powf(1.0 / 2.4) - 0.055 };
+    (s * 255.0 + 0.5).clamp(0.0, 255.0) as u8
 }
 
 pub struct Raster {
@@ -113,23 +150,38 @@ pub struct Raster {
     pub h: usize,
     pub col: Vec<u8>,
     pub z: Vec<f32>,
+    lut: [f32; 256], // sRGB byte -> linear, so light math happens in linear space
 }
 
 impl Raster {
     pub fn new(w: usize, h: usize) -> Self {
-        Raster { w, h, col: vec![0; w * h * 4], z: vec![f32::INFINITY; w * h] }
+        let mut lut = [0.0f32; 256];
+        for (i, e) in lut.iter_mut().enumerate() {
+            let x = i as f32 / 255.0;
+            *e = if x <= 0.04045 { x / 12.92 } else { ((x + 0.055) / 1.055).powf(2.4) };
+        }
+        Raster { w, h, col: vec![0; w * h * 4], z: vec![f32::INFINITY; w * h], lut }
     }
 
-    fn clear(&mut self, bg: [u8; 3]) {
-        for px in self.col.chunks_exact_mut(4) { px[0] = bg[0]; px[1] = bg[1]; px[2] = bg[2]; px[3] = 255; }
+    fn clear(&mut self, top: [u8; 3], bot: [u8; 3]) {
+        for y in 0..self.h {
+            let f = y as f32 / (self.h.max(1) - 1).max(1) as f32;
+            let c = [
+                (top[0] as f32 * (1.0 - f) + bot[0] as f32 * f) as u8,
+                (top[1] as f32 * (1.0 - f) + bot[1] as f32 * f) as u8,
+                (top[2] as f32 * (1.0 - f) + bot[2] as f32 * f) as u8,
+            ];
+            for x in 0..self.w {
+                let o = (y * self.w + x) * 4;
+                self.col[o] = c[0]; self.col[o + 1] = c[1]; self.col[o + 2] = c[2]; self.col[o + 3] = 255;
+            }
+        }
         for d in self.z.iter_mut() { *d = f32::INFINITY; }
     }
 
-    pub fn render(&mut self, scene: &Scene, vp: &M4, bg: [u8; 3]) {
-        self.clear(bg);
-        let light = norm([0.4, 0.85, 0.35]);
+    pub fn render(&mut self, scene: &Scene, vp: &M4, _bg: [u8; 3]) {
+        self.clear([54, 58, 74], [22, 22, 30]); // bluish Alice sky -> dark horizon
         let (fw, fh) = (self.w as f32, self.h as f32);
-        // project a world point to (sx, sy, depth, w); None if behind near plane
         let project = |p: V3| -> Option<(f32, f32, f32, f32)> {
             let c = xform(vp, p);
             if c[3] <= 0.01 { return None; }
@@ -139,25 +191,16 @@ impl Raster {
             Some((sx, sy, c[2] * inv, inv)) // 4th = 1/w for perspective-correct interpolation
         };
         for t in &scene.tris {
-            let (a, b, cc) = (t.p[0], t.p[1], t.p[2]);
-            let n = norm(cross(sub(b, a), sub(cc, a)));
-            // hemisphere ambient (brighter from above) + a two-sided key light.
-            let key = dot(n, light).abs();
-            let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
-            let shade = (0.20 + 0.46 * hemi + 0.40 * key).min(1.15);
-            let (pa, pb, pc) = match (project(a), project(b), project(cc)) {
+            let (pa, pb, pc) = match (project(t.p[0]), project(t.p[1]), project(t.p[2])) {
                 (Some(x), Some(y), Some(z)) => (x, y, z),
                 _ => continue,
             };
+            let lit = [t.light[0] * EXPOSURE, t.light[1] * EXPOSURE, t.light[2] * EXPOSURE];
             if t.tex >= 0 && (t.tex as usize) < scene.textures.len() {
-                self.triangle_tex(pa, pb, pc, &t.uv, &scene.textures[t.tex as usize], shade);
+                self.triangle_tex(pa, pb, pc, &t.uv, &scene.textures[t.tex as usize], lit);
             } else {
-                let warm = 1.0 + 0.06 * key;
-                let col = [
-                    (t.color[0] as f32 * shade * warm).min(255.0) as u8,
-                    (t.color[1] as f32 * shade).min(255.0) as u8,
-                    (t.color[2] as f32 * shade * (2.0 - warm)).min(255.0) as u8,
-                ];
+                let l = self.lut;
+                let col = [lin_to_srgb(l[t.color[0] as usize] * lit[0]), lin_to_srgb(l[t.color[1] as usize] * lit[1]), lin_to_srgb(l[t.color[2] as usize] * lit[2])];
                 self.triangle(pa, pb, pc, col);
             }
         }
@@ -195,9 +238,9 @@ impl Raster {
         }
     }
 
-    // Perspective-correct textured triangle: interpolate (u/w, v/w, 1/w), divide to recover UV,
-    // sample the texture (wrapping), modulate by the lighting shade.
-    fn triangle_tex(&mut self, a: (f32, f32, f32, f32), b: (f32, f32, f32, f32), c: (f32, f32, f32, f32), uv: &[[f32; 2]; 3], tex: &Tex, shade: f32) {
+    // Perspective-correct textured triangle: bilinear-sample the texture (wrapping), alpha-test,
+    // then light in linear space (texel sRGB->linear * lit, tonemap+encode).
+    fn triangle_tex(&mut self, a: (f32, f32, f32, f32), b: (f32, f32, f32, f32), c: (f32, f32, f32, f32), uv: &[[f32; 2]; 3], tex: &Tex, lit: [f32; 3]) {
         if tex.w == 0 || tex.h == 0 { return; }
         let area = (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0);
         if area.abs() < 1e-4 { return; }
@@ -224,15 +267,29 @@ impl Raster {
                 if iw.abs() < 1e-12 { continue; }
                 let u = (w0 * uwa + w1 * uwb + w2 * uwc) / iw;
                 let v = (w0 * vwa + w1 * vwb + w2 * vwc) / iw;
-                let tu = ((u - u.floor()) * tex.w as f32) as usize % tex.w;
-                let tv = ((v - v.floor()) * tex.h as f32) as usize % tex.h;
-                let to = (tv * tex.w + tu) * 4;
-                if to + 3 >= tex.rgba.len() { continue; }
+                // bilinear fetch with wrap, in linear space
+                let fu = (u - u.floor()) * tex.w as f32 - 0.5;
+                let fv = (v - v.floor()) * tex.h as f32 - 0.5;
+                let (x0t, y0t) = (fu.floor(), fv.floor());
+                let (du, dv) = (fu - x0t, fv - y0t);
+                let wrap = |i: i32, n: usize| ((i % n as i32 + n as i32) % n as i32) as usize;
+                let (ix0, ix1) = (wrap(x0t as i32, tex.w), wrap(x0t as i32 + 1, tex.w));
+                let (iy0, iy1) = (wrap(y0t as i32, tex.h), wrap(y0t as i32 + 1, tex.h));
+                let texel = |tx: usize, ty: usize| -> [f32; 4] {
+                    let o = (ty * tex.w + tx) * 4;
+                    [self.lut[tex.rgba[o] as usize], self.lut[tex.rgba[o + 1] as usize], self.lut[tex.rgba[o + 2] as usize], tex.rgba[o + 3] as f32]
+                };
+                let (t00, t10, t01, t11) = (texel(ix0, iy0), texel(ix1, iy0), texel(ix0, iy1), texel(ix1, iy1));
+                let mut s = [0.0f32; 4];
+                for k in 0..4 {
+                    s[k] = (t00[k] * (1.0 - du) + t10[k] * du) * (1.0 - dv) + (t01[k] * (1.0 - du) + t11[k] * du) * dv;
+                }
+                if s[3] < 110.0 { continue; }            // masked-material alpha test
                 self.z[idx] = depth;
                 let o = idx * 4;
-                self.col[o] = (tex.rgba[to] as f32 * shade).min(255.0) as u8;
-                self.col[o + 1] = (tex.rgba[to + 1] as f32 * shade).min(255.0) as u8;
-                self.col[o + 2] = (tex.rgba[to + 2] as f32 * shade).min(255.0) as u8;
+                self.col[o] = lin_to_srgb(s[0] * lit[0]);
+                self.col[o + 1] = lin_to_srgb(s[1] * lit[1]);
+                self.col[o + 2] = lin_to_srgb(s[2] * lit[2]);
                 self.col[o + 3] = 255;
             }
         }

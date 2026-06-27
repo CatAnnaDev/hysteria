@@ -38,16 +38,25 @@ fn filter_spikes(verts: &[[f32; 3]], indices: &[u32]) -> (Vec<u32>, f32) {
     if tris.len() < 2 { return (indices.to_vec(), 1.0); }
     let nv = verts.len();
     let mut edges: Vec<f32> = Vec::new();
+    let mut used: Vec<[f32; 3]> = Vec::new();
     for t in &tris {
         if (t[0] as usize) < nv && (t[1] as usize) < nv && (t[2] as usize) < nv {
             edges.push(tri_edge(verts[t[0] as usize], verts[t[1] as usize]));
+            used.push(verts[t[0] as usize]); used.push(verts[t[1] as usize]); used.push(verts[t[2] as usize]);
         }
     }
     if edges.is_empty() { return (Vec::new(), 0.0); }
-    let mut s = edges.clone();
-    s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    let med = s[s.len() / 2].max(1e-3);
-    let limit = med * 8.0;
+    edges.sort_by(f32::total_cmp);
+    let med = edges[edges.len() / 2].max(1e-3);
+    let mut diag2 = 0.0f32;
+    for ax in 0..3 {
+        let mut cs: Vec<f32> = used.iter().map(|v| v[ax]).filter(|x| x.is_finite()).collect();
+        if cs.is_empty() { continue; }
+        cs.sort_by(f32::total_cmp);
+        let ext = cs[(((cs.len() - 1) as f32) * 0.95) as usize] - cs[(((cs.len() - 1) as f32) * 0.05) as usize];
+        diag2 += ext * ext;
+    }
+    let limit = (diag2.sqrt() * 1.5).max(med * 8.0);
     let mut kept = Vec::with_capacity(indices.len());
     for t in &tris {
         if (t[0] as usize) >= nv || (t[1] as usize) >= nv || (t[2] as usize) >= nv { continue; }
@@ -490,6 +499,18 @@ impl Pkg {
         let mut m = [0.0f32; 16];
         m.copy_from_slice(&f[1..17]);
         Some(m)
+    }
+
+    pub fn float_prop(&self, start: i32, key: &str) -> Option<f32> {
+        let (typ, off, len) = self.find_prop_raw(start, key)?;
+        if typ == "FloatProperty" && len >= 4 { Some(rf(&self.buf, off)) } else { None }
+    }
+
+    // A Color struct property (BGRA bytes) as RGB.
+    pub fn color_prop(&self, start: i32, key: &str) -> Option<[u8; 3]> {
+        let (_, off, _) = self.find_prop_raw(start, key)?;
+        let b = &self.buf;
+        if off + 4 <= b.len() { Some([b[off + 2], b[off + 1], b[off]]) } else { None }
     }
 
     // All object indices referenced by an export's tagged properties (ObjectProperty values and
