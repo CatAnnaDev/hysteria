@@ -841,21 +841,31 @@ impl AssetCache {
         self.loaded.get(name).and_then(|o| o.as_ref())
     }
 
-    // BFS the material graph across packages from a host component, loading imported packages
-    // as needed, and decode the first Texture2D reached (local or cross-package).
+    // BFS the material graph across packages from a host component, loading imported packages as
+    // needed. Prefer the albedo/diffuse Texture2D; skip normal/mask/spec/lightmap textures (they
+    // would give wrong surface colours) but keep one as a last-resort fallback.
     fn diffuse_texture(&mut self, host: &upk::Pkg, root: usize, packages: &[PathBuf], cooked: &std::path::Path) -> Option<(usize, usize, Vec<u8>)> {
         let mut seen = std::collections::HashSet::new();
         let mut queue = std::collections::VecDeque::new();
         queue.push_back((String::new(), root));
+        let mut fallback: Option<(usize, usize, Vec<u8>)> = None;
         let mut steps = 0;
         while let Some((pname, ei)) = queue.pop_front() {
             if steps > 240 { break; } steps += 1;
             if !seen.insert((pname.clone(), ei)) { continue; }
             // extract what we need, then release the package borrow before loading others
-            let (tex, refs): (Option<(usize, usize, Vec<u8>)>, Vec<(Option<(String, String)>, usize)>) = {
+            let (good, fb, refs): (Option<(usize, usize, Vec<u8>)>, Option<(usize, usize, Vec<u8>)>, Vec<(Option<(String, String)>, usize)>) = {
                 let pkg = if pname.is_empty() { host } else { match self.package(&pname, packages) { Some(p) => p, None => continue } };
                 let e = match pkg.exports.get(ei) { Some(e) => e, None => continue };
-                let tex = if e.class_name.contains("Texture") { pkg.texture(e, cooked).map(|t| (t.w, t.h, t.rgba)) } else { None };
+                let (mut good, mut fb) = (None, None);
+                if e.class_name.contains("Texture") {
+                    let n = e.name.to_lowercase();
+                    let is_other = n.contains("normal") || n.contains("lightmap") || n.contains("_mask") || n.contains("_spec")
+                        || ["_n", "_nrm", "_norm", "_msk", "_sp", "_cube", "_emap"].iter().any(|s| n.ends_with(s));
+                    if let Some(t) = pkg.texture(e, cooked).map(|t| (t.w, t.h, t.rgba)) {
+                        if is_other { fb = Some(t); } else { good = Some(t); }
+                    }
+                }
                 let mut rr = pkg.collect_refs(e.off);
                 rr.extend(pkg.relevant_refs(e));
                 let refs = rr.into_iter().filter_map(|r| match pkg.resolve_ref(r) {
@@ -863,9 +873,10 @@ impl AssetCache {
                     upk::Ref::Import { package, object } => Some((Some((package, object)), 0)),
                     upk::Ref::None => None,
                 }).collect();
-                (tex, refs)
+                (good, fb, refs)
             };
-            if tex.is_some() { return tex; }
+            if good.is_some() { return good; }
+            if fallback.is_none() { fallback = fb; }
             for (imp, lei) in refs {
                 match imp {
                     None => queue.push_back((pname.clone(), lei)),
@@ -879,7 +890,7 @@ impl AssetCache {
                 }
             }
         }
-        None
+        fallback
     }
 
     fn import_mesh(&mut self, package: &str, object: &str, packages: &[PathBuf]) -> Option<&upk::Mesh> {
