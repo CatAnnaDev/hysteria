@@ -48,6 +48,7 @@ struct App {
     scene_key: Option<(usize, Option<usize>)>,
     mesh_cache: std::collections::HashMap<usize, Option<upk::Mesh>>,
     mat_cache: std::collections::HashMap<usize, [u8; 3]>,
+    assets: AssetCache,
     loc_files: Vec<PathBuf>,
     loc_root: Option<PathBuf>,
     loc_filter: String,
@@ -70,7 +71,7 @@ impl Default for App {
             map_actors: vec![], actor_filter: String::new(),
             cam: view3d::Cam { target: [0.0, 0.0, 0.0], yaw: 0.9, pitch: 0.6, dist: 1000.0 },
             view_tex: None, view_dirty: true, view_cam_for: None, view_size: (0, 0),
-            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(), mat_cache: std::collections::HashMap::new(),
+            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(), mat_cache: std::collections::HashMap::new(), assets: AssetCache::default(),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
             sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
@@ -688,7 +689,7 @@ impl eframe::App for App {
                         if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); self.mat_cache.clear(); }
                         let cooked = self.game_dir.clone();
                         self.scene = if let Some(pkg) = &self.pkg {
-                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache, &mut self.mat_cache, cooked.as_deref())
+                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache, &mut self.mat_cache, cooked.as_deref(), &mut self.assets, &self.packages)
                         } else { view3d::Scene::new() };
                         self.scene_key = Some(key);
                         self.view_dirty = true;
@@ -821,6 +822,37 @@ fn fit_cam(cam: &mut view3d::Cam, placed: &[Placed]) {
 
 fn class_rgb(class: &str) -> [u8; 3] { let c = theme::class_color(class); [c.r(), c.g(), c.b()] }
 
+// Loads referenced packages on demand and caches decoded imported meshes, so a map's actors
+// can pull geometry from other cooked packages (the cross-package "load everything").
+#[derive(Default)]
+struct AssetCache {
+    loaded: std::collections::HashMap<String, Option<upk::Pkg>>,
+    meshes: std::collections::HashMap<String, Option<upk::Mesh>>,
+}
+
+impl AssetCache {
+    fn package(&mut self, name: &str, packages: &[PathBuf]) -> Option<&upk::Pkg> {
+        if !self.loaded.contains_key(name) {
+            let path = packages.iter().find(|p| p.file_stem().map(|s| s.eq_ignore_ascii_case(name)).unwrap_or(false)).cloned();
+            let pkg = path.and_then(|p| std::panic::catch_unwind(|| upk::Pkg::load(&p)).ok().and_then(|r| r.ok()));
+            self.loaded.insert(name.to_string(), pkg);
+        }
+        self.loaded.get(name).and_then(|o| o.as_ref())
+    }
+
+    fn import_mesh(&mut self, package: &str, object: &str, packages: &[PathBuf]) -> Option<&upk::Mesh> {
+        let key = format!("{}/{}", package, object);
+        if !self.meshes.contains_key(&key) {
+            let m = self.package(package, packages).and_then(|pkg| {
+                pkg.exports.iter().position(|e| e.class_name == "StaticMesh" && e.name == object)
+                    .and_then(|ei| pkg.static_mesh(&pkg.exports[ei]))
+            });
+            self.meshes.insert(key.clone(), m);
+        }
+        self.meshes.get(&key).and_then(|o| o.as_ref())
+    }
+}
+
 fn swz3(w: [f32; 3]) -> [f32; 3] { [w[0], w[2], w[1]] }
 
 // Transform a mesh's local triangles to world (component matrix if present, else translate by
@@ -851,7 +883,8 @@ fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]
 fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize>,
     meshc: &mut std::collections::HashMap<usize, Option<upk::Mesh>>,
     matc: &mut std::collections::HashMap<usize, [u8; 3]>,
-    cooked: Option<&std::path::Path>) -> view3d::Scene {
+    cooked: Option<&std::path::Path>,
+    assets: &mut AssetCache, packages: &[PathBuf]) -> view3d::Scene {
     let mut sc = view3d::Scene::new();
     let placed: Vec<Placed> = actors.iter().filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
     if placed.is_empty() { return sc; }
@@ -872,20 +905,30 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
         let mut drew_mesh = false;
         if let Some(smc) = smc {
             let off = pkg.exports[smc].off;
+            let mat = pkg.world_matrix(off);
             if let Some(r) = pkg.object_ref(off, "StaticMesh") {
-                if r > 0 {
-                    let ei = (r - 1) as usize;
-                    let mesh = meshc.entry(ei).or_insert_with(|| {
-                        pkg.exports.get(ei).filter(|e| e.class_name == "StaticMesh").and_then(|e| pkg.static_mesh(e))
-                    });
-                    if let Some(m) = mesh {
-                        let base = *matc.entry(ei).or_insert_with(|| {
-                            cooked.and_then(|c| pkg.diffuse_color(smc, c)).unwrap_or([150, 140, 130])
+                match pkg.resolve_ref(r) {
+                    upk::Ref::Local(ei) => {
+                        let mesh = meshc.entry(ei).or_insert_with(|| {
+                            pkg.exports.get(ei).filter(|e| e.class_name == "StaticMesh").and_then(|e| pkg.static_mesh(e))
                         });
-                        let col = if is_sel { [206, 58, 50] } else { base };
-                        add_mesh_tris(&mut sc, m, pkg.world_matrix(off), a.pos, col);
-                        drew_mesh = true;
+                        if let Some(m) = mesh {
+                            let base = *matc.entry(ei).or_insert_with(|| {
+                                cooked.and_then(|c| pkg.diffuse_color(smc, c)).unwrap_or([150, 140, 130])
+                            });
+                            let col = if is_sel { [206, 58, 50] } else { base };
+                            add_mesh_tris(&mut sc, m, mat, a.pos, col);
+                            drew_mesh = true;
+                        }
                     }
+                    upk::Ref::Import { package, object } => {
+                        if let Some(m) = assets.import_mesh(&package, &object, packages) {
+                            let col = if is_sel { [206, 58, 50] } else { [150, 155, 165] };
+                            add_mesh_tris(&mut sc, m, mat, a.pos, col);
+                            drew_mesh = true;
+                        }
+                    }
+                    upk::Ref::None => {}
                 }
             }
         }

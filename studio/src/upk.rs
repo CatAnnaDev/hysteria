@@ -147,6 +147,12 @@ pub struct Mesh {
     pub indices: Vec<u32>,
 }
 
+pub enum Ref {
+    Local(usize),
+    Import { package: String, object: String },
+    None,
+}
+
 impl PropNode {
     fn leaf(name: String, typ: &str, value: String) -> PropNode {
         PropNode { name, typ: typ.to_string(), value, children: Vec::new() }
@@ -158,6 +164,7 @@ pub struct Pkg {
     pub ver: u16,
     pub names: Vec<String>,
     pub imports: Vec<String>,
+    pub import_outers: Vec<i32>,   // OuterIndex per import — follow to the top to get the package name
     pub exports: Vec<Export>,
     pub cflags_off: usize,
     pub name_off: usize,
@@ -487,6 +494,23 @@ impl Pkg {
             for re in self.collect_refs(e.off) { if re > 0 { queue.push_back((re - 1) as usize); } }
         }
         None
+    }
+
+    // Resolve an object index: a local export, or an import with its source package + object
+    // name (the outer chain is followed to the top-level package import).
+    pub fn resolve_ref(&self, r: i32) -> Ref {
+        if r > 0 { return Ref::Local((r - 1) as usize); }
+        if r == 0 { return Ref::None; }
+        let idx = (-r - 1) as usize;
+        let object = self.imports.get(idx).cloned().unwrap_or_default();
+        let mut cur = idx;
+        let mut package = String::new();
+        for _ in 0..16 {
+            let outer = *self.import_outers.get(cur).unwrap_or(&0);
+            if outer == 0 { package = self.imports.get(cur).cloned().unwrap_or_default(); break; }
+            if outer < 0 { cur = (-outer - 1) as usize; } else { break; }
+        }
+        Ref::Import { package, object }
     }
 
     // Raw object index stored by a named ObjectProperty (>0 export 1-based, <0 import, 0 none).
@@ -860,10 +884,12 @@ impl Pkg {
         };
 
         let mut imports = Vec::new();
+        let mut import_outers = Vec::new();
         let mut o2 = import_off;
         for _ in 0..import_count {
-            o2 += 8 + 8 + 4;
-            imports.push(fname(&buf, o2)); o2 += 8;
+            o2 += 8 + 8;                          // ClassPackage(FName) + ClassName(FName)
+            import_outers.push(ri(&buf, o2)); o2 += 4;  // OuterIndex
+            imports.push(fname(&buf, o2)); o2 += 8;      // ObjectName
         }
 
         let mut raw_exports = Vec::new();
@@ -901,7 +927,7 @@ impl Pkg {
             if tl > 0 && cte + tl <= raw.len() { raw[cte..cte + tl].to_vec() } else { vec![] }
         } else { vec![] };
 
-        Ok(Pkg { buf, ver, names, imports, exports, cflags_off, name_off, compressed, summary_tail })
+        Ok(Pkg { buf, ver, names, imports, import_outers, exports, cflags_off, name_off, compressed, summary_tail })
     }
 
     pub fn replace_texture(&mut self, e_idx: usize, rgba: &[u8], w: usize, h: usize, cooked_dir: &std::path::Path) -> Result<String, String> {
