@@ -214,6 +214,7 @@ pub struct Pkg {
     pub names: Vec<String>,
     pub imports: Vec<String>,
     pub import_outers: Vec<i32>,   // OuterIndex per import — follow to the top to get the package name
+    pub import_classes: Vec<String>,
     pub exports: Vec<Export>,
     pub cflags_off: usize,
     pub name_off: usize,
@@ -535,6 +536,30 @@ impl Pkg {
             for re in self.collect_refs(e.off) { if re > 0 { queue.push_back((re - 1) as usize); } }
         }
         None
+    }
+
+    // Object refs (local or import) anywhere in an export's serial that resolve to a Material or
+    // Texture class. Unlike collect_refs (tagged props only) this reaches refs in native data —
+    // a StaticMesh's per-section materials live in its native Elements, not in tagged properties.
+    pub fn relevant_refs(&self, e: &Export) -> Vec<i32> {
+        let b = &self.buf;
+        let (s, en) = (e.off as usize, ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len()));
+        let mut out = Vec::new();
+        let mut o = s;
+        while o + 4 <= en {
+            let v = ri(b, o);
+            let cls = if v > 0 {
+                self.exports.get((v - 1) as usize).map(|x| x.class_name.as_str())
+            } else if v < 0 {
+                self.import_classes.get((-v - 1) as usize).map(|x| x.as_str())
+            } else { None };
+            if let Some(c) = cls {
+                if c.contains("Material") || c.contains("Texture") { out.push(v); }
+            }
+            o += 4;
+        }
+        out.sort_unstable(); out.dedup();
+        out
     }
 
     // Average diffuse colour of an object's material: BFS its reference graph
@@ -958,9 +983,11 @@ impl Pkg {
 
         let mut imports = Vec::new();
         let mut import_outers = Vec::new();
+        let mut import_classes = Vec::new();
         let mut o2 = import_off;
         for _ in 0..import_count {
-            o2 += 8 + 8;                          // ClassPackage(FName) + ClassName(FName)
+            o2 += 8;                              // ClassPackage(FName)
+            import_classes.push(fname(&buf, o2)); o2 += 8;  // ClassName(FName)
             import_outers.push(ri(&buf, o2)); o2 += 4;  // OuterIndex
             imports.push(fname(&buf, o2)); o2 += 8;      // ObjectName
         }
@@ -1000,7 +1027,7 @@ impl Pkg {
             if tl > 0 && cte + tl <= raw.len() { raw[cte..cte + tl].to_vec() } else { vec![] }
         } else { vec![] };
 
-        Ok(Pkg { buf, ver, names, imports, import_outers, exports, cflags_off, name_off, compressed, summary_tail })
+        Ok(Pkg { buf, ver, names, imports, import_outers, import_classes, exports, cflags_off, name_off, compressed, summary_tail })
     }
 
     pub fn replace_texture(&mut self, e_idx: usize, rgba: &[u8], w: usize, h: usize, cooked_dir: &std::path::Path) -> Result<String, String> {

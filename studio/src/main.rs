@@ -841,6 +841,47 @@ impl AssetCache {
         self.loaded.get(name).and_then(|o| o.as_ref())
     }
 
+    // BFS the material graph across packages from a host component, loading imported packages
+    // as needed, and decode the first Texture2D reached (local or cross-package).
+    fn diffuse_texture(&mut self, host: &upk::Pkg, root: usize, packages: &[PathBuf], cooked: &std::path::Path) -> Option<(usize, usize, Vec<u8>)> {
+        let mut seen = std::collections::HashSet::new();
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back((String::new(), root));
+        let mut steps = 0;
+        while let Some((pname, ei)) = queue.pop_front() {
+            if steps > 240 { break; } steps += 1;
+            if !seen.insert((pname.clone(), ei)) { continue; }
+            // extract what we need, then release the package borrow before loading others
+            let (tex, refs): (Option<(usize, usize, Vec<u8>)>, Vec<(Option<(String, String)>, usize)>) = {
+                let pkg = if pname.is_empty() { host } else { match self.package(&pname, packages) { Some(p) => p, None => continue } };
+                let e = match pkg.exports.get(ei) { Some(e) => e, None => continue };
+                let tex = if e.class_name.contains("Texture") { pkg.texture(e, cooked).map(|t| (t.w, t.h, t.rgba)) } else { None };
+                let mut rr = pkg.collect_refs(e.off);
+                rr.extend(pkg.relevant_refs(e));
+                let refs = rr.into_iter().filter_map(|r| match pkg.resolve_ref(r) {
+                    upk::Ref::Local(l) => Some((None, l)),
+                    upk::Ref::Import { package, object } => Some((Some((package, object)), 0)),
+                    upk::Ref::None => None,
+                }).collect();
+                (tex, refs)
+            };
+            if tex.is_some() { return tex; }
+            for (imp, lei) in refs {
+                match imp {
+                    None => queue.push_back((pname.clone(), lei)),
+                    Some((package, object)) => {
+                        if let Some(p2) = self.package(&package, packages) {
+                            if let Some(oei) = p2.exports.iter().position(|x| x.name == object) {
+                                queue.push_back((package, oei));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+
     fn import_mesh(&mut self, package: &str, object: &str, packages: &[PathBuf]) -> Option<&upk::Mesh> {
         let key = format!("{}/{}", package, object);
         if !self.meshes.contains_key(&key) {
@@ -920,10 +961,11 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
                         if let Some(m) = mesh {
                             // resolve & attach the diffuse texture once per mesh
                             let ti = if let Some(&i) = tex_idx.get(&ei) { i } else {
-                                let decoded = texd.entry(ei).or_insert_with(|| {
-                                    cooked.and_then(|c| pkg.diffuse_texture(smc, c)).map(|t| (t.w, t.h, t.rgba))
-                                });
-                                let i = match decoded {
+                                if !texd.contains_key(&ei) {
+                                    let decoded = cooked.and_then(|c| assets.diffuse_texture(pkg, smc, packages, c));
+                                    texd.insert(ei, decoded);
+                                }
+                                let i = match texd.get(&ei).and_then(|o| o.as_ref()) {
                                     Some((w, h, rgba)) => { sc.textures.push(view3d::Tex { w: *w, h: *h, rgba: rgba.clone() }); (sc.textures.len() - 1) as i32 }
                                     None => -1,
                                 };
@@ -958,6 +1000,10 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
                 sc.box_solid(swz(p), [sz; 3], col);
             }
         }
+    }
+    if std::env::var("TEXDBG").is_ok() {
+        let textured = sc.tris.iter().filter(|t| t.tex >= 0).count();
+        eprintln!("TEXDBG textures={} tris={} textured_tris={}", sc.textures.len(), sc.tris.len(), textured);
     }
     sc
 }
