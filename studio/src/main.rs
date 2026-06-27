@@ -1186,12 +1186,31 @@ fn main() -> eframe::Result<()> {
     }
     if args.len() > 2 && args[1] == "--xform" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let actors = p.actors();
+        let placed: Vec<(f32, f32, f32)> = actors.iter().filter_map(|a| a.pos).collect();
+        let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
+        for q in &placed { let v = [q.0, q.1, q.2]; for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); } }
+        let ext = (mx[0]-mn[0]).max(mx[1]-mn[1]).max(mx[2]-mn[2]).max(1000.0);
+        let f32a = |b: &[u8], o: usize| f32::from_le_bytes([b[o], b[o+1], b[o+2], b[o+3]]);
+        let i32a = |b: &[u8], o: usize| i32::from_le_bytes([b[o], b[o+1], b[o+2], b[o+3]]);
+        let b = &p.buf;
         let mut n = 0;
-        for (i, e) in p.exports.iter().enumerate() {
+        for e in p.exports.iter() {
             if e.class_name != "StaticMeshActor" { continue; }
-            let (loc, rot, s3, s1) = p.actor_transform_fields(i);
-            println!("{:<22} loc={:?} rot={:?} scale3={:?} scale={:?}", e.name, loc, rot, s3, s1);
-            n += 1; if n >= 10 { break; }
+            let (st, en) = (e.off as usize, (e.off + e.size) as usize);
+            let mut o = st;
+            while o + 12 <= en {
+                let v = [f32a(b, o), f32a(b, o+4), f32a(b, o+8)];
+                if (0..3).all(|k| v[k] >= mn[k]-ext && v[k] <= mx[k]+ext) && v.iter().any(|f| f.abs() > 1.0) {
+                    println!("{:<20} loc@{} ({:.0},{:.0},{:.0}) after: rot?[{} {} {}] f[{:.2} {:.2} {:.2} {:.2}]",
+                        e.name, o-st, v[0], v[1], v[2],
+                        i32a(b, o+12), i32a(b, o+16), i32a(b, o+20),
+                        f32a(b, o+12), f32a(b, o+24), f32a(b, o+28), f32a(b, o+32));
+                    break;
+                }
+                o += 1;
+            }
+            n += 1; if n >= 8 { break; }
         }
         return Ok(());
     }
