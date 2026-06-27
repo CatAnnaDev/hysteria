@@ -811,6 +811,50 @@ impl Pkg {
         out
     }
 
+    // Find a tagged property by name anywhere in an actor's serial (robust against the leading
+    // native data that defeats find_prop_start). Returns the value offset: a StructProperty's
+    // value sits 32 bytes after the name (name8+type8+size4+arrayidx4+structname8), a scalar's 24.
+    fn find_actor_tag(&self, e: &Export, name: &str) -> Option<usize> {
+        let nidx = self.names.iter().position(|n| n == name)? as i32;
+        let b = &self.buf;
+        let (s, en) = (e.off as usize, ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len()));
+        let mut o = s;
+        while o + 16 <= en {
+            if ri(b, o) == nidx && ri(b, o + 4) == 0 {
+                let typ = self.fname_at(o + 8);
+                if typ.ends_with("Property") {
+                    return Some(if typ == "StructProperty" { o + 32 } else { o + 24 });
+                }
+            }
+            o += 4;
+        }
+        None
+    }
+
+    // Full world matrix for an actor from its tagged Location / Rotation / DrawScale(3D).
+    pub fn actor_matrix(&self, idx: usize) -> Option<[f32; 16]> {
+        let e = &self.exports[idx];
+        let b = &self.buf;
+        let loc = self.find_actor_tag(e, "Location").map(|o| [rf(b, o), rf(b, o + 4), rf(b, o + 8)]);
+        let rot = self.find_actor_tag(e, "Rotation").map(|o| [ri(b, o), ri(b, o + 4), ri(b, o + 8)]);
+        let s3 = self.find_actor_tag(e, "DrawScale3D").map(|o| [rf(b, o), rf(b, o + 4), rf(b, o + 8)]);
+        let s1 = self.find_actor_tag(e, "DrawScale").map(|o| rf(b, o)).unwrap_or(1.0);
+        if loc.is_none() && rot.is_none() && s3.is_none() { return None; }
+        let t = loc.unwrap_or([0.0; 3]);
+        let s = s3.unwrap_or([1.0; 3]);
+        let sc = [s[0] * s1, s[1] * s1, s[2] * s1];
+        let u = std::f32::consts::TAU / 65536.0;
+        let (p, y, r) = match rot { Some(rr) => (rr[0] as f32 * u, rr[1] as f32 * u, rr[2] as f32 * u), None => (0.0, 0.0, 0.0) };
+        let (cp, sp, cy, sy, cr, sr) = (p.cos(), p.sin(), y.cos(), y.sin(), r.cos(), r.sin());
+        // UE3 FRotationMatrix (row-major basis), each basis row scaled; translation in row 3.
+        let mut m = [0.0f32; 16];
+        m[0] = cp * cy * sc[0]; m[1] = cp * sy * sc[0]; m[2] = sp * sc[0];
+        m[4] = (sr * sp * cy - cr * sy) * sc[1]; m[5] = (sr * sp * sy + cr * cy) * sc[1]; m[6] = -sr * cp * sc[1];
+        m[8] = -(cr * sp * cy + sr * sy) * sc[2]; m[9] = (cy * sr - cr * sp * sy) * sc[2]; m[10] = cr * cp * sc[2];
+        m[12] = t[0]; m[13] = t[1]; m[14] = t[2]; m[15] = 1.0;
+        Some(m)
+    }
+
     fn scan_location(&self, idx: usize, lo: [f32; 3], hi: [f32; 3]) -> Option<(f32, f32, f32)> {
         let e = &self.exports[idx];
         let b = &self.buf;

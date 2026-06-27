@@ -951,7 +951,7 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
         let mut drew_mesh = false;
         if let Some(smc) = smc {
             let off = pkg.exports[smc].off;
-            let mat = pkg.world_matrix(off);
+            let mat = pkg.actor_matrix(a.idx).or_else(|| pkg.world_matrix(off));
             if let Some(r) = pkg.object_ref(off, "StaticMesh") {
                 match pkg.resolve_ref(r) {
                     upk::Ref::Local(ei) => {
@@ -1246,6 +1246,15 @@ fn main() -> eframe::Result<()> {
                 println!("{:6} {:<48} {:<16} | {}", row - e.off as usize, hex, asc, f32s.join(" "));
             }
         } else { println!("no export matching '{}'", args[3]); }
+        return Ok(());
+    }
+    if args.len() > 3 && args[1] == "--names" {
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        for idx in args[3].split(',') {
+            if let Ok(i) = idx.parse::<usize>() {
+                println!("names[{}] = {:?}", i, p.names.get(i));
+            }
+        }
         return Ok(());
     }
     if args.len() > 4 && args[1] == "--render" {
