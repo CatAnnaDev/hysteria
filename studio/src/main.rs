@@ -48,6 +48,7 @@ struct App {
     scene_key: Option<(usize, Option<usize>)>,
     mesh_cache: std::collections::HashMap<usize, Option<upk::Mesh>>,
     mat_cache: std::collections::HashMap<usize, [u8; 3]>,
+    tex_data: std::collections::HashMap<usize, Option<(usize, usize, Vec<u8>)>>,
     assets: AssetCache,
     loc_files: Vec<PathBuf>,
     loc_root: Option<PathBuf>,
@@ -71,7 +72,7 @@ impl Default for App {
             map_actors: vec![], actor_filter: String::new(),
             cam: view3d::Cam { target: [0.0, 0.0, 0.0], yaw: 0.9, pitch: 0.6, dist: 1000.0 },
             view_tex: None, view_dirty: true, view_cam_for: None, view_size: (0, 0),
-            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(), mat_cache: std::collections::HashMap::new(), assets: AssetCache::default(),
+            scene: view3d::Scene::new(), scene_key: None, mesh_cache: std::collections::HashMap::new(), mat_cache: std::collections::HashMap::new(), tex_data: std::collections::HashMap::new(), assets: AssetCache::default(),
             loc_files: vec![], loc_root: None, loc_filter: String::new(),
             sel_loc: None, loc: None, loc_entry_filter: String::new(), loc_dirty: false,
         };
@@ -686,10 +687,10 @@ impl eframe::App for App {
                     }
                     let key = (self.sel_pkg.unwrap_or(0), self.sel_obj);
                     if self.scene_key != Some(key) {
-                        if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); self.mat_cache.clear(); }
+                        if self.scene_key.map(|(p, _)| p) != Some(key.0) { self.mesh_cache.clear(); self.mat_cache.clear(); self.tex_data.clear(); }
                         let cooked = self.game_dir.clone();
                         self.scene = if let Some(pkg) = &self.pkg {
-                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache, &mut self.mat_cache, cooked.as_deref(), &mut self.assets, &self.packages)
+                            build_world_scene(pkg, &self.map_actors, self.sel_obj, &mut self.mesh_cache, &mut self.mat_cache, cooked.as_deref(), &mut self.tex_data, &mut self.assets, &self.packages)
                         } else { view3d::Scene::new() };
                         self.scene_key = Some(key);
                         self.view_dirty = true;
@@ -857,7 +858,7 @@ fn swz3(w: [f32; 3]) -> [f32; 3] { [w[0], w[2], w[1]] }
 
 // Transform a mesh's local triangles to world (component matrix if present, else translate by
 // the actor position) and append them, swizzled UE Z-up -> render Y-up.
-fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]>, pos: Option<(f32, f32, f32)>, color: [u8; 3]) {
+fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]>, pos: Option<(f32, f32, f32)>, color: [u8; 3], tex: i32) {
     let xf = |lp: [f32; 3]| -> [f32; 3] {
         let w = match mat {
             Some(m) => [
@@ -870,10 +871,12 @@ fn add_mesh_tris(sc: &mut view3d::Scene, mesh: &upk::Mesh, mat: Option<[f32; 16]
         swz3(w)
     };
     let nv = mesh.verts.len();
+    let huv = tex >= 0 && mesh.uvs.len() == nv;
     for t in mesh.indices.chunks_exact(3) {
         let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
         if a < nv && b < nv && c < nv {
-            sc.tris.push(view3d::Tri { p: [xf(mesh.verts[a]), xf(mesh.verts[b]), xf(mesh.verts[c])], color });
+            let uv = if huv { [mesh.uvs[a], mesh.uvs[b], mesh.uvs[c]] } else { [[0.0; 2]; 3] };
+            sc.tris.push(view3d::Tri { p: [xf(mesh.verts[a]), xf(mesh.verts[b]), xf(mesh.verts[c])], uv, tex, color });
         }
     }
 }
@@ -884,8 +887,10 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
     meshc: &mut std::collections::HashMap<usize, Option<upk::Mesh>>,
     matc: &mut std::collections::HashMap<usize, [u8; 3]>,
     cooked: Option<&std::path::Path>,
+    texd: &mut std::collections::HashMap<usize, Option<(usize, usize, Vec<u8>)>>,
     assets: &mut AssetCache, packages: &[PathBuf]) -> view3d::Scene {
     let mut sc = view3d::Scene::new();
+    let mut tex_idx: std::collections::HashMap<usize, i32> = std::collections::HashMap::new();
     let placed: Vec<Placed> = actors.iter().filter_map(|a| a.pos.map(|p| (a.idx, a.class.clone(), p))).collect();
     if placed.is_empty() { return sc; }
     let (mn, mx) = scene_bounds(&placed);
@@ -913,18 +918,29 @@ fn build_world_scene(pkg: &upk::Pkg, actors: &[upk::MapActor], sel: Option<usize
                             pkg.exports.get(ei).filter(|e| e.class_name == "StaticMesh").and_then(|e| pkg.static_mesh(e))
                         });
                         if let Some(m) = mesh {
+                            // resolve & attach the diffuse texture once per mesh
+                            let ti = if let Some(&i) = tex_idx.get(&ei) { i } else {
+                                let decoded = texd.entry(ei).or_insert_with(|| {
+                                    cooked.and_then(|c| pkg.diffuse_texture(smc, c)).map(|t| (t.w, t.h, t.rgba))
+                                });
+                                let i = match decoded {
+                                    Some((w, h, rgba)) => { sc.textures.push(view3d::Tex { w: *w, h: *h, rgba: rgba.clone() }); (sc.textures.len() - 1) as i32 }
+                                    None => -1,
+                                };
+                                tex_idx.insert(ei, i); i
+                            };
                             let base = *matc.entry(ei).or_insert_with(|| {
                                 cooked.and_then(|c| pkg.diffuse_color(smc, c)).unwrap_or([150, 140, 130])
                             });
                             let col = if is_sel { [206, 58, 50] } else { base };
-                            add_mesh_tris(&mut sc, m, mat, a.pos, col);
+                            add_mesh_tris(&mut sc, m, mat, a.pos, col, if is_sel { -1 } else { ti });
                             drew_mesh = true;
                         }
                     }
                     upk::Ref::Import { package, object } => {
                         if let Some(m) = assets.import_mesh(&package, &object, packages) {
                             let col = if is_sel { [206, 58, 50] } else { [150, 155, 165] };
-                            add_mesh_tris(&mut sc, m, mat, a.pos, col);
+                            add_mesh_tris(&mut sc, m, mat, a.pos, col, -1);
                             drew_mesh = true;
                         }
                     }
@@ -1145,8 +1161,10 @@ fn main() -> eframe::Result<()> {
                 Some(m) => {
                     let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
                     for v in &m.verts { for k in 0..3 { mn[k] = mn[k].min(v[k]); mx[k] = mx[k].max(v[k]); } }
-                    println!("{:<26} verts={:<6} tris={:<6} bbox=({:.0}..{:.0}, {:.0}..{:.0}, {:.0}..{:.0})",
-                        e.name, m.verts.len(), m.indices.len() / 3, mn[0], mx[0], mn[1], mx[1], mn[2], mx[2]);
+                    let (mut umn, mut umx, mut vmn, mut vmx) = (f32::MAX, f32::MIN, f32::MAX, f32::MIN);
+                    for uv in &m.uvs { umn = umn.min(uv[0]); umx = umx.max(uv[0]); vmn = vmn.min(uv[1]); vmx = vmx.max(uv[1]); }
+                    println!("{:<26} verts={:<6} tris={:<6} bbox=({:.0}..{:.0}, {:.0}..{:.0}, {:.0}..{:.0}) uv=({:.2}..{:.2}, {:.2}..{:.2})",
+                        e.name, m.verts.len(), m.indices.len() / 3, mn[0], mx[0], mn[1], mx[1], mn[2], mx[2], umn, umx, vmn, vmx);
                     if let Some(out) = args.get(4) {
                         let mut s = String::new();
                         for v in &m.verts { s.push_str(&format!("v {} {} {}\n", v[0], v[1], v[2])); }
@@ -1189,11 +1207,33 @@ fn main() -> eframe::Result<()> {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
         let e = p.exports.iter().find(|e| e.class_name == "StaticMesh" && e.name.to_lowercase().contains(&args[3].to_lowercase())).expect("mesh not found");
         let m = p.static_mesh(e).expect("decode failed");
+        let ei = p.exports.iter().position(|x| std::ptr::eq(x, e)).unwrap_or(0);
+        let cooked = std::path::Path::new(&args[2]).parent().unwrap_or(std::path::Path::new("."));
         let mut sc = view3d::Scene::new();
+        // resolve the texture via a component that references this mesh (the material lives there)
+        let smc = p.exports.iter().enumerate().find(|(_, c)| c.class_name.contains("StaticMeshComponent")
+            && p.object_ref(c.off, "StaticMesh") == Some(ei as i32 + 1)).map(|(i, _)| i);
+        let tex = match smc.and_then(|s| p.diffuse_texture(s, cooked)) {
+            Some(t) => { println!("  texture {}x{} {}", t.w, t.h, t.format); sc.textures.push(view3d::Tex { w: t.w, h: t.h, rgba: t.rgba }); 0i32 }
+            None => {
+                println!("  no texture -> checkerboard test");
+                let (cw, ch) = (64usize, 64usize);
+                let mut rgba = vec![0u8; cw * ch * 4];
+                for y in 0..ch { for x in 0..cw {
+                    let on = ((x / 8) + (y / 8)) % 2 == 0;
+                    let c = if on { [220, 80, 80] } else { [40, 40, 60] };
+                    let o = (y * cw + x) * 4; rgba[o] = c[0]; rgba[o + 1] = c[1]; rgba[o + 2] = c[2]; rgba[o + 3] = 255;
+                }}
+                sc.textures.push(view3d::Tex { w: cw, h: ch, rgba }); 0i32
+            }
+        };
+        let huv = tex >= 0 && m.uvs.len() == m.verts.len();
         let (mut mn, mut mx) = ([f32::MAX; 3], [f32::MIN; 3]);
         for v in &m.verts { let w = swz3(*v); for k in 0..3 { mn[k] = mn[k].min(w[k]); mx[k] = mx[k].max(w[k]); } }
         for t in m.indices.chunks_exact(3) {
-            sc.tris.push(view3d::Tri { p: [swz3(m.verts[t[0] as usize]), swz3(m.verts[t[1] as usize]), swz3(m.verts[t[2] as usize])], color: [180, 170, 160] });
+            let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
+            let uv = if huv { [m.uvs[a], m.uvs[b], m.uvs[c]] } else { [[0.0; 2]; 3] };
+            sc.tris.push(view3d::Tri { p: [swz3(m.verts[a]), swz3(m.verts[b]), swz3(m.verts[c])], uv, tex, color: [180, 170, 160] });
         }
         let center = [(mn[0] + mx[0]) / 2.0, (mn[1] + mx[1]) / 2.0, (mn[2] + mx[2]) / 2.0];
         let diag = ((mx[0] - mn[0]).powi(2) + (mx[1] - mn[1]).powi(2) + (mx[2] - mn[2]).powi(2)).sqrt().max(1.0);

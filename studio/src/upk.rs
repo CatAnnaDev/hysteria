@@ -178,7 +178,22 @@ pub struct PropNode {
 
 pub struct Mesh {
     pub verts: Vec<[f32; 3]>,
+    pub uvs: Vec<[f32; 2]>,
     pub indices: Vec<u32>,
+}
+
+fn half_to_f32(h: u16) -> f32 {
+    let sign = (h >> 15) & 1;
+    let exp = (h >> 10) & 0x1f;
+    let mant = h & 0x3ff;
+    let f = if exp == 0 {
+        (mant as f32) * 2.0f32.powi(-24)
+    } else if exp == 0x1f {
+        if mant == 0 { f32::INFINITY } else { f32::NAN }
+    } else {
+        (1.0 + (mant as f32) / 1024.0) * 2.0f32.powi(exp as i32 - 15)
+    };
+    if sign == 1 { -f } else { f }
 }
 
 pub enum Ref {
@@ -504,6 +519,24 @@ impl Pkg {
         out
     }
 
+    // The first local Texture2D reachable from an object's material graph, decoded.
+    pub fn diffuse_texture(&self, root: usize, cooked: &std::path::Path) -> Option<Texture> {
+        let mut seen = std::collections::HashSet::new();
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back(root);
+        let mut steps = 0;
+        while let Some(ei) = queue.pop_front() {
+            if !seen.insert(ei) || steps > 80 { steps += 1; continue; }
+            steps += 1;
+            let e = match self.exports.get(ei) { Some(e) => e, None => continue };
+            if e.class_name.contains("Texture") {
+                if let Some(t) = self.texture(e, cooked) { return Some(t); }
+            }
+            for re in self.collect_refs(e.off) { if re > 0 { queue.push_back((re - 1) as usize); } }
+        }
+        None
+    }
+
     // Average diffuse colour of an object's material: BFS its reference graph
     // (Material -> Expressions -> Texture2D), decode the first local Texture2D, average it.
     pub fn diffuse_color(&self, root: usize, cooked: &std::path::Path) -> Option<[u8; 3]> {
@@ -587,7 +620,19 @@ impl Pkg {
                         if let Some(indices) = indices {
                             let (kept, frac) = filter_spikes(&verts, &indices);
                             if frac > 0.6 && kept.len() >= 3 {
-                                return Some(Mesh { verts, indices: kept });
+                                // UVs share the vertex order; the tangent/UV bulk starts after the
+                                // 24-byte header, UV channel 0 sits after the 8-byte tangent basis.
+                                let full = ru(b, o + 12) != 0;
+                                let bulk = o + 24;
+                                let uvs = (0..n).map(|i| {
+                                    let vo = bulk + i * stride as usize + 8;
+                                    if full && vo + 8 <= end {
+                                        [rf(b, vo), rf(b, vo + 4)]
+                                    } else if vo + 4 <= end {
+                                        [half_to_f32(u16::from_le_bytes([b[vo], b[vo + 1]])), half_to_f32(u16::from_le_bytes([b[vo + 2], b[vo + 3]]))]
+                                    } else { [0.0, 0.0] }
+                                }).collect();
+                                return Some(Mesh { verts, uvs, indices: kept });
                             }
                         }
                     }

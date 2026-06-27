@@ -78,15 +78,18 @@ impl Cam {
     }
 }
 
-pub struct Tri { pub p: [V3; 3], pub color: [u8; 3] }
+pub struct Tri { pub p: [V3; 3], pub uv: [[f32; 2]; 3], pub tex: i32, pub color: [u8; 3] }
+
+pub struct Tex { pub w: usize, pub h: usize, pub rgba: Vec<u8> }
 
 pub struct Scene {
     pub tris: Vec<Tri>,
     pub lines: Vec<(V3, V3, [u8; 3])>,
+    pub textures: Vec<Tex>,
 }
 
 impl Scene {
-    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new() } }
+    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new(), textures: Vec::new() } }
 
     // Axis-aligned box (8 corners) as 12 shaded triangles, centred at c with half-extents h.
     pub fn box_solid(&mut self, c: V3, h: V3, color: [u8; 3]) {
@@ -97,9 +100,10 @@ impl Scene {
             [c[0]+h[0], c[1]+h[1], c[2]+h[2]], [c[0]-h[0], c[1]+h[1], c[2]+h[2]],
         ];
         let faces = [[0,1,2,3],[4,6,5,4],[4,5,1,0],[6,7,3,2],[5,6,2,1],[7,4,0,3]];
+        let z = [[0.0f32; 2]; 3];
         for f in faces {
-            self.tris.push(Tri { p: [v[f[0]], v[f[1]], v[f[2]]], color });
-            self.tris.push(Tri { p: [v[f[0]], v[f[2]], v[f[3]]], color });
+            self.tris.push(Tri { p: [v[f[0]], v[f[1]], v[f[2]]], uv: z, tex: -1, color });
+            self.tris.push(Tri { p: [v[f[0]], v[f[2]], v[f[3]]], uv: z, tex: -1, color });
         }
     }
 }
@@ -132,27 +136,30 @@ impl Raster {
             let inv = 1.0 / c[3];
             let sx = (c[0] * inv * 0.5 + 0.5) * fw;
             let sy = (1.0 - (c[1] * inv * 0.5 + 0.5)) * fh;
-            Some((sx, sy, c[2] * inv, c[3]))
+            Some((sx, sy, c[2] * inv, inv)) // 4th = 1/w for perspective-correct interpolation
         };
         for t in &scene.tris {
             let (a, b, cc) = (t.p[0], t.p[1], t.p[2]);
             let n = norm(cross(sub(b, a), sub(cc, a)));
-            // hemisphere ambient (brighter from above) + a two-sided key light, so untextured
-            // grey geometry still reads its form. Warm the lit side slightly.
+            // hemisphere ambient (brighter from above) + a two-sided key light.
             let key = dot(n, light).abs();
             let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
             let shade = (0.20 + 0.46 * hemi + 0.40 * key).min(1.15);
-            let warm = 1.0 + 0.06 * key;
-            let col = [
-                ((t.color[0] as f32 * shade * warm).min(255.0)) as u8,
-                ((t.color[1] as f32 * shade).min(255.0)) as u8,
-                ((t.color[2] as f32 * shade * (2.0 - warm)).min(255.0)) as u8,
-            ];
             let (pa, pb, pc) = match (project(a), project(b), project(cc)) {
                 (Some(x), Some(y), Some(z)) => (x, y, z),
                 _ => continue,
             };
-            self.triangle(pa, pb, pc, col);
+            if t.tex >= 0 && (t.tex as usize) < scene.textures.len() {
+                self.triangle_tex(pa, pb, pc, &t.uv, &scene.textures[t.tex as usize], shade);
+            } else {
+                let warm = 1.0 + 0.06 * key;
+                let col = [
+                    (t.color[0] as f32 * shade * warm).min(255.0) as u8,
+                    (t.color[1] as f32 * shade).min(255.0) as u8,
+                    (t.color[2] as f32 * shade * (2.0 - warm)).min(255.0) as u8,
+                ];
+                self.triangle(pa, pb, pc, col);
+            }
         }
         for (a, b, col) in &scene.lines {
             if let (Some(pa), Some(pb)) = (project(*a), project(*b)) {
@@ -184,6 +191,49 @@ impl Raster {
                     let o = idx * 4;
                     self.col[o] = col[0]; self.col[o + 1] = col[1]; self.col[o + 2] = col[2]; self.col[o + 3] = 255;
                 }
+            }
+        }
+    }
+
+    // Perspective-correct textured triangle: interpolate (u/w, v/w, 1/w), divide to recover UV,
+    // sample the texture (wrapping), modulate by the lighting shade.
+    fn triangle_tex(&mut self, a: (f32, f32, f32, f32), b: (f32, f32, f32, f32), c: (f32, f32, f32, f32), uv: &[[f32; 2]; 3], tex: &Tex, shade: f32) {
+        if tex.w == 0 || tex.h == 0 { return; }
+        let area = (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0);
+        if area.abs() < 1e-4 { return; }
+        let inv = 1.0 / area;
+        let minx = a.0.min(b.0).min(c.0).floor().max(0.0) as usize;
+        let maxx = a.0.max(b.0).max(c.0).ceil().min(self.w as f32 - 1.0) as usize;
+        let miny = a.1.min(b.1).min(c.1).floor().max(0.0) as usize;
+        let maxy = a.1.max(b.1).max(c.1).ceil().min(self.h as f32 - 1.0) as usize;
+        if minx > maxx || miny > maxy { return; }
+        let (uwa, vwa) = (uv[0][0] * a.3, uv[0][1] * a.3);
+        let (uwb, vwb) = (uv[1][0] * b.3, uv[1][1] * b.3);
+        let (uwc, vwc) = (uv[2][0] * c.3, uv[2][1] * c.3);
+        for y in miny..=maxy {
+            for x in minx..=maxx {
+                let px = x as f32 + 0.5; let py = y as f32 + 0.5;
+                let w0 = ((b.0 - px) * (c.1 - py) - (b.1 - py) * (c.0 - px)) * inv;
+                let w1 = ((c.0 - px) * (a.1 - py) - (c.1 - py) * (a.0 - px)) * inv;
+                let w2 = 1.0 - w0 - w1;
+                if w0 < 0.0 || w1 < 0.0 || w2 < 0.0 { continue; }
+                let depth = w0 * a.2 + w1 * b.2 + w2 * c.2;
+                let idx = y * self.w + x;
+                if depth >= self.z[idx] { continue; }
+                let iw = w0 * a.3 + w1 * b.3 + w2 * c.3;
+                if iw.abs() < 1e-12 { continue; }
+                let u = (w0 * uwa + w1 * uwb + w2 * uwc) / iw;
+                let v = (w0 * vwa + w1 * vwb + w2 * vwc) / iw;
+                let tu = ((u - u.floor()) * tex.w as f32) as usize % tex.w;
+                let tv = ((v - v.floor()) * tex.h as f32) as usize % tex.h;
+                let to = (tv * tex.w + tu) * 4;
+                if to + 3 >= tex.rgba.len() { continue; }
+                self.z[idx] = depth;
+                let o = idx * 4;
+                self.col[o] = (tex.rgba[to] as f32 * shade).min(255.0) as u8;
+                self.col[o + 1] = (tex.rgba[to + 1] as f32 * shade).min(255.0) as u8;
+                self.col[o + 2] = (tex.rgba[to + 2] as f32 * shade).min(255.0) as u8;
+                self.col[o + 3] = 255;
             }
         }
     }
