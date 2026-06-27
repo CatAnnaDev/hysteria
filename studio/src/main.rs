@@ -1025,6 +1025,30 @@ fn main() -> eframe::Result<()> {
             l.entries.len(), kv, l.bom, l.crlf, a == b, a.len(), b.len());
         return Ok(());
     }
+    if args.len() > 3 && args[1] == "--rawat" {
+        // --rawat <pkg> <namesubstr> [skip] [len] : hex-dump an export's serial bytes
+        let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
+        let skip: usize = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let len: usize = args.get(5).and_then(|s| s.parse().ok()).unwrap_or(256);
+        if let Some(e) = p.exports.iter().find(|e| e.name.to_lowercase().contains(&args[3].to_lowercase())) {
+            let base = e.off as usize + skip;
+            let end = (base + len).min((e.off + e.size) as usize).min(p.buf.len());
+            println!("{} ({}) size {} — bytes [{}..{}]", e.name, e.class_name, e.size, skip, skip + (end - base));
+            let b = &p.buf;
+            for row in (base..end).step_by(16) {
+                let mut hex = String::new(); let mut asc = String::new();
+                for o in row..(row + 16).min(end) {
+                    hex.push_str(&format!("{:02x} ", b[o]));
+                    let c = b[o]; asc.push(if (32..127).contains(&c) { c as char } else { '.' });
+                }
+                let f32s: Vec<String> = (row..(row + 16).min(end)).step_by(4)
+                    .filter(|&o| o + 4 <= b.len())
+                    .map(|o| format!("{:.1}", f32::from_le_bytes([b[o], b[o+1], b[o+2], b[o+3]]))).collect();
+                println!("{:6} {:<48} {:<16} | {}", row - e.off as usize, hex, asc, f32s.join(" "));
+            }
+        } else { println!("no export matching '{}'", args[3]); }
+        return Ok(());
+    }
     if args.len() > 2 && args[1] == "--map" {
         let p = Pkg::load(std::path::Path::new(&args[2])).unwrap();
         let actors = p.actors();
