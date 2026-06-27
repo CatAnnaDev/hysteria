@@ -145,12 +145,26 @@ fn lin_to_srgb(x: f32) -> u8 {
     (s * 255.0 + 0.5).clamp(0.0, 255.0) as u8
 }
 
+const FOG_COL: [f32; 3] = [40.0, 44.0, 58.0]; // matches the horizon sky, distant geometry fades into it
+
+fn apply_fog(c: [u8; 3], invw: f32, density: f32) -> [u8; 3] {
+    if density <= 0.0 { return c; }
+    let vd = 1.0 / invw.max(1e-6);
+    let f = (1.0 - (-density * vd).exp()).clamp(0.0, 0.9);
+    [
+        (c[0] as f32 * (1.0 - f) + FOG_COL[0] * f) as u8,
+        (c[1] as f32 * (1.0 - f) + FOG_COL[1] * f) as u8,
+        (c[2] as f32 * (1.0 - f) + FOG_COL[2] * f) as u8,
+    ]
+}
+
 pub struct Raster {
     pub w: usize,
     pub h: usize,
     pub col: Vec<u8>,
     pub z: Vec<f32>,
     lut: [f32; 256], // sRGB byte -> linear, so light math happens in linear space
+    fog: f32,
 }
 
 impl Raster {
@@ -160,7 +174,7 @@ impl Raster {
             let x = i as f32 / 255.0;
             *e = if x <= 0.04045 { x / 12.92 } else { ((x + 0.055) / 1.055).powf(2.4) };
         }
-        Raster { w, h, col: vec![0; w * h * 4], z: vec![f32::INFINITY; w * h], lut }
+        Raster { w, h, col: vec![0; w * h * 4], z: vec![f32::INFINITY; w * h], lut, fog: 0.0 }
     }
 
     fn clear(&mut self, top: [u8; 3], bot: [u8; 3]) {
@@ -179,8 +193,9 @@ impl Raster {
         for d in self.z.iter_mut() { *d = f32::INFINITY; }
     }
 
-    pub fn render(&mut self, scene: &Scene, vp: &M4, _bg: [u8; 3]) {
+    pub fn render(&mut self, scene: &Scene, vp: &M4, fog_density: f32) {
         self.clear([54, 58, 74], [22, 22, 30]); // bluish Alice sky -> dark horizon
+        self.fog = fog_density;
         let (fw, fh) = (self.w as f32, self.h as f32);
         let project = |p: V3| -> Option<(f32, f32, f32, f32)> {
             let c = xform(vp, p);
@@ -232,7 +247,9 @@ impl Raster {
                 if depth < self.z[idx] {
                     self.z[idx] = depth;
                     let o = idx * 4;
-                    self.col[o] = col[0]; self.col[o + 1] = col[1]; self.col[o + 2] = col[2]; self.col[o + 3] = 255;
+                    let iw = w0 * a.3 + w1 * b.3 + w2 * c.3;
+                    let c = apply_fog(col, iw, self.fog);
+                    self.col[o] = c[0]; self.col[o + 1] = c[1]; self.col[o + 2] = c[2]; self.col[o + 3] = 255;
                 }
             }
         }
@@ -287,10 +304,8 @@ impl Raster {
                 if s[3] < 110.0 { continue; }            // masked-material alpha test
                 self.z[idx] = depth;
                 let o = idx * 4;
-                self.col[o] = lin_to_srgb(s[0] * lit[0]);
-                self.col[o + 1] = lin_to_srgb(s[1] * lit[1]);
-                self.col[o + 2] = lin_to_srgb(s[2] * lit[2]);
-                self.col[o + 3] = 255;
+                let c = apply_fog([lin_to_srgb(s[0] * lit[0]), lin_to_srgb(s[1] * lit[1]), lin_to_srgb(s[2] * lit[2])], iw, self.fog);
+                self.col[o] = c[0]; self.col[o + 1] = c[1]; self.col[o + 2] = c[2]; self.col[o + 3] = 255;
             }
         }
     }

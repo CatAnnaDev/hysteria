@@ -700,7 +700,8 @@ impl eframe::App for App {
                     if self.view_dirty || self.view_size != (pw, ph) {
                         self.view_size = (pw, ph);
                         let mut r = view3d::Raster::new(pw, ph);
-                        r.render(&self.scene, &self.cam.view_proj(pw as f32 / ph as f32), [18, 16, 13]);
+                        let fog = 0.6 / self.cam.dist.max(1.0);
+                        r.render(&self.scene, &self.cam.view_proj(pw as f32 / ph as f32), fog);
                         let img = egui::ColorImage::from_rgba_unmultiplied([pw, ph], &r.col);
                         self.view_tex = Some(ctx.load_texture("view3d", img, egui::TextureOptions::NEAREST));
                         self.view_dirty = false;
@@ -1323,7 +1324,7 @@ fn main() -> eframe::Result<()> {
         let cam = view3d::Cam { target: center, yaw: 0.7, pitch: 0.5, dist: diag * 1.3 };
         let (w, h) = (700usize, 700usize);
         let mut r = view3d::Raster::new(w, h);
-        r.render(&sc, &cam.view_proj(1.0), [22, 20, 16]);
+        r.render(&sc, &cam.view_proj(1.0), 0.0);
         image::save_buffer(&args[4], &r.col, w as u32, h as u32, image::ColorType::Rgba8).unwrap();
         println!("rendered {} ({} verts, {} tris) -> {}", e.name, m.verts.len(), m.indices.len() / 3, args[4]);
         return Ok(());
