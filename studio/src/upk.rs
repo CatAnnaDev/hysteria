@@ -5,6 +5,7 @@ use std::io::{Read, Seek, SeekFrom, Write};
 fn ri(b: &[u8], o: usize) -> i32 { if o + 4 <= b.len() { i32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0 } }
 fn ru(b: &[u8], o: usize) -> u32 { if o + 4 <= b.len() { u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0 } }
 fn rf(b: &[u8], o: usize) -> f32 { if o + 4 <= b.len() { f32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]]) } else { 0.0 } }
+fn ru16(b: &[u8], o: usize) -> u16 { if o + 2 <= b.len() { u16::from_le_bytes([b[o], b[o + 1]]) } else { 0 } }
 
 // Read a UE3 FString at o: [i32 len][body]. len>0 => ANSI (len bytes incl. null),
 // len<0 => UTF-16LE (2*|len| bytes). Returns (decoded, total bytes consumed incl. the
@@ -170,6 +171,7 @@ pub struct Export {
     pub outer: i32,      // OuterIndex: package-export index (1-based) of the owning object, 0 = top level
 }
 
+#[derive(Clone)]
 pub struct MapActor {
     pub idx: usize,
     pub name: String,
@@ -189,6 +191,36 @@ pub struct Mesh {
     pub verts: Vec<[f32; 3]>,
     pub uvs: Vec<[f32; 2]>,
     pub indices: Vec<u32>,
+}
+
+pub struct SkelSection {
+    pub material: usize,
+    pub first: usize,
+    pub count: usize,
+}
+
+pub struct SkelMesh {
+    pub verts: Vec<[f32; 3]>,
+    pub uvs: Vec<[f32; 2]>,
+    pub indices: Vec<u32>,
+    pub sections: Vec<SkelSection>,
+    pub materials: Vec<i32>,
+}
+
+pub struct TerrainMesh {
+    pub verts: Vec<[f32; 3]>,
+    pub uvs: Vec<[f32; 2]>,
+    pub indices: Vec<u32>,
+    pub nvx: usize,
+    pub nvy: usize,
+    pub hmin: f32,
+    pub hmax: f32,
+}
+
+pub struct SmSection {
+    pub material: i32,
+    pub first: usize,
+    pub count: usize,
 }
 
 fn half_to_f32(h: u16) -> f32 {
@@ -383,7 +415,7 @@ impl Pkg {
         let base = self.names.get(idx as usize).cloned().unwrap_or_else(|| format!("?{}", idx));
         if num > 0 { format!("{}_{}", base, num - 1) } else { base }
     }
-    fn idx_name(&self, i: i32) -> String {
+    pub fn idx_name(&self, i: i32) -> String {
         if i == 0 { "None".into() }
         else if i < 0 { self.imports.get((-i - 1) as usize).cloned().unwrap_or_else(|| "?imp".into()) }
         else { self.exports.get((i - 1) as usize).map(|e| e.name.clone()).unwrap_or_else(|| "?exp".into()) }
@@ -501,12 +533,34 @@ impl Pkg {
         Some(m)
     }
 
+    #[allow(dead_code)]
     pub fn float_prop(&self, start: i32, key: &str) -> Option<f32> {
         let (typ, off, len) = self.find_prop_raw(start, key)?;
         if typ == "FloatProperty" && len >= 4 { Some(rf(&self.buf, off)) } else { None }
     }
 
+    pub fn int_prop(&self, start: i32, key: &str) -> Option<i32> {
+        let (typ, off, len) = self.find_prop_raw(start, key)?;
+        if typ == "IntProperty" && len >= 4 { Some(ri(&self.buf, off)) } else { None }
+    }
+
+    pub fn first_ref_of_class(&self, e: &Export, needle: &str) -> Option<i32> {
+        let b = &self.buf;
+        let (s, en) = (e.off as usize, ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len()));
+        let mut o = s;
+        while o + 4 <= en {
+            let v = ri(b, o);
+            let cls = if v > 0 { self.exports.get((v - 1) as usize).map(|x| x.class_name.as_str()) }
+                else if v < 0 { self.import_classes.get((-(v as i64) - 1) as usize).map(|x| x.as_str()) }
+                else { None };
+            if let Some(c) = cls { if c.contains(needle) { return Some(v); } }
+            o += 1;
+        }
+        None
+    }
+
     // A Color struct property (BGRA bytes) as RGB.
+    #[allow(dead_code)]
     pub fn color_prop(&self, start: i32, key: &str) -> Option<[u8; 3]> {
         let (_, off, _) = self.find_prop_raw(start, key)?;
         let b = &self.buf;
@@ -572,15 +626,78 @@ impl Pkg {
             let cls = if v > 0 {
                 self.exports.get((v - 1) as usize).map(|x| x.class_name.as_str())
             } else if v < 0 {
-                self.import_classes.get((-v - 1) as usize).map(|x| x.as_str())
+                self.import_classes.get((-(v as i64) - 1) as usize).map(|x| x.as_str())
             } else { None };
             if let Some(c) = cls {
                 if c.contains("Material") || c.contains("Texture") { out.push(v); }
             }
-            o += 4;
+            o += 1;
         }
         out.sort_unstable(); out.dedup();
         out
+    }
+
+    pub fn texture_params(&self, mat_ei: usize) -> Vec<(String, i32)> {
+        let e = match self.exports.get(mat_ei) { Some(e) => e, None => return Vec::new() };
+        let b = &self.buf;
+        let end = self.export_end(e.off);
+        let adv = |typ: &str, size: usize| -> usize {
+            match typ { "BoolProperty" => 1, "ByteProperty" => 8 + if size == 8 { 8 } else { size }, "StructProperty" => 8 + size, _ => size }
+        };
+        let mut o = self.prop_start_at(e.off);
+        let mut body: Option<(usize, usize)> = None;
+        while o + 24 <= b.len() && o < end {
+            let name = self.fname_at(o);
+            if name == "None" || name.starts_with('?') { break; }
+            let typ = self.fname_at(o + 8);
+            if !typ.ends_with("Property") { break; }
+            let size = ri(b, o + 16).max(0) as usize;
+            let hdr = o + 24;
+            if name == "TextureParameterValues" && typ == "ArrayProperty" {
+                body = Some((hdr + 4, (hdr + size).min(end)));
+                break;
+            }
+            o = hdr + adv(&typ, size);
+        }
+        let (mut p, pend) = match body { Some(x) => x, None => return Vec::new() };
+        let mut out = Vec::new();
+        let mut cur: Option<String> = None;
+        while p + 24 <= b.len() && p < pend {
+            let name = self.fname_at(p);
+            if name == "None" { p += 8; cur = None; continue; }
+            if name.starts_with('?') { break; }
+            let typ = self.fname_at(p + 8);
+            if !typ.ends_with("Property") { break; }
+            let size = ri(b, p + 16).max(0) as usize;
+            let hdr = p + 24;
+            if name == "ParameterName" && typ == "NameProperty" { cur = Some(self.fname_at(hdr)); }
+            else if name == "ParameterValue" && typ == "ObjectProperty" {
+                if let Some(n) = cur.clone() { out.push((n, ri(b, hdr))); }
+            }
+            p = hdr + adv(&typ, size);
+        }
+        out
+    }
+
+    pub fn material_diffuse_ref(&self, mat_ei: usize) -> Option<i32> {
+        self.material_diffuse_ref_at(mat_ei, 0)
+    }
+
+    fn material_diffuse_ref_at(&self, mat_ei: usize, depth: usize) -> Option<i32> {
+        let params = self.texture_params(mat_ei);
+        let pick = |pred: &dyn Fn(&str) -> bool| params.iter().find(|(n, r)| *r != 0 && pred(&n.to_lowercase())).map(|(_, r)| *r);
+        let base = |n: &str| !n.contains("tiling") && !n.contains("detail");
+        let local = pick(&|n| base(n) && (n == "diffusemap" || n == "diffuse" || n == "basecolor" || n == "base_color" || n == "albedo"))
+            .or_else(|| pick(&|n| base(n) && (n.contains("diff") || n.contains("albedo"))))
+            .or_else(|| pick(&|n| base(n) && (n.contains("color") || n.contains("colour"))))
+            .or_else(|| pick(&|n| base(n) && !n.contains("normal") && !n.contains("spec") && !n.contains("mask")
+                && !n.contains("opac") && !n.contains("emiss") && !n.contains("cube") && !n.contains("light") && !n.contains("tint")));
+        if local.is_some() || depth >= 6 { return local; }
+        let e = self.exports.get(mat_ei)?;
+        match self.object_ref(e.off, "Parent") {
+            Some(pr) if pr > 0 => self.material_diffuse_ref_at((pr - 1) as usize, depth + 1),
+            _ => None,
+        }
     }
 
     // Average diffuse colour of an object's material: BFS its reference graph
@@ -712,6 +829,241 @@ impl Pkg {
             o += 1;
         }
         None
+    }
+
+    pub fn static_mesh_structured(&self, e: &Export) -> Option<(Mesh, Vec<SmSection>)> {
+        let b = &self.buf;
+        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
+        let mut o = self.props_end_offset(e)?;
+        o += 28 + 4;
+        for _ in 0..2 {
+            if o + 8 > end { return None; }
+            let es = ri(b, o) as usize; let n = ri(b, o + 4) as usize; o += 8;
+            if es > 4096 || n > (1 << 26) { return None; }
+            o += es.checked_mul(n)?;
+            if o > end { return None; }
+        }
+        o += 4;
+        if o + 4 > end { return None; }
+        let nlod = ri(b, o) as usize; o += 4;
+        if nlod == 0 || nlod > 16 { return None; }
+        if o + 16 > end { return None; }
+        let rt_flags = ru(b, o); let rt_sod = ri(b, o + 8).max(0) as usize; o += 16;
+        if rt_flags & 0x01 == 0 { o += rt_sod; }
+        if o + 4 > end { return None; }
+        let nelem = ri(b, o) as usize; o += 4;
+        if nelem == 0 || nelem > 4096 { return None; }
+        let mut sections = Vec::with_capacity(nelem);
+        for _ in 0..nelem {
+            if o + 36 > end { return None; }
+            let material = ri(b, o);
+            let first = ru(b, o + 16) as usize;
+            let numtri = ru(b, o + 20) as usize;
+            o += 36;
+            if o + 4 > end { return None; }
+            let nfrag = ri(b, o) as usize; o += 4;
+            if nfrag > (1 << 20) { return None; }
+            o += nfrag * 8 + 1;
+            if o > end { return None; }
+            sections.push(SmSection { material, first, count: numtri * 3 });
+        }
+        if o + 16 > end { return None; }
+        if ru(b, o) != 12 || ru(b, o + 8) != 12 || ru(b, o + 4) != ru(b, o + 12) { return None; }
+        let numverts = ru(b, o + 4) as usize;
+        if numverts == 0 || numverts > (1 << 22) { return None; }
+        let pos_data = o + 16;
+        if pos_data + numverts * 12 > end { return None; }
+        let verts: Vec<[f32; 3]> = (0..numverts).map(|i| { let vo = pos_data + i * 12; [rf(b, vo), rf(b, vo + 4), rf(b, vo + 8)] }).collect();
+        o = pos_data + numverts * 12;
+        if o + 24 > end { return None; }
+        let numtc = ru(b, o); let stride = ru(b, o + 4) as usize; let vnumv = ru(b, o + 8) as usize;
+        let fullprec = ru(b, o + 12);
+        if !(1..=8).contains(&numtc) || !(8..=128).contains(&stride) || vnumv != numverts { return None; }
+        let vdata = o + 24;
+        if vdata + vnumv * stride > end { return None; }
+        let uvs: Vec<[f32; 2]> = (0..vnumv).map(|i| {
+            let vo = vdata + i * stride + 8;
+            if fullprec != 0 { [rf(b, vo), rf(b, vo + 4)] }
+            else { [half_to_f32(ru16(b, vo)), half_to_f32(ru16(b, vo + 2))] }
+        }).collect();
+        o = vdata + vnumv * stride;
+        if o + 8 > end { return None; }
+        let cnumv = ru(b, o + 4) as usize; o += 8;
+        if cnumv > 0 {
+            if o + 8 > end { return None; }
+            let ccount = ru(b, o + 4) as usize; o += 8 + ccount * 4;
+        }
+        if o + 4 > end { return None; }
+        o += 4;
+        if o + 8 > end { return None; }
+        let istride = ru(b, o) as usize; let icount = ru(b, o + 4) as usize; o += 8;
+        if (istride != 2 && istride != 4) || icount == 0 || icount > (1 << 24) || o + icount * istride > end { return None; }
+        let indices: Vec<u32> = (0..icount).map(|i| if istride == 2 { ru16(b, o + i * 2) as u32 } else { ru(b, o + i * 4) }).collect();
+        if sections.iter().any(|s| s.first + s.count > icount) { return None; }
+        Some((Mesh { verts, uvs, indices }, sections))
+    }
+
+    fn props_end_offset(&self, e: &Export) -> Option<usize> {
+        let b = &self.buf;
+        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
+        let mut o = self.prop_start_at(e.off);
+        for _ in 0..4096 {
+            if o + 8 > end { return None; }
+            let name = self.fname_at(o);
+            if name == "None" { return Some(o + 8); }
+            if name.starts_with('?') { return None; }
+            o += 8;
+            let typ = self.fname_at(o);
+            if !typ.ends_with("Property") { return None; }
+            o += 8;
+            let size = ri(b, o) as usize; o += 8;
+            o += self.prop_body_len(&typ, size);
+            if o > end { return None; }
+        }
+        None
+    }
+
+    pub fn skeletal_mesh(&self, e: &Export) -> Option<SkelMesh> {
+        let b = &self.buf;
+        let end = ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len());
+        let mut o = self.props_end_offset(e)?;
+        o += 28;
+        if o + 4 > end { return None; }
+        let nmat = ri(b, o) as usize; o += 4;
+        if nmat > 256 { return None; }
+        let mut materials = Vec::with_capacity(nmat);
+        for _ in 0..nmat { materials.push(ri(b, o)); o += 4; }
+        o += 24;
+        if o + 4 > end { return None; }
+        let nbones = ri(b, o) as usize; o += 4;
+        if nbones == 0 || nbones > 8192 { return None; }
+        o += nbones * 52;
+        if o + 8 > end { return None; }
+        o += 4;
+        let nlod = ri(b, o) as usize; o += 4;
+        if nlod == 0 || nlod > 32 { return None; }
+        if o + 4 > end { return None; }
+        let nsec = ri(b, o) as usize; o += 4;
+        if nsec > 1024 { return None; }
+        let mut sections = Vec::with_capacity(nsec);
+        for _ in 0..nsec {
+            if o + 11 > end { return None; }
+            let material = ru16(b, o) as usize;
+            let first = ru(b, o + 4) as usize;
+            let ntri = ru16(b, o + 8) as usize;
+            o += 11;
+            sections.push(SkelSection { material, first, count: ntri * 3 });
+        }
+        if o + 8 > end { return None; }
+        let ielem = ri(b, o) as usize; o += 4;
+        let nidx = ri(b, o) as usize; o += 4;
+        if (ielem != 2 && ielem != 4) || nidx == 0 || nidx > (1 << 25) || o + nidx * ielem > end { return None; }
+        let mut indices = Vec::with_capacity(nidx);
+        for i in 0..nidx {
+            let io = o + i * ielem;
+            indices.push(if ielem == 2 { ru16(b, io) as u32 } else { ru(b, io) });
+        }
+        o += nidx * ielem;
+        let maxidx = indices.iter().copied().max().unwrap_or(0) as usize;
+        let (verts, uvs) = self.skel_vertex_buffer(o, end, maxidx)?;
+        if sections.iter().any(|s| s.first + s.count > indices.len()) { return None; }
+        Some(SkelMesh { verts, uvs, indices, sections, materials })
+    }
+
+    fn skel_vertex_buffer(&self, from: usize, end: usize, maxidx: usize) -> Option<(Vec<[f32; 3]>, Vec<[f32; 2]>)> {
+        let b = &self.buf;
+        let mut o = from + 32;
+        while o + 8 <= end {
+            let stride = ru(b, o) as usize;
+            let nverts = ru(b, o + 4) as usize;
+            let full = ru(b, o - 32);
+            let packed = ru(b, o - 28);
+            if (stride == 32 || stride == 36) && full <= 1 && packed <= 1
+                && nverts > maxidx && nverts < (1 << 21) && o + 8 + nverts * stride <= end {
+                let base = o + 8;
+                let floatuv = stride == 36;
+                let mut verts = Vec::with_capacity(nverts);
+                let mut uvs = Vec::with_capacity(nverts);
+                for i in 0..nverts {
+                    let vo = base + i * stride;
+                    verts.push([rf(b, vo + 16), rf(b, vo + 20), rf(b, vo + 24)]);
+                    let uo = vo + 28;
+                    let uv = if floatuv { [rf(b, uo), rf(b, uo + 4)] }
+                        else { [half_to_f32(ru16(b, uo)), half_to_f32(ru16(b, uo + 2))] };
+                    uvs.push(uv);
+                }
+                if verts.iter().take(128).all(|v| v.iter().all(|c| c.is_finite() && c.abs() < 1.0e5)) {
+                    return Some((verts, uvs));
+                }
+            }
+            o += 1;
+        }
+        None
+    }
+
+    pub fn terrain_mesh(&self, e: &Export, idx: usize) -> Option<TerrainMesh> {
+        let b = &self.buf;
+        let (s, end) = (e.off as usize, ((e.off as i64 + e.size.max(0) as i64) as usize).min(b.len()));
+        let (mut nvx, mut nvy) = (0usize, 0usize);
+        if let Some(v) = self.int_prop(e.off, "NumVerticesX") { if (2..=8192).contains(&v) { nvx = v as usize; } }
+        if let Some(v) = self.int_prop(e.off, "NumVerticesY") { if (2..=8192).contains(&v) { nvy = v as usize; } }
+        for ci in self.children(idx) {
+            let c = match self.exports.get(ci) { Some(c) if c.class_name == "TerrainComponent" => c, _ => continue };
+            let bx = self.int_prop(c.off, "SectionBaseX").unwrap_or(0).max(0) as usize;
+            let by = self.int_prop(c.off, "SectionBaseY").unwrap_or(0).max(0) as usize;
+            let tx = self.int_prop(c.off, "TrueSectionSizeX").or_else(|| self.int_prop(c.off, "SectionSizeX")).unwrap_or(0).max(0) as usize;
+            let ty = self.int_prop(c.off, "TrueSectionSizeY").or_else(|| self.int_prop(c.off, "SectionSizeY")).unwrap_or(0).max(0) as usize;
+            if tx > 0 { nvx = nvx.max(bx + tx + 1); }
+            if ty > 0 { nvy = nvy.max(by + ty + 1); }
+        }
+        let mut found = None;
+        let mut o = s;
+        while o + 8 <= end {
+            let cnt = ri(b, o) as usize;
+            if (16..(1 << 22)).contains(&cnt) {
+                let io = o + 4 + cnt * 2;
+                if io + 4 + cnt <= end && ri(b, io) as usize == cnt {
+                    let band = (0..16).filter(|k| { let v = ru16(b, o + 4 + (k * cnt / 16) * 2); (256..=65280).contains(&v) }).count();
+                    if band >= 12 { found = Some((o + 4, cnt)); break; }
+                }
+            }
+            o += 1;
+        }
+        let (hoff, count) = found?;
+        if nvx == 0 || nvy == 0 || nvx * nvy != count {
+            let r = (count as f64).sqrt().round() as usize;
+            if r * r == count { nvx = r; nvy = r; }
+            else if nvx > 1 && count % nvx == 0 { nvy = count / nvx; }
+            else if nvy > 1 && count % nvy == 0 { nvx = count / nvy; }
+            else { return None; }
+        }
+        let info_off = hoff + count * 2 + 4;
+        let info_ok = info_off + count <= end;
+        let (mut hmin, mut hmax) = (f32::MAX, f32::MIN);
+        let verts: Vec<[f32; 3]> = (0..count).map(|i| {
+            let h = (ru16(b, hoff + i * 2) as f32 - 32768.0) / 128.0;
+            hmin = hmin.min(h); hmax = hmax.max(h);
+            [(i % nvx) as f32, (i / nvx) as f32, h]
+        }).collect();
+        let uvs: Vec<[f32; 2]> = (0..count).map(|i| [(i % nvx) as f32, (i / nvx) as f32]).collect();
+        let mut indices = Vec::new();
+        for qy in 0..nvy - 1 {
+            for qx in 0..nvx - 1 {
+                let d = if info_ok { b[info_off + qy * nvx + qx] } else { 0 };
+                if d & 0x01 != 0 { continue; }
+                let v00 = (qy * nvx + qx) as u32;
+                let v01 = ((qy + 1) * nvx + qx) as u32;
+                let v10 = (qy * nvx + qx + 1) as u32;
+                let v11 = ((qy + 1) * nvx + qx + 1) as u32;
+                if d & 0x02 == 0 {
+                    indices.extend_from_slice(&[v00, v11, v01, v00, v10, v11]);
+                } else {
+                    indices.extend_from_slice(&[v00, v10, v01, v10, v11, v01]);
+                }
+            }
+        }
+        if indices.is_empty() { return None; }
+        Some(TerrainMesh { verts, uvs, indices, nvx, nvy, hmin, hmax })
     }
 
     // Export indices whose Outer is the given export (its sub-objects / components).
@@ -847,7 +1199,7 @@ impl Pkg {
                     return Some(if typ == "StructProperty" { o + 32 } else { o + 24 });
                 }
             }
-            o += 4;
+            o += 1;
         }
         None
     }
@@ -876,6 +1228,65 @@ impl Pkg {
         Some(m)
     }
 
+    pub fn transform_edits(&self, idx: usize) -> Vec<PropEdit> {
+        let e = match self.exports.get(idx) { Some(e) => e, None => return Vec::new() };
+        let b = &self.buf;
+        let mut out = Vec::new();
+        if let Some(o) = self.find_actor_tag(e, "Location") {
+            for (k, c) in ["X", "Y", "Z"].iter().enumerate() {
+                out.push(PropEdit { name: format!("Location.{}", c), typ: "Float".into(), kind: 2, off: o + k * 4, value: format!("{}", rf(b, o + k * 4)) });
+            }
+        }
+        if let Some(o) = self.find_actor_tag(e, "Rotation") {
+            for (k, c) in ["Pitch", "Yaw", "Roll"].iter().enumerate() {
+                let deg = ri(b, o + k * 4) as f32 * 360.0 / 65536.0;
+                out.push(PropEdit { name: format!("Rotation.{} (deg)", c), typ: "Deg".into(), kind: 5, off: o + k * 4, value: format!("{:.4}", deg) });
+            }
+        }
+        if let Some(o) = self.find_actor_tag(e, "DrawScale") {
+            out.push(PropEdit { name: "DrawScale".into(), typ: "Float".into(), kind: 2, off: o, value: format!("{}", rf(b, o)) });
+        }
+        if let Some(o) = self.find_actor_tag(e, "DrawScale3D") {
+            for (k, c) in ["X", "Y", "Z"].iter().enumerate() {
+                out.push(PropEdit { name: format!("DrawScale3D.{}", c), typ: "Float".into(), kind: 2, off: o + k * 4, value: format!("{}", rf(b, o + k * 4)) });
+            }
+        }
+        out
+    }
+
+    // Find the ULevel.Actors array: after the Level export's NetIndex + tagged props + None,
+    // ULevelBase::Serialize writes Actors first as [i32 count][count * i32 export-ref].
+    fn level_actors_off(&self) -> Option<(usize, usize)> {
+        let level = self.level_export()?;
+        let off = self.props_end_offset(&self.exports[level])?;
+        if off + 4 > self.buf.len() { return None; }
+        let count = ri(&self.buf, off);
+        if !(0..1_000_000).contains(&count) || off + 4 + count as usize * 4 > self.buf.len() { return None; }
+        Some((off, count as usize))
+    }
+
+    // Delete an actor: NULL its ref in ULevel.Actors (the engine tolerates null slots and never
+    // spawns it) and orphan its export (OuterIndex = 0) so it stops being a child of the Level.
+    // No export removal / index renumbering — the on-disk graph is untyped and unsafe to renumber.
+    pub fn delete_actor(&mut self, idx: usize) -> Result<usize, String> {
+        let e = self.exports.get(idx).ok_or("bad actor index")?;
+        let target = idx as i32 + 1;
+        let outer_off = e.size_off.checked_sub(24).ok_or("bad export entry offset")?;
+        if outer_off + 4 > self.buf.len() || ri(&self.buf, outer_off) != e.outer {
+            return Err("export-table OuterIndex offset mismatch".into());
+        }
+        let (actors_off, count) = self.level_actors_off().ok_or("could not locate Level.Actors")?;
+        let mut nulled = 0;
+        for i in 0..count {
+            let ro = actors_off + 4 + i * 4;
+            if ri(&self.buf, ro) == target { self.buf[ro..ro + 4].copy_from_slice(&0i32.to_le_bytes()); nulled += 1; }
+        }
+        if nulled == 0 { return Err("actor is not referenced by Level.Actors".into()); }
+        self.buf[outer_off..outer_off + 4].copy_from_slice(&0i32.to_le_bytes());
+        self.exports[idx].outer = 0;
+        Ok(nulled)
+    }
+
     fn scan_location(&self, idx: usize, lo: [f32; 3], hi: [f32; 3]) -> Option<(f32, f32, f32)> {
         let e = &self.exports[idx];
         let b = &self.buf;
@@ -893,14 +1304,13 @@ impl Pkg {
         None
     }
 
+    // Position must match exactly what the renderer transforms the mesh by, so the actor's
+    // pick point / gizmo anchor / minimap dot all sit on the visible mesh: that is
+    // actor_matrix (tagged Location/Rotation/Scale) else the component's world matrix.
     fn actor_pos(&self, actor: usize, comps: &[usize]) -> Option<(f32, f32, f32)> {
-        if let Some(v) = self.struct_floats(self.exports[actor].off, "Location") {
-            if v.len() >= 3 { return Some((v[0], v[1], v[2])); }
-        }
+        if let Some(m) = self.actor_matrix(actor) { return Some((m[12], m[13], m[14])); }
         for &c in comps {
-            if let Some(m) = self.struct_floats(self.exports[c].off, "CachedParentToWorld") {
-                if m.len() >= 16 { return Some((m[13], m[14], m[15])); }
-            }
+            if let Some(m) = self.world_matrix(self.exports[c].off) { return Some((m[12], m[13], m[14])); }
             if let Some(v) = self.struct_floats(self.exports[c].off, "Translation") {
                 if v.len() >= 3 { return Some((v[0], v[1], v[2])); }
             }

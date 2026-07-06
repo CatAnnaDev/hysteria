@@ -82,43 +82,14 @@ pub struct Tri { pub p: [V3; 3], pub uv: [[f32; 2]; 3], pub tex: i32, pub color:
 
 pub struct Tex { pub w: usize, pub h: usize, pub rgba: Vec<u8> }
 
-// A point light from the map (position pre-swizzled to render Y-up; colour linear).
-pub struct Light { pub pos: V3, pub color: [f32; 3], pub brightness: f32, pub radius: f32 }
-
 pub struct Scene {
     pub tris: Vec<Tri>,
     pub lines: Vec<(V3, V3, [u8; 3])>,
     pub textures: Vec<Tex>,
-    pub lights: Vec<Light>,
 }
 
 impl Scene {
-    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new(), textures: Vec::new(), lights: Vec::new() } }
-
-    // Bake per-triangle lighting once (cheap, at scene build): a small sky/ground ambient plus
-    // every point light attenuated by distance and N·L. Stored in Tri.light as a linear
-    // multiplier on the albedo — recreates Alice's localized, coloured, moody lighting.
-    pub fn bake_lighting(&mut self) {
-        for t in self.tris.iter_mut() {
-            let (a, b, c) = (t.p[0], t.p[1], t.p[2]);
-            let n = norm(cross(sub(b, a), sub(c, a)));
-            let ctr = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0];
-            let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
-            let mut acc = [0.16 + 0.12 * hemi; 3];          // cool sky/ground ambient
-            acc[2] += 0.03;                                  // faint cool tint in shadow
-            for l in &self.lights {
-                let d = sub(l.pos, ctr);
-                let dist = dot(d, d).sqrt().max(1.0);
-                if dist > l.radius { continue; }
-                let atten = (1.0 - (dist / l.radius)).clamp(0.0, 1.0);
-                let atten = atten * atten;
-                let ndl = (dot(n, scl(d, 1.0 / dist))).abs();
-                let e = l.brightness * ndl * atten;
-                for k in 0..3 { acc[k] += l.color[k] * e; }
-            }
-            t.light = acc;
-        }
-    }
+    pub fn new() -> Self { Scene { tris: Vec::new(), lines: Vec::new(), textures: Vec::new() } }
 
     // Axis-aligned box (8 corners) as 12 shaded triangles, centred at c with half-extents h.
     pub fn box_solid(&mut self, c: V3, h: V3, color: [u8; 3]) {
@@ -135,9 +106,19 @@ impl Scene {
             self.tris.push(Tri { p: [v[f[0]], v[f[2]], v[f[3]]], uv: z, tex: -1, color, light: [1.0; 3] });
         }
     }
+
+    pub fn shade(&mut self) {
+        let kd = norm([0.35, 0.9, 0.25]);
+        for t in self.tris.iter_mut() {
+            let n = norm(cross(sub(t.p[1], t.p[0]), sub(t.p[2], t.p[0])));
+            let hemi = 0.5 + 0.5 * n[1].clamp(-1.0, 1.0);
+            let key = dot(n, kd).max(0.0);
+            let l = 0.40 + 0.32 * hemi + 0.30 * key;
+            t.light = [l * 0.93, l * 0.97, l * 1.07];
+        }
+    }
 }
 
-const EXPOSURE: f32 = 1.5;
 
 fn lin_to_srgb(x: f32) -> u8 {
     let x = (x / (1.0 + x)).clamp(0.0, 1.0);                  // Reinhard tonemap then encode
@@ -210,7 +191,7 @@ impl Raster {
                 (Some(x), Some(y), Some(z)) => (x, y, z),
                 _ => continue,
             };
-            let lit = [t.light[0] * EXPOSURE, t.light[1] * EXPOSURE, t.light[2] * EXPOSURE];
+            let lit = t.light;
             if t.tex >= 0 && (t.tex as usize) < scene.textures.len() {
                 self.triangle_tex(pa, pb, pc, &t.uv, &scene.textures[t.tex as usize], lit);
             } else {
