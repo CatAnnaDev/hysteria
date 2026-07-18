@@ -129,15 +129,23 @@ PNG (DXT1/DXT3/DXT5/G8/A8R8G8B8, reading streamed mips from `.tfc`), replaces te
 PNG, exports/replaces sounds (OGG/WAV), bulk-exports all textures/sounds, shows a raw hex
 view of any object, and writes a game-loadable package back out.
 
-**3D mesh view** is wired to UModel (UE Viewer): select a SkeletalMesh/StaticMesh and click
-"View in 3D (UModel)" to open its interactive 3D viewer (and export OBJ/glTF/textures).
-Drop `umodel_64.exe` into the CrossOver bottle at `C:\umodel\` (from gildor.org); `umodel.command`
-launches the browser standalone.
+![Hysteria Studio — package browser and 3D preview](studio_screenshot/packages.png)
+
+**3D preview** is built in: select a SkeletalMesh or StaticMesh and it renders right in the
+inspector — bind pose, per-section materials, drag to orbit, scroll to zoom.
+
+**Map mode** opens any `.umap`, renders the world (static meshes, terrain, textures) and lists
+every placed actor. Fly with WASD/QE, double-click an actor to focus it, then move/rotate/scale
+it with the 3D gizmo — with undo/redo and an automatic backup before the package is written.
+
+![Hysteria Studio — map editor](studio_screenshot/map.png)
 
 It also has a **Localization (text) mode**: browse and edit every `Localization/<LANG>/*`
 string file (menus, subtitles, objectives, tutorials...) with byte-exact saves (UTF-16 and
 Latin-1 preserved). Editing these is the most reliable way to mod game text — it takes effect
 in-game immediately, no package rebuild needed.
+
+![Hysteria Studio — localization editor](studio_screenshot/localization.png)
 
 ## Notes
 
