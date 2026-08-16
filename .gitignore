@@ -16,3 +16,12 @@ __pycache__/
 # distributable build (dlls bundled on purpose)
 !/dist/dinput8.dll
 !/dist/Mods/*.dll
+/ALICE_ANATOMY.md
+/ALICE_COOP_MIROIR.md
+/ALICE_COOP_RECHERCHE_EXTERNE.md
+/ALICE_COOP_REFERENCE.md
+/COOP_MODE_EMPLOI.md
+/coop_keyaudit.command
+/coop_status.command
+/.backup-spawncascade/20260815-173715
+/.backup-precoop

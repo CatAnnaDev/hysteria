@@ -28,9 +28,8 @@ static int copy_len(unsigned char *p){
         if(op==0x6A){ n+=2; continue; }
         if(op==0x90){ n+=1; continue; }
         if(op==0xB8){ n+=5; continue; }
-        if(op==0xE9){ n+=5; continue; }
-        if(op==0x8B && (p[n+1]==0xEC||p[n+1]==0xFF)){ n+=2; continue; }
-        if(op==0x89 && p[n+1]==0xE5){ n+=2; continue; }
+        if(op==0x8B && p[n+1]>=0xC0){ n+=2; continue; }
+        if(op==0x89 && p[n+1]>=0xC0){ n+=2; continue; }
         if(op==0x83 && (p[n+1]&0xC0)==0xC0){ n+=3; continue; }
         if(op==0x81 && (p[n+1]&0xC0)==0xC0){ n+=6; continue; }
         if(op==0x64 && p[n+1]==0xA1){ n+=6; continue; }
@@ -53,17 +52,9 @@ void *detour(void *target, void *hook){
     FlushInstructionCache(GetCurrentProcess(),NULL,0);
     return tr;
 }
-static void undetour(void *target, unsigned char *saved5){
-    DWORD op;
-    if(!VirtualProtect(target,5,PAGE_EXECUTE_READWRITE,&op)) return;
-    for(int i=0;i<5;i++) ((unsigned char*)target)[i]=saved5[i];
-    VirtualProtect(target,5,op,&op);
-    FlushInstructionCache(GetCurrentProcess(),NULL,0);
-}
 
-PE_t g_peTramp=NULL;
-static void *g_peTarget=NULL;
-static volatile int g_calHits=0, g_calBad=0;
+PE_t  g_peTramp=NULL;
+void *g_peTarget=NULL;
 
 static void pe_emit(void *obj, void *fn){
     static HANDLE h=NULL;
@@ -75,47 +66,81 @@ static void pe_emit(void *obj, void *fn){
     DWORD w; WriteFile(h,line,n,&w,NULL);
 }
 
+static void *g_fnClass=NULL;
+static int   g_ptFid=-1;
+static volatile DWORD g_pumpTid=0;
+
 static void __fastcall pe_hook(void* obj, void* edx, void* fn, void* parms, void* res){
-    if(mem_ok(fn,O_CLASS+4)){
+    void *fc;
+    if(!mem_ok(fn,O_CLASS+4)){ g_peTramp(obj,edx,fn,parms,res); return; }
+    fc=*(void**)((char*)fn+O_CLASS);
+    if(!g_fnClass){
         const char *cn=obj_class_name(fn);
-        if(cn && cn[0]=='F' && lstrcmpA(cn,"Function")==0){
-            g_calHits++;
-            if(g_modFound){
-                if(g_modLog && (obj==g_pc || (g_modPawn && obj==g_modPawn))) pe_emit(obj, fn);
-                if(dispatch_event(obj,fn,parms,res)) return;
-                g_peTramp(obj,edx,fn,parms,res);
-                dispatch_post(obj,fn,parms,res);
-                return;
-            }
-        } else g_calBad++;
-    } else g_calBad++;
+        if(cn && cn[0]=='F' && lstrcmpA(cn,"Function")==0) g_fnClass=fc;
+    }
+    if(fc!=g_fnClass || !g_modFound){ g_peTramp(obj,edx,fn,parms,res); return; }
+
+    if(obj==g_pc && mem_ok((char*)fn+O_NAME,4)){
+        if(g_ptFid<0) g_ptFid=find_name("PlayerTick");
+        if(g_ptFid>=0 && *(int*)((char*)fn+O_NAME)==g_ptFid){
+            DWORD tid=GetCurrentThreadId();
+            if(g_pumpTid!=tid){ g_pumpTid=tid; mod_pump_game(); g_pumpTid=0; }
+        }
+    }
+    if(g_modLog && (obj==g_pc || (g_modPawn && obj==g_modPawn))) pe_emit(obj,fn);
+    if(dispatch_event(obj,fn,parms,res)) return;
     g_peTramp(obj,edx,fn,parms,res);
+    dispatch_post(obj,fn,parms,res);
+}
+
+static const unsigned char PE_SIG[5]={0x55,0x8B,0xEC,0x6A,0xFF};
+
+static void *pe_known_target(void){
+    mod_module_range();
+    if(!g_modLo) return NULL;
+    unsigned char *p=(unsigned char*)(ULONG_PTR)(g_modLo+RVA_UOBJECT_PROCESSEVENT);
+    if(!in_text(p) || !mem_ok(p,16)) return NULL;
+    for(int i=0;i<5;i++) if(p[i]!=PE_SIG[i]) return NULL;
+    return p;
 }
 
 void mod_tick(void){
+    static int tried=0;
+    void *k, *tr, *cand; void **vt;
+
     if(g_modReloadReq){ g_modReloadReq=0; if(g_modFound) mod_do_reload(); }
     if(g_modFound || !g_modFind) return;
     if(!g_pc || !mem_ok(g_pc,4)) return;
     mod_module_range();
     if(!g_modHi) return;
-    void **vt=*(void***)g_pc;
-    if(!mem_ok(vt,4)) return;
 
-    static int idx=0, frames=0;
-    static unsigned char saved[5];
-
-    if(g_peTarget){
-        frames++;
-        if(g_calBad>0){ undetour(g_peTarget,saved); g_peTarget=NULL; idx++; frames=0; g_calHits=g_calBad=0; return; }
-        if(g_calHits>=8){ g_modFound=1; logmsg("[hysteria][mod] ProcessEvent @ vt[%d]=%p hooked\r\n", idx, g_peTarget); load_mods(); return; }
-        if(frames>40){ undetour(g_peTarget,saved); g_peTarget=NULL; idx++; frames=0; g_calHits=g_calBad=0; }
-        return;
+    if(!tried){
+        tried=1;
+        k=pe_known_target();
+        if(k){
+            tr=detour(k,(void*)pe_hook);
+            if(tr){
+                g_peTramp=(PE_t)tr; g_peTarget=k; g_modFound=1;
+                logmsg("[hysteria][mod] UObject::ProcessEvent @%p hooke (signature RVA)\r\n",k);
+                load_mods();
+                return;
+            }
+            logmsg("[hysteria][mod] detour ProcessEvent ECHEC, repli vt[67]\r\n");
+        } else logmsg("[hysteria][mod] signature RVA absente, repli vt[67]\r\n");
     }
-    if(idx>=200){ idx=0; return; }
-    void *cand=mem_ok(&vt[idx],4)?vt[idx]:NULL;
-    if(!cand || !in_text(cand)){ idx++; return; }
-    for(int i=0;i<5;i++) saved[i]=((unsigned char*)cand)[i];
-    void *tr=detour(cand,(void*)pe_hook);
-    if(!tr){ idx++; return; }
-    g_peTramp=(PE_t)tr; g_peTarget=cand; frames=0; g_calHits=g_calBad=0;
+
+    vt=*(void***)g_pc;
+    if(!mem_ok(vt,(VT_PROCESSEVENT+1)*4)) return;
+    cand=vt[VT_PROCESSEVENT];
+    if(!cand || !in_text(cand)) return;
+    if((unsigned)(ULONG_PTR)cand!=ADDR_AACTOR_PROCESSEVENT &&
+       (unsigned)(ULONG_PTR)cand!=ADDR_UOBJECT_PROCESSEVENT){
+        logmsg("[hysteria][mod] vt[67]=%p inattendu, hook annule\r\n",cand);
+        g_modFind=0; return;
+    }
+    tr=detour(cand,(void*)pe_hook);
+    if(!tr){ logmsg("[hysteria][mod] detour vt[67] ECHEC\r\n"); g_modFind=0; return; }
+    g_peTramp=(PE_t)tr; g_peTarget=cand; g_modFound=1;
+    logmsg("[hysteria][mod] ProcessEvent @ vt[67]=%p hooke\r\n",cand);
+    load_mods();
 }

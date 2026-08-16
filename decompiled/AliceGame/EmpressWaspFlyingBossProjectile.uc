@@ -1,0 +1,35 @@
+class EmpressWaspFlyingBossProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    ProjFlightEffectTemplate="GFX_Eyepot.TeaStreamer_Texture_NoDirection"
+    ProjFlightEffects="Default__EmpressWaspFlyingBossProjectile.Particle"
+    AccelRate=3500.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=350.0
+    MaxShotDist=10000.0
+    RadiusDamageTime=0.1
+    KnockBackID=4
+    ProjTrace="Default__EmpressWaspFlyingBossProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__EmpressWaspFlyingBossProjectile.RangeAttackActorinfo"
+    Speed=1300.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=10.0
+    DamageRadius=100.0
+    MyDamageType="DmgType_EmpressWaspFlyingBoss"
+    CylinderComponent="Default__EmpressWaspFlyingBossProjectile.CollisionCylinder"
+    Components(0)="Default__EmpressWaspFlyingBossProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__EmpressWaspFlyingBossProjectile.CollisionCylinder"
+}

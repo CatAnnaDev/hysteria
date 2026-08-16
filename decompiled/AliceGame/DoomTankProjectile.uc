@@ -1,0 +1,42 @@
+class DoomTankProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    AmbientSound="SFX_Doom_Tank.sfx_npc_tank_projectile_loop01_Cue"
+    ProjFlightEffectTemplate="FX_NPC_DoomTank.Projectile.P_Projectile_SmokeMain"
+    ProjFlightEffects="Default__DoomTankProjectile.Particle"
+    AccelRate=5000.0
+    CheckRadius=50.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_HeaveyWithoutKnockback"
+    MinShotDist=600.0
+    MaxShotDist=4000.0
+    RadiusDamageTime=0.1
+    KnockBackID=6
+    ProjTrace="Default__DoomTankProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__DoomTankProjectile.RangeAttackActorinfo"
+    RigidBallClass="DoomTankRigidBall"
+    BallBlastDelayTime=3.0
+    BallImpulseValue=0.5
+    bBallSelfRotating=1
+    BallSelfRotaionRate=(Pitch=32767,Yaw=0,Roll=-196602)
+    Speed=3000.0
+    MaxSpeed=10000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=350.0
+    MyDamageType="DmgType_DoomTank"
+    CylinderComponent="Default__DoomTankProjectile.CollisionCylinder"
+    bCollideActors=True
+    bBlockActors=True
+    Components(0)="Default__DoomTankProjectile.CollisionCylinder"
+    LifeSpan=5.0
+    CollisionComponent="Default__DoomTankProjectile.CollisionCylinder"
+}

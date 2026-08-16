@@ -1,0 +1,26 @@
+### AliceInventoryManager -- 3 own properties (offsets from live-process dump)
+  +0x244   bInfiniteAmmo                                  BoolProperty       mask=0x1
+  +0x248   AmmoStorage                                    ArrayProperty     
+  +0x254   MemoryFragmentArray                            ArrayProperty     
+
+### AliceInventoryManager -- 10 functions (path / native-script / storage bytes / flags)
+  SCRIPT   AliceInventoryManager.AddAmmoToWeapon                            305    Defined|Public
+        (int AmountToAdd@0x0, class WeaponClassToAddTo@0x4, array WeaponList@0x8, int I@0x14)
+  SCRIPT   AliceInventoryManager.AddInventory                               32     Defined|Simulated|HasOptionalParms|Public
+        (object NewItem@0x0, bool bDoNotActivate@0x4, bool ReturnValue@0x8)
+  SCRIPT   AliceInventoryManager.AddMemoryFragment                          217    Defined|Public
+        (object MF@0x0, str MemoryName@0x4)
+  SCRIPT   AliceInventoryManager.CheckWeaponUpgrade                         299    Defined|Public
+        (int PickedWeaponLevel@0x0, int PickedUpgradeLevel@0x4, class InvClass@0x8, bool ReturnValue@0xc, object CurrentVorpalBlade@0x10, object CurrentTeapotCannon@0x14)
+  SCRIPT   AliceInventoryManager.GetBestWeapon                              65     Defined|Simulated|HasOptionalParms|Public
+        (bool bForceADifferentWeapon@0x0, object ReturnValue@0x4, object W@0x8)
+  SCRIPT   AliceInventoryManager.GetMemoryFragmentCount                     14     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AliceInventoryManager.GetWeaponList                              309    Defined|Simulated|HasOptionalParms|Public|HasOutParms
+        (array WeaponList@0x0, bool bFilter@0xc, int GroupFilter@0x10, bool bNoEmpty@0x14, object Weap@0x18, int I@0x1c)
+  SCRIPT   AliceInventoryManager.HasInventoryOfClass                        92     Defined|Public
+        (class InvClass@0x0, object ReturnValue@0x4, object Inv@0x8)
+  SCRIPT   AliceInventoryManager.NeedsAmmo                                  271    Defined|Public
+        (class TestWeapon@0x0, bool ReturnValue@0x4, array WeaponList@0x8, int I@0x14)
+  SCRIPT   AliceInventoryManager.PassingComboInfomation                     456    Defined|Public
+        (object PreviousWeapon@0x0, object NewWeapon@0x4, object PreMeleeWeapon@0x8, object NewMeleeWeapon@0xc, object PreRangeWeapon@0x10, object NewRangeWeapon@0x14)

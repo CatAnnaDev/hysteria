@@ -1,0 +1,37 @@
+class DoomGruntProjectile2 extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    ProjFlightEffectTemplate="FX_NPC_DoomGrunt.P_NPC_Grunt_Projectile2"
+    ProjFlightEffects="Default__DoomGruntProjectile2.Particle"
+    AccelRate=3500.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Medium"
+    MinShotDist=350.0
+    MaxShotDist=8000.0
+    RadiusDamageTime=0.1
+    KnockBackID=2
+    ProjTrace="Default__DoomGruntProjectile2.ProjectileTrace"
+    RangeAttackActorList="Default__DoomGruntProjectile2.RangeAttackActorinfo"
+    AngleToleranceXY=60.0
+    AngleToleranceZ=60.0
+    Speed=3500.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=1.0
+    MyDamageType="DmgType_DoomGrunt2"
+    CylinderComponent="Default__DoomGruntProjectile2.CollisionCylinder"
+    Components(0)="Default__DoomGruntProjectile2.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__DoomGruntProjectile2.CollisionCylinder"
+}

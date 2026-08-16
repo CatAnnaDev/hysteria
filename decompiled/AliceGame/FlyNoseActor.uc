@@ -1,0 +1,29 @@
+class FlyNoseActor extends NoseActorBase
+    placeable
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    AudioActive="Default__FlyNoseActor.Active"
+    AudioIdle="Default__FlyNoseActor.Idle"
+    AudioCharge="Default__FlyNoseActor.Charge"
+    AudioRelief="Default__FlyNoseActor.Relief"
+    DestroyParticle="Default__FlyNoseActor.DP"
+    IdleParticle="Default__FlyNoseActor.IP"
+    ChargeParticle="Default__FlyNoseActor.CP"
+    SkeletalMeshComponent="Default__FlyNoseActor.SkeletalMeshComponent0"
+    LightEnvironment="Default__FlyNoseActor.MyLightEnvironment"
+    FacialAudioComp="Default__FlyNoseActor.FaceAudioComponent"
+    Components(0)="Default__FlyNoseActor.MyLightEnvironment"
+    Components(1)="Default__FlyNoseActor.SkeletalMeshComponent0"
+    Components(2)="Default__FlyNoseActor.FaceAudioComponent"
+    Components(3)="Default__FlyNoseActor.CollisionCylinder"
+    Components(4)="Default__FlyNoseActor.Active"
+    Components(5)="Default__FlyNoseActor.Idle"
+    Components(6)="Default__FlyNoseActor.Relief"
+    Components(7)="Default__FlyNoseActor.Charge"
+    Components(8)="Default__FlyNoseActor.DP"
+    Components(9)="Default__FlyNoseActor.IP"
+    Components(10)="Default__FlyNoseActor.CP"
+    CollisionComponent="Default__FlyNoseActor.CollisionCylinder"
+}

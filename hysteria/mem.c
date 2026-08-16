@@ -8,16 +8,23 @@ int g_oOuter = 0x28, g_oName = 0x2C, g_oClass = 0x34;
 void *g_pc = NULL;
 
 #define MEMCACHE 64
-static unsigned int cache_b[MEMCACHE], cache_e[MEMCACHE];
-static int cache_idx, cache_last;
+#define MEMSLOT_PAGES 0xFFFu
+static volatile unsigned int g_memSlot[MEMCACHE];
+static volatile unsigned int g_memIdx, g_memHint;
 
 void mem_ok_reset(void) {
-  for (int i = 0; i < MEMCACHE; i++) {
-    cache_b[i] = 0;
-    cache_e[i] = 0;
-  }
-  cache_idx = 0;
-  cache_last = 0;
+  for (int i = 0; i < MEMCACHE; i++)
+    g_memSlot[i] = 0;
+  g_memHint = 0;
+}
+
+static int slot_covers(unsigned int slot, unsigned int a, unsigned int e) {
+  unsigned int base, end;
+  if (!slot)
+    return 0;
+  base = slot & ~MEMSLOT_PAGES;
+  end = base + ((slot & MEMSLOT_PAGES) << 12);
+  return a >= base && e <= end;
 }
 
 static int ptr_ok(const void *p) {
@@ -29,11 +36,12 @@ int mem_ok(const void *p, int n) {
   if (!ptr_ok(p))
     return 0;
   unsigned int a = (unsigned int)(ULONG_PTR)p, e = a + n;
-  if (cache_b[cache_last] && a >= cache_b[cache_last] && e <= cache_e[cache_last])
+  unsigned int hint = g_memHint & (MEMCACHE - 1);
+  if (slot_covers(g_memSlot[hint], a, e))
     return 1;
   for (int i = 0; i < MEMCACHE; i++) {
-    if (cache_b[i] && a >= cache_b[i] && e <= cache_e[i]) {
-      cache_last = i;
+    if (slot_covers(g_memSlot[i], a, e)) {
+      g_memHint = (unsigned int)i;
       return 1;
     }
   }
@@ -53,10 +61,16 @@ int mem_ok(const void *p, int n) {
                end = base + mbi.RegionSize;
   if (e > end)
     return 0;
-  cache_last = cache_idx & (MEMCACHE - 1);
-  cache_b[cache_last] = base;
-  cache_e[cache_last] = end;
-  cache_idx++;
+  {
+    unsigned int pages = (unsigned int)(mbi.RegionSize >> 12);
+    if (pages > MEMSLOT_PAGES)
+      pages = MEMSLOT_PAGES;
+    if (pages && !(base & MEMSLOT_PAGES)) {
+      unsigned int at = g_memIdx++ & (MEMCACHE - 1);
+      g_memSlot[at] = base | pages;
+      g_memHint = at;
+    }
+  }
   return 1;
 }
 

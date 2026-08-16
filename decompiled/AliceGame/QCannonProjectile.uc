@@ -1,0 +1,37 @@
+class QCannonProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    AmbientSound="SFX_C4W3_Giant.sfx_c4w3_g_cannon_projectile_loop_Cue"
+    ProjFlightEffectTemplate="GFX_Giant.BattleTowerCannonballTrail"
+    ProjFlightEffects="Default__QCannonProjectile.Particle"
+    AccelRate=4000.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=350.0
+    MaxShotDist=10000.0
+    RadiusDamageTime=0.1
+    KnockBackID=3
+    ProjTrace="Default__QCannonProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__QCannonProjectile.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    Speed=1200.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=100.0
+    MyDamageType="DmgType_QCannon"
+    CylinderComponent="Default__QCannonProjectile.CollisionCylinder"
+    Components(0)="Default__QCannonProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__QCannonProjectile.CollisionCylinder"
+}

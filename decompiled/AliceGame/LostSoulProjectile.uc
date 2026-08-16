@@ -1,0 +1,42 @@
+class LostSoulProjectile extends NpcProjectile
+    native
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    ProjFlightEffectTemplate="FX_NPC_LostSoul.P_NPC_LostSoul_BombSpark"
+    ProjFlightEffects="Default__LostSoulProjectile.Particle"
+    AccelRate=2000.0
+    CheckRadius=15.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=200.0
+    MaxShotDist=1200.0
+    RadiusDamageTime=0.1
+    KnockBackID=5
+    ProjTrace="Default__LostSoulProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__LostSoulProjectile.RangeAttackActorinfo"
+    AngleToleranceXY=5.0
+    AngleToleranceZ=1.0
+    RigidBallClass="LostSoulRigidBall"
+    BallBlastDelayTime=3.0
+    BallImpulseValue=0.1
+    Speed=2000.0
+    MaxSpeed=4000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=200.0
+    MyDamageType="DmgType_LostSoul"
+    CylinderComponent="Default__LostSoulProjectile.CollisionCylinder"
+    bCollideActors=True
+    bBlockActors=True
+    Components(0)="Default__LostSoulProjectile.CollisionCylinder"
+    LifeSpan=5.0
+    CollisionComponent="Default__LostSoulProjectile.CollisionCylinder"
+}

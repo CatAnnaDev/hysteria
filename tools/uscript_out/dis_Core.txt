@@ -1,0 +1,2597 @@
+===== Object.Not_PreBool  (Final|PreOperator|Native|Operator|Static|Public)
+   NativeParm Object.Not_PreBool.A
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_BoolBool  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_BoolBool.A
+   NativeParm Object.EqualEqual_BoolBool.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_BoolBool  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_BoolBool.A
+   NativeParm Object.NotEqual_BoolBool.B
+   Nothing
+   EndOfScript
+===== Object.AndAnd_BoolBool  (Final|Native|Operator|Static|Public)
+   NativeParm Object.AndAnd_BoolBool.A
+   NativeParm Object.AndAnd_BoolBool.B
+   Nothing
+   EndOfScript
+===== Object.XorXor_BoolBool  (Final|Native|Operator|Static|Public)
+   NativeParm Object.XorXor_BoolBool.A
+   NativeParm Object.XorXor_BoolBool.B
+   Nothing
+   EndOfScript
+===== Object.OrOr_BoolBool  (Final|Native|Operator|Static|Public)
+   NativeParm Object.OrOr_BoolBool.A
+   NativeParm Object.OrOr_BoolBool.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_ByteByte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_ByteByte.A
+   NativeParm Object.MultiplyEqual_ByteByte.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_ByteFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_ByteFloat.A
+   NativeParm Object.MultiplyEqual_ByteFloat.B
+   Nothing
+   EndOfScript
+===== Object.DivideEqual_ByteByte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.DivideEqual_ByteByte.A
+   NativeParm Object.DivideEqual_ByteByte.B
+   Nothing
+   EndOfScript
+===== Object.AddEqual_ByteByte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddEqual_ByteByte.A
+   NativeParm Object.AddEqual_ByteByte.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_ByteByte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_ByteByte.A
+   NativeParm Object.SubtractEqual_ByteByte.B
+   Nothing
+   EndOfScript
+===== Object.AddAdd_PreByte  (Final|PreOperator|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddAdd_PreByte.A
+   Nothing
+   EndOfScript
+===== Object.SubtractSubtract_PreByte  (Final|PreOperator|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractSubtract_PreByte.A
+   Nothing
+   EndOfScript
+===== Object.AddAdd_Byte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddAdd_Byte.A
+   Nothing
+   EndOfScript
+===== Object.SubtractSubtract_Byte  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractSubtract_Byte.A
+   Nothing
+   EndOfScript
+===== Object.Complement_PreInt  (Final|PreOperator|Native|Operator|Static|Public)
+   NativeParm Object.Complement_PreInt.A
+   Nothing
+   EndOfScript
+===== Object.Subtract_PreInt  (Final|PreOperator|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_PreInt.A
+   Nothing
+   EndOfScript
+===== Object.Multiply_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_IntInt.A
+   NativeParm Object.Multiply_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Divide_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Divide_IntInt.A
+   NativeParm Object.Divide_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Percent_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Percent_IntInt.A
+   NativeParm Object.Percent_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Add_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_IntInt.A
+   NativeParm Object.Add_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_IntInt.A
+   NativeParm Object.Subtract_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.LessLess_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.LessLess_IntInt.A
+   NativeParm Object.LessLess_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.GreaterGreater_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterGreater_IntInt.A
+   NativeParm Object.GreaterGreater_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.GreaterGreaterGreater_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterGreaterGreater_IntInt.A
+   NativeParm Object.GreaterGreaterGreater_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Less_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Less_IntInt.A
+   NativeParm Object.Less_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Greater_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Greater_IntInt.A
+   NativeParm Object.Greater_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.LessEqual_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.LessEqual_IntInt.A
+   NativeParm Object.LessEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.GreaterEqual_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterEqual_IntInt.A
+   NativeParm Object.GreaterEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_IntInt.A
+   NativeParm Object.EqualEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_IntInt.A
+   NativeParm Object.NotEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.And_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.And_IntInt.A
+   NativeParm Object.And_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Xor_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Xor_IntInt.A
+   NativeParm Object.Xor_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.Or_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Or_IntInt.A
+   NativeParm Object.Or_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_IntFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_IntFloat.A
+   NativeParm Object.MultiplyEqual_IntFloat.B
+   Nothing
+   EndOfScript
+===== Object.DivideEqual_IntFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.DivideEqual_IntFloat.A
+   NativeParm Object.DivideEqual_IntFloat.B
+   Nothing
+   EndOfScript
+===== Object.AddEqual_IntInt  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddEqual_IntInt.A
+   NativeParm Object.AddEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_IntInt  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_IntInt.A
+   NativeParm Object.SubtractEqual_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.AddAdd_PreInt  (Final|PreOperator|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddAdd_PreInt.A
+   Nothing
+   EndOfScript
+===== Object.SubtractSubtract_PreInt  (Final|PreOperator|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractSubtract_PreInt.A
+   Nothing
+   EndOfScript
+===== Object.AddAdd_Int  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddAdd_Int.A
+   Nothing
+   EndOfScript
+===== Object.SubtractSubtract_Int  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractSubtract_Int.A
+   Nothing
+   EndOfScript
+===== Object.Rand  (Final|Native|Static|Public)
+   NativeParm Object.Rand.Max
+   Nothing
+   EndOfScript
+===== Object.Min  (Final|Native|Static|Public)
+   NativeParm Object.Min.A
+   NativeParm Object.Min.B
+   Nothing
+   EndOfScript
+===== Object.Max  (Final|Native|Static|Public)
+   NativeParm Object.Max.A
+   NativeParm Object.Max.B
+   Nothing
+   EndOfScript
+===== Object.Clamp  (Final|Native|Static|Public)
+   NativeParm Object.Clamp.V
+   NativeParm Object.Clamp.A
+   NativeParm Object.Clamp.B
+   Nothing
+   EndOfScript
+===== Object.ToHex  (Final|Native|Static|Public)
+   NativeParm Object.ToHex.A
+   Nothing
+   EndOfScript
+===== Object.Subtract_PreFloat  (Final|PreOperator|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_PreFloat.A
+   Nothing
+   EndOfScript
+===== Object.MultiplyMultiply_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.MultiplyMultiply_FloatFloat.Base
+   NativeParm Object.MultiplyMultiply_FloatFloat.Exp
+   Nothing
+   EndOfScript
+===== Object.Multiply_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_FloatFloat.A
+   NativeParm Object.Multiply_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Divide_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Divide_FloatFloat.A
+   NativeParm Object.Divide_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Percent_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Percent_FloatFloat.A
+   NativeParm Object.Percent_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Add_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_FloatFloat.A
+   NativeParm Object.Add_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_FloatFloat.A
+   NativeParm Object.Subtract_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Less_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Less_FloatFloat.A
+   NativeParm Object.Less_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Greater_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Greater_FloatFloat.A
+   NativeParm Object.Greater_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.LessEqual_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.LessEqual_FloatFloat.A
+   NativeParm Object.LessEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.GreaterEqual_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterEqual_FloatFloat.A
+   NativeParm Object.GreaterEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_FloatFloat.A
+   NativeParm Object.EqualEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.ComplementEqual_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.ComplementEqual_FloatFloat.A
+   NativeParm Object.ComplementEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_FloatFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_FloatFloat.A
+   NativeParm Object.NotEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_FloatFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_FloatFloat.A
+   NativeParm Object.MultiplyEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.DivideEqual_FloatFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.DivideEqual_FloatFloat.A
+   NativeParm Object.DivideEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.AddEqual_FloatFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddEqual_FloatFloat.A
+   NativeParm Object.AddEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_FloatFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_FloatFloat.A
+   NativeParm Object.SubtractEqual_FloatFloat.B
+   Nothing
+   EndOfScript
+===== Object.Abs  (Final|Native|Static|Public)
+   NativeParm Object.Abs.A
+   Nothing
+   EndOfScript
+===== Object.Sin  (Final|Native|Static|Public)
+   NativeParm Object.Sin.A
+   Nothing
+   EndOfScript
+===== Object.Asin  (Final|Native|Static|Public)
+   NativeParm Object.Asin.A
+   Nothing
+   EndOfScript
+===== Object.Cos  (Final|Native|Static|Public)
+   NativeParm Object.Cos.A
+   Nothing
+   EndOfScript
+===== Object.Acos  (Final|Native|Static|Public)
+   NativeParm Object.Acos.A
+   Nothing
+   EndOfScript
+===== Object.Tan  (Final|Native|Static|Public)
+   NativeParm Object.Tan.A
+   Nothing
+   EndOfScript
+===== Object.Atan  (Final|Native|Static|Public)
+   NativeParm Object.Atan.A
+   Nothing
+   EndOfScript
+===== Object.Atan2  (Final|Native|Static|Public)
+   NativeParm Object.Atan2.A
+   NativeParm Object.Atan2.B
+   Nothing
+   EndOfScript
+===== Object.Exp  (Final|Native|Static|Public)
+   NativeParm Object.Exp.A
+   Nothing
+   EndOfScript
+===== Object.Loge  (Final|Native|Static|Public)
+   NativeParm Object.Loge.A
+   Nothing
+   EndOfScript
+===== Object.Sqrt  (Final|Native|Static|Public)
+   NativeParm Object.Sqrt.A
+   Nothing
+   EndOfScript
+===== Object.Square  (Final|Native|Static|Public)
+   NativeParm Object.Square.A
+   Nothing
+   EndOfScript
+===== Object.FRand  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.FMin  (Final|Native|Static|Public)
+   NativeParm Object.FMin.A
+   NativeParm Object.FMin.B
+   Nothing
+   EndOfScript
+===== Object.FMax  (Final|Native|Static|Public)
+   NativeParm Object.FMax.A
+   NativeParm Object.FMax.B
+   Nothing
+   EndOfScript
+===== Object.FClamp  (Final|Native|Static|Public)
+   NativeParm Object.FClamp.V
+   NativeParm Object.FClamp.A
+   NativeParm Object.FClamp.B
+   Nothing
+   EndOfScript
+===== Object.Lerp  (Final|Native|Static|Public)
+   NativeParm Object.Lerp.A
+   NativeParm Object.Lerp.B
+   NativeParm Object.Lerp.Alpha
+   Nothing
+   EndOfScript
+===== Object.Round  (Final|Native|Static|Public)
+   NativeParm Object.Round.A
+   Nothing
+   EndOfScript
+===== Object.FFloor  (Final|Native|Static|Public)
+   NativeParm Object.FFloor.A
+   Nothing
+   EndOfScript
+===== Object.FCeil  (Final|Native|Static|Public)
+   NativeParm Object.FCeil.A
+   Nothing
+   EndOfScript
+===== Object.FCubicInterp  (Final|Native|Static|Public)
+   NativeParm Object.FCubicInterp.P0
+   NativeParm Object.FCubicInterp.T0
+   NativeParm Object.FCubicInterp.P1
+   NativeParm Object.FCubicInterp.T1
+   NativeParm Object.FCubicInterp.A
+   Nothing
+   EndOfScript
+===== Object.FInterpEaseIn  (Final|Defined|Static|Public)
+   Return
+     Native247
+       Local Object.FInterpEaseIn.A
+       Local Object.FInterpEaseIn.B
+       Native170
+         Local Object.FInterpEaseIn.Alpha
+         Local Object.FInterpEaseIn.Exp
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.FInterpEaseIn.ReturnValue
+   EndOfScript
+===== Object.FInterpEaseOut  (Final|Defined|Static|Public)
+   Return
+     Native247
+       Local Object.FInterpEaseOut.A
+       Local Object.FInterpEaseOut.B
+       Native170
+         Local Object.FInterpEaseOut.Alpha
+         Native172
+           Cast 63
+             IntOne
+           Local Object.FInterpEaseOut.Exp
+           EndFunctionParms
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.FInterpEaseOut.ReturnValue
+   EndOfScript
+===== Object.FInterpEaseInOut  (Final|Native|Static|Public)
+   NativeParm Object.FInterpEaseInOut.A
+   NativeParm Object.FInterpEaseInOut.B
+   NativeParm Object.FInterpEaseInOut.Alpha
+   NativeParm Object.FInterpEaseInOut.Exp
+   Nothing
+   EndOfScript
+===== Object.RandRange  (Final|Defined|Simulated|Static|Public)
+   Return
+     Native174
+       Local Object.RandRange.InMin
+       Native171
+         Native175
+           Local Object.RandRange.InMax
+           Local Object.RandRange.InMin
+           EndFunctionParms
+         Native195
+           EndFunctionParms
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.RandRange.ReturnValue
+   EndOfScript
+===== Object.FPctByRange  (Final|Defined|Simulated|Static|Public)
+   Return
+     Native172
+       Native175
+         Local Object.FPctByRange.Value
+         Local Object.FPctByRange.InMin
+         EndFunctionParms
+       Native175
+         Local Object.FPctByRange.InMax
+         Local Object.FPctByRange.InMin
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.FPctByRange.ReturnValue
+   EndOfScript
+===== Object.FInterpTo  (Final|Native|Static|Public)
+   NativeParm Object.FInterpTo.Current
+   NativeParm Object.FInterpTo.Target
+   NativeParm Object.FInterpTo.DeltaTime
+   NativeParm Object.FInterpTo.InterpSpeed
+   Nothing
+   EndOfScript
+===== Object.FInterpConstantTo  (Final|Native|Static|Public)
+   NativeParm Object.FInterpConstantTo.Current
+   NativeParm Object.FInterpConstantTo.Target
+   NativeParm Object.FInterpConstantTo.DeltaTime
+   NativeParm Object.FInterpConstantTo.InterpSpeed
+   Nothing
+   EndOfScript
+===== Object.Subtract_PreVector  (Final|PreOperator|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_PreVector.A
+   Nothing
+   EndOfScript
+===== Object.Multiply_VectorFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_VectorFloat.A
+   NativeParm Object.Multiply_VectorFloat.B
+   Nothing
+   EndOfScript
+===== Object.Multiply_FloatVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_FloatVector.A
+   NativeParm Object.Multiply_FloatVector.B
+   Nothing
+   EndOfScript
+===== Object.Multiply_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_VectorVector.A
+   NativeParm Object.Multiply_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.Divide_VectorFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Divide_VectorFloat.A
+   NativeParm Object.Divide_VectorFloat.B
+   Nothing
+   EndOfScript
+===== Object.Add_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_VectorVector.A
+   NativeParm Object.Add_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_VectorVector.A
+   NativeParm Object.Subtract_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.LessLess_VectorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.LessLess_VectorRotator.A
+   NativeParm Object.LessLess_VectorRotator.B
+   Nothing
+   EndOfScript
+===== Object.GreaterGreater_VectorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterGreater_VectorRotator.A
+   NativeParm Object.GreaterGreater_VectorRotator.B
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_VectorVector.A
+   NativeParm Object.EqualEqual_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_VectorVector.A
+   NativeParm Object.NotEqual_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.Dot_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Dot_VectorVector.A
+   NativeParm Object.Dot_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.Cross_VectorVector  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Cross_VectorVector.A
+   NativeParm Object.Cross_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_VectorFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_VectorFloat.A
+   NativeParm Object.MultiplyEqual_VectorFloat.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_VectorVector  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_VectorVector.A
+   NativeParm Object.MultiplyEqual_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.DivideEqual_VectorFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.DivideEqual_VectorFloat.A
+   NativeParm Object.DivideEqual_VectorFloat.B
+   Nothing
+   EndOfScript
+===== Object.AddEqual_VectorVector  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddEqual_VectorVector.A
+   NativeParm Object.AddEqual_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_VectorVector  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_VectorVector.A
+   NativeParm Object.SubtractEqual_VectorVector.B
+   Nothing
+   EndOfScript
+===== Object.VSize  (Final|Native|Static|Public)
+   NativeParm Object.VSize.A
+   Nothing
+   EndOfScript
+===== Object.VSize2D  (Final|Native|Static|Public)
+   NativeParm Object.VSize2D.A
+   Nothing
+   EndOfScript
+===== Object.VSizeSq  (Final|Native|Static|Public)
+   NativeParm Object.VSizeSq.A
+   Nothing
+   EndOfScript
+===== Object.VSizeSq2D  (Final|Native|Static|Public)
+   NativeParm Object.VSizeSq2D.A
+   Nothing
+   EndOfScript
+===== Object.Normal  (Final|Native|Static|Public)
+   NativeParm Object.Normal.A
+   Nothing
+   EndOfScript
+===== Object.VLerp  (Final|Native|Static|Public)
+   NativeParm Object.VLerp.A
+   NativeParm Object.VLerp.B
+   NativeParm Object.VLerp.Alpha
+   Nothing
+   EndOfScript
+===== Object.VSmerp  (Final|Native|Static|Public)
+   NativeParm Object.VSmerp.A
+   NativeParm Object.VSmerp.B
+   NativeParm Object.VSmerp.Alpha
+   Nothing
+   EndOfScript
+===== Object.VRand  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.VRandCone  (Final|Native|Static|Public)
+   NativeParm Object.VRandCone.Dir
+   NativeParm Object.VRandCone.ConeHalfAngleRadians
+   Nothing
+   EndOfScript
+===== Object.VRandCone2  (Final|Native|Static|Public)
+   NativeParm Object.VRandCone2.Dir
+   NativeParm Object.VRandCone2.HorizontalConeHalfAngleRadians
+   NativeParm Object.VRandCone2.VerticalConeHalfAngleRadians
+   Nothing
+   EndOfScript
+===== Object.MirrorVectorByNormal  (Final|Native|Static|Public)
+   NativeParm Object.MirrorVectorByNormal.InVect
+   NativeParm Object.MirrorVectorByNormal.InNormal
+   Nothing
+   EndOfScript
+===== Object.ProjectOnTo  (Final|Native|Static|Public)
+   NativeParm Object.ProjectOnTo.X
+   NativeParm Object.ProjectOnTo.Y
+   Nothing
+   EndOfScript
+===== Object.IsZero  (Final|Native|Static|Public)
+   NativeParm Object.IsZero.A
+   Nothing
+   EndOfScript
+===== Object.VInterpTo  (Final|Native|Static|Public)
+   NativeParm Object.VInterpTo.Current
+   NativeParm Object.VInterpTo.Target
+   NativeParm Object.VInterpTo.DeltaTime
+   NativeParm Object.VInterpTo.InterpSpeed
+   Nothing
+   EndOfScript
+===== Object.ClampLength  (Final|Native|Static|Public)
+   NativeParm Object.ClampLength.V
+   NativeParm Object.ClampLength.MaxLength
+   Nothing
+   EndOfScript
+===== Object.NoZDot  (Final|Defined|Simulated|Public)
+   Let
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.NoZDot.A
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.NoZDot.B
+   Let
+     Local Object.NoZDot.A
+     Native226
+       Local Object.NoZDot.A
+       EndFunctionParms
+   Let
+     Local Object.NoZDot.B
+     Native226
+       Local Object.NoZDot.B
+       EndFunctionParms
+   Return
+     Native219
+       Local Object.NoZDot.A
+       Local Object.NoZDot.B
+       EndFunctionParms
+   Return
+     ReturnNothing Object.NoZDot.ReturnValue
+   EndOfScript
+===== Object.InCylinder  (Final|Defined|Simulated|HasOptionalParms|Public|HasDefaults)
+   Nothing
+   JumpIfNot 112
+     BoolVar
+       Local Object.InCylinder.bIgnoreZ
+   Let
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.InCylinder.Origin
+     Float 0
+   Let
+     StructMember Object.Rotator.Pitch (of Rotator)
+       Local Object.InCylinder.Dir
+     IntZero
+   Let
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.InCylinder.A
+     Float 0
+   Let
+     Local Object.InCylinder.VDir
+     Cast 57
+       Local Object.InCylinder.Dir
+   Let
+     Local Object.InCylinder.B
+     Native215
+       Native213
+         Native219
+           Native216
+             Local Object.InCylinder.A
+             Local Object.InCylinder.Origin
+             EndFunctionParms
+           Local Object.InCylinder.VDir
+           EndFunctionParms
+         Local Object.InCylinder.VDir
+         EndFunctionParms
+       Local Object.InCylinder.Origin
+       EndFunctionParms
+   JumpIfNot 245
+     Native178
+       Native228
+         Native216
+           Local Object.InCylinder.B
+           Local Object.InCylinder.A
+           EndFunctionParms
+         EndFunctionParms
+       Native171
+         Local Object.InCylinder.Width
+         Local Object.InCylinder.Width
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     True
+   Return
+     False
+   Return
+     ReturnNothing Object.InCylinder.ReturnValue
+   EndOfScript
+===== Object.EqualEqual_RotatorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_RotatorRotator.A
+   NativeParm Object.EqualEqual_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_RotatorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_RotatorRotator.A
+   NativeParm Object.NotEqual_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.Multiply_RotatorFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_RotatorFloat.A
+   NativeParm Object.Multiply_RotatorFloat.B
+   Nothing
+   EndOfScript
+===== Object.Multiply_FloatRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_FloatRotator.A
+   NativeParm Object.Multiply_FloatRotator.B
+   Nothing
+   EndOfScript
+===== Object.Divide_RotatorFloat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Divide_RotatorFloat.A
+   NativeParm Object.Divide_RotatorFloat.B
+   Nothing
+   EndOfScript
+===== Object.MultiplyEqual_RotatorFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.MultiplyEqual_RotatorFloat.A
+   NativeParm Object.MultiplyEqual_RotatorFloat.B
+   Nothing
+   EndOfScript
+===== Object.DivideEqual_RotatorFloat  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.DivideEqual_RotatorFloat.A
+   NativeParm Object.DivideEqual_RotatorFloat.B
+   Nothing
+   EndOfScript
+===== Object.Add_RotatorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_RotatorRotator.A
+   NativeParm Object.Add_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_RotatorRotator  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_RotatorRotator.A
+   NativeParm Object.Subtract_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.AddEqual_RotatorRotator  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AddEqual_RotatorRotator.A
+   NativeParm Object.AddEqual_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_RotatorRotator  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_RotatorRotator.A
+   NativeParm Object.SubtractEqual_RotatorRotator.B
+   Nothing
+   EndOfScript
+===== Object.ClockwiseFrom_IntInt  (Final|Native|Operator|Static|Public)
+   NativeParm Object.ClockwiseFrom_IntInt.A
+   NativeParm Object.ClockwiseFrom_IntInt.B
+   Nothing
+   EndOfScript
+===== Object.GetAxes  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.GetAxes.A
+   NativeParm Object.GetAxes.X
+   NativeParm Object.GetAxes.Y
+   NativeParm Object.GetAxes.Z
+   Nothing
+   EndOfScript
+===== Object.GetUnAxes  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.GetUnAxes.A
+   NativeParm Object.GetUnAxes.X
+   NativeParm Object.GetUnAxes.Y
+   NativeParm Object.GetUnAxes.Z
+   Nothing
+   EndOfScript
+===== Object.RotRand  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.RotRand.bRoll
+   Nothing
+   EndOfScript
+===== Object.OrthoRotation  (Final|Native|Static|Public)
+   NativeParm Object.OrthoRotation.X
+   NativeParm Object.OrthoRotation.Y
+   NativeParm Object.OrthoRotation.Z
+   Nothing
+   EndOfScript
+===== Object.Normalize  (Final|Native|Static|Public)
+   NativeParm Object.Normalize.Rot
+   Nothing
+   EndOfScript
+===== Object.RLerp  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.RLerp.A
+   NativeParm Object.RLerp.B
+   NativeParm Object.RLerp.Alpha
+   NativeParm Object.RLerp.bShortestPath
+   Nothing
+   EndOfScript
+===== Object.RSmerp  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.RSmerp.A
+   NativeParm Object.RSmerp.B
+   NativeParm Object.RSmerp.Alpha
+   NativeParm Object.RSmerp.bShortestPath
+   Nothing
+   EndOfScript
+===== Object.RTransform  (Final|Native|Static|Public)
+   NativeParm Object.RTransform.R
+   NativeParm Object.RTransform.RBasis
+   Nothing
+   EndOfScript
+===== Object.RInterpTo  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.RInterpTo.Current
+   NativeParm Object.RInterpTo.Target
+   NativeParm Object.RInterpTo.DeltaTime
+   NativeParm Object.RInterpTo.InterpSpeed
+   NativeParm Object.RInterpTo.bConstantInterpSpeed
+   Nothing
+   EndOfScript
+===== Object.NormalizeRotAxis  (Final|Native|Static|Public)
+   NativeParm Object.NormalizeRotAxis.Angle
+   Nothing
+   EndOfScript
+===== Object.RDiff  (Final|Native|Static|Public)
+   NativeParm Object.RDiff.A
+   NativeParm Object.RDiff.B
+   Nothing
+   EndOfScript
+===== Object.RSize  (Final|Defined|Static|Public)
+   Let
+     Local Object.RSize.PitchNorm
+     FinalFunction Object.NormalizeRotAxis
+       StructMember Object.Rotator.Pitch (of Rotator)
+         Local Object.RSize.R
+       EndFunctionParms
+   Let
+     Local Object.RSize.YawNorm
+     FinalFunction Object.NormalizeRotAxis
+       StructMember Object.Rotator.Yaw (of Rotator)
+         Local Object.RSize.R
+       EndFunctionParms
+   Let
+     Local Object.RSize.RollNorm
+     FinalFunction Object.NormalizeRotAxis
+       StructMember Object.Rotator.Roll (of Rotator)
+         Local Object.RSize.R
+       EndFunctionParms
+   Return
+     Native193
+       Cast 63
+         Native146
+           Native146
+             Native144
+               Local Object.RSize.PitchNorm
+               Local Object.RSize.PitchNorm
+               EndFunctionParms
+             Native144
+               Local Object.RSize.YawNorm
+               Local Object.RSize.YawNorm
+               EndFunctionParms
+             EndFunctionParms
+           Native144
+             Local Object.RSize.RollNorm
+             Local Object.RSize.RollNorm
+             EndFunctionParms
+           EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.RSize.ReturnValue
+   EndOfScript
+===== Object.ClampRotAxis  (Final|Defined|Simulated|Static|Public|HasOutParms)
+   Let
+     Local Object.ClampRotAxis.ViewAxis
+     FinalFunction Object.NormalizeRotAxis
+       Local Object.ClampRotAxis.ViewAxis
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxis.DesiredViewAxis
+     Native146
+       Local Object.ClampRotAxis.ViewAxis
+       LocalOut Object.ClampRotAxis.out_DeltaViewAxis
+       EndFunctionParms
+   JumpIfNot 101
+     Native151
+       Local Object.ClampRotAxis.DesiredViewAxis
+       Local Object.ClampRotAxis.MaxLimit
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxis.DesiredViewAxis
+     Local Object.ClampRotAxis.MaxLimit
+   JumpIfNot 143
+     Native150
+       Local Object.ClampRotAxis.DesiredViewAxis
+       Local Object.ClampRotAxis.MinLimit
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxis.DesiredViewAxis
+     Local Object.ClampRotAxis.MinLimit
+   Let
+     LocalOut Object.ClampRotAxis.out_DeltaViewAxis
+     Native147
+       Local Object.ClampRotAxis.DesiredViewAxis
+       Local Object.ClampRotAxis.ViewAxis
+       EndFunctionParms
+   Return
+     Nothing
+   EndOfScript
+===== Object.ClampRotAxisFromBase  (Final|Defined|Simulated|Static|Public)
+   Let
+     Local Object.ClampRotAxisFromBase.DeltaFromCenter
+     FinalFunction Object.NormalizeRotAxis
+       Native147
+         Local Object.ClampRotAxisFromBase.Current
+         Local Object.ClampRotAxisFromBase.Center
+         EndFunctionParms
+       EndFunctionParms
+   JumpIfNot 96
+     Native151
+       Local Object.ClampRotAxisFromBase.DeltaFromCenter
+       Local Object.ClampRotAxisFromBase.MaxDelta
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxisFromBase.Current
+     Native146
+       Local Object.ClampRotAxisFromBase.Center
+       Local Object.ClampRotAxisFromBase.MaxDelta
+       EndFunctionParms
+   Jump 151
+   JumpIfNot 151
+     Native150
+       Local Object.ClampRotAxisFromBase.DeltaFromCenter
+       Native143
+         Local Object.ClampRotAxisFromBase.MaxDelta
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxisFromBase.Current
+     Native147
+       Local Object.ClampRotAxisFromBase.Center
+       Local Object.ClampRotAxisFromBase.MaxDelta
+       EndFunctionParms
+   Return
+     Local Object.ClampRotAxisFromBase.Current
+   Return
+     ReturnNothing Object.ClampRotAxisFromBase.ReturnValue
+   EndOfScript
+===== Object.ClampRotAxisFromRange  (Final|Defined|Simulated|Static|Public)
+   Let
+     Local Object.ClampRotAxisFromRange.Delta
+     Native145
+       FinalFunction Object.NormalizeRotAxis
+         Native147
+           Local Object.ClampRotAxisFromRange.Max
+           Local Object.ClampRotAxisFromRange.Min
+           EndFunctionParms
+         EndFunctionParms
+       IntConstByte 2
+       EndFunctionParms
+   Let
+     Local Object.ClampRotAxisFromRange.Center
+     Native145
+       FinalFunction Object.NormalizeRotAxis
+         Native146
+           Local Object.ClampRotAxisFromRange.Max
+           Local Object.ClampRotAxisFromRange.Min
+           EndFunctionParms
+         EndFunctionParms
+       IntConstByte 2
+       EndFunctionParms
+   Return
+     FinalFunction Object.ClampRotAxisFromBase
+       Local Object.ClampRotAxisFromRange.Current
+       Local Object.ClampRotAxisFromRange.Center
+       Local Object.ClampRotAxisFromRange.Delta
+       EndFunctionParms
+   Return
+     ReturnNothing Object.ClampRotAxisFromRange.ReturnValue
+   EndOfScript
+===== Object.SClampRotAxis  (Final|Defined|Simulated|Static|Public|HasOutParms)
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     FinalFunction Object.NormalizeRotAxis
+       LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+       EndFunctionParms
+   Let
+     Local Object.SClampRotAxis.ViewAxis
+     FinalFunction Object.NormalizeRotAxis
+       Local Object.SClampRotAxis.ViewAxis
+       EndFunctionParms
+   JumpIfNot 162
+     Native130
+       Native152
+         Local Object.SClampRotAxis.ViewAxis
+         Local Object.SClampRotAxis.MaxLimit
+         EndFunctionParms
+       Skip
+         Native153
+           Native146
+             Local Object.SClampRotAxis.ViewAxis
+             LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+             EndFunctionParms
+           Local Object.SClampRotAxis.MaxLimit
+           EndFunctionParms
+       EndFunctionParms
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     Native147
+       Local Object.SClampRotAxis.MaxLimit
+       Local Object.SClampRotAxis.ViewAxis
+       EndFunctionParms
+   LetBool
+     BoolVar
+       Local Object.SClampRotAxis.bClamped
+     True
+   Jump 596
+   JumpIfNot 328
+     Native151
+       Local Object.SClampRotAxis.ViewAxis
+       Local Object.SClampRotAxis.MaxLimit
+       EndFunctionParms
+   JumpIfNot 211
+     Native151
+       LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+       IntZero
+       EndFunctionParms
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     IntZero
+   JumpIfNot 325
+     Native151
+       Native146
+         Local Object.SClampRotAxis.ViewAxis
+         LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+         EndFunctionParms
+       Local Object.SClampRotAxis.MaxLimit
+       EndFunctionParms
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     Cast 68
+       Native175
+         Native175
+           FinalFunction Object.FInterpTo
+             Cast 63
+               Local Object.SClampRotAxis.ViewAxis
+             Cast 63
+               Local Object.SClampRotAxis.MaxLimit
+             Local Object.SClampRotAxis.DeltaTime
+             Local Object.SClampRotAxis.InterpolationSpeed
+             EndFunctionParms
+           Cast 63
+             Local Object.SClampRotAxis.ViewAxis
+           EndFunctionParms
+         Cast 63
+           IntOne
+         EndFunctionParms
+   Jump 596
+   JumpIfNot 432
+     Native130
+       Native153
+         Local Object.SClampRotAxis.ViewAxis
+         Local Object.SClampRotAxis.MinLimit
+         EndFunctionParms
+       Skip
+         Native152
+           Native146
+             Local Object.SClampRotAxis.ViewAxis
+             LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+             EndFunctionParms
+           Local Object.SClampRotAxis.MinLimit
+           EndFunctionParms
+       EndFunctionParms
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     Native147
+       Local Object.SClampRotAxis.MinLimit
+       Local Object.SClampRotAxis.ViewAxis
+       EndFunctionParms
+   LetBool
+     BoolVar
+       Local Object.SClampRotAxis.bClamped
+     True
+   Jump 596
+   JumpIfNot 596
+     Native150
+       Local Object.SClampRotAxis.ViewAxis
+       Local Object.SClampRotAxis.MinLimit
+       EndFunctionParms
+   JumpIfNot 481
+     Native150
+       LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+       IntZero
+       EndFunctionParms
+   Let
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     IntZero
+   JumpIfNot 596
+     Native150
+       Native146
+         Local Object.SClampRotAxis.ViewAxis
+         LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+         EndFunctionParms
+       Local Object.SClampRotAxis.MinLimit
+       EndFunctionParms
+   Native161
+     LocalOut Object.SClampRotAxis.out_DeltaViewAxis
+     Cast 68
+       Native174
+         Native175
+           FinalFunction Object.FInterpTo
+             Cast 63
+               Local Object.SClampRotAxis.ViewAxis
+             Cast 63
+               Local Object.SClampRotAxis.MinLimit
+             Local Object.SClampRotAxis.DeltaTime
+             Local Object.SClampRotAxis.InterpolationSpeed
+             EndFunctionParms
+           Cast 63
+             Local Object.SClampRotAxis.ViewAxis
+           EndFunctionParms
+         Cast 63
+           IntOne
+         EndFunctionParms
+     EndFunctionParms
+   Return
+     BoolVar
+       Local Object.SClampRotAxis.bClamped
+   Return
+     ReturnNothing Object.SClampRotAxis.ReturnValue
+   EndOfScript
+===== Object.MakeRotator  (Final|Defined|Static|Public|HasDefaults)
+   Let
+     StructMember Object.Rotator.Pitch (of Rotator)
+       Local Object.MakeRotator.R
+     Local Object.MakeRotator.Pitch
+   Let
+     StructMember Object.Rotator.Yaw (of Rotator)
+       Local Object.MakeRotator.R
+     Local Object.MakeRotator.Yaw
+   Let
+     StructMember Object.Rotator.Roll (of Rotator)
+       Local Object.MakeRotator.R
+     Local Object.MakeRotator.Roll
+   Return
+     Local Object.MakeRotator.R
+   Return
+     ReturnNothing Object.MakeRotator.ReturnValue
+   EndOfScript
+===== Object.Concat_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Concat_StrStr.A
+   NativeParm Object.Concat_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.At_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.At_StrStr.A
+   NativeParm Object.At_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.Less_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Less_StrStr.A
+   NativeParm Object.Less_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.Greater_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Greater_StrStr.A
+   NativeParm Object.Greater_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.LessEqual_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.LessEqual_StrStr.A
+   NativeParm Object.LessEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.GreaterEqual_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.GreaterEqual_StrStr.A
+   NativeParm Object.GreaterEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_StrStr.A
+   NativeParm Object.EqualEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_StrStr.A
+   NativeParm Object.NotEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.ComplementEqual_StrStr  (Final|Native|Operator|Static|Public)
+   NativeParm Object.ComplementEqual_StrStr.A
+   NativeParm Object.ComplementEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.ConcatEqual_StrStr  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.ConcatEqual_StrStr.A
+   NativeParm Object.ConcatEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.AtEqual_StrStr  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.AtEqual_StrStr.A
+   NativeParm Object.AtEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.SubtractEqual_StrStr  (Final|Native|Operator|Static|Public|HasOutParms)
+   NativeParm Object.SubtractEqual_StrStr.A
+   NativeParm Object.SubtractEqual_StrStr.B
+   Nothing
+   EndOfScript
+===== Object.Len  (Final|Native|Static|Public)
+   NativeParm Object.Len.S
+   Nothing
+   EndOfScript
+===== Object.InStr  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   Nothing
+   Nothing
+   NativeParm Object.InStr.S
+   NativeParm Object.InStr.T
+   NativeParm Object.InStr.bSearchFromRight
+   NativeParm Object.InStr.bIgnoreCase
+   NativeParm Object.InStr.StartPos
+   Nothing
+   EndOfScript
+===== Object.Mid  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.Mid.S
+   NativeParm Object.Mid.I
+   NativeParm Object.Mid.J
+   Nothing
+   EndOfScript
+===== Object.Left  (Final|Native|Static|Public)
+   NativeParm Object.Left.S
+   NativeParm Object.Left.I
+   Nothing
+   EndOfScript
+===== Object.Right  (Final|Native|Static|Public)
+   NativeParm Object.Right.S
+   NativeParm Object.Right.I
+   Nothing
+   EndOfScript
+===== Object.Caps  (Final|Native|Static|Public)
+   NativeParm Object.Caps.S
+   Nothing
+   EndOfScript
+===== Object.Locs  (Final|Native|Static|Public)
+   NativeParm Object.Locs.S
+   Nothing
+   EndOfScript
+===== Object.Chr  (Final|Native|Static|Public)
+   NativeParm Object.Chr.I
+   Nothing
+   EndOfScript
+===== Object.Asc  (Final|Native|Static|Public)
+   NativeParm Object.Asc.S
+   Nothing
+   EndOfScript
+===== Object.Repl  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.Repl.Src
+   NativeParm Object.Repl.Match
+   NativeParm Object.Repl.With
+   NativeParm Object.Repl.bCaseSensitive
+   Nothing
+   EndOfScript
+===== Object.Split  (Final|Defined|Static|HasOptionalParms|Public)
+   Nothing
+   Let
+     Local Object.Split.pos
+     Native126
+       Local Object.Split.Text
+       Local Object.Split.SplitStr
+       EmptyParmValue
+       EmptyParmValue
+       EmptyParmValue
+       EndFunctionParms
+   JumpIfNot 126
+     Native155
+       Local Object.Split.pos
+       Int -1
+       EndFunctionParms
+   JumpIfNot 101
+     BoolVar
+       Local Object.Split.bOmitSplitStr
+   Return
+     Native127
+       Local Object.Split.Text
+       Native146
+         Local Object.Split.pos
+         Native125
+           Local Object.Split.SplitStr
+           EndFunctionParms
+         EndFunctionParms
+       EmptyParmValue
+       EndFunctionParms
+   Return
+     Native127
+       Local Object.Split.Text
+       Local Object.Split.pos
+       EmptyParmValue
+       EndFunctionParms
+   Jump 136
+   Return
+     Local Object.Split.Text
+   Return
+     ReturnNothing Object.Split.ReturnValue
+   EndOfScript
+===== Object.GetRightMost  (Final|Defined|Static|Public)
+   Let
+     Local Object.GetRightMost.Idx
+     Native126
+       Local Object.GetRightMost.Text
+       Str "_"
+       EmptyParmValue
+       EmptyParmValue
+       EmptyParmValue
+       EndFunctionParms
+   JumpIfNot 120
+     Native155
+       Local Object.GetRightMost.Idx
+       Int -1
+       EndFunctionParms
+   Let
+     Local Object.GetRightMost.Text
+     Native127
+       Local Object.GetRightMost.Text
+       Native146
+         Local Object.GetRightMost.Idx
+         IntOne
+         EndFunctionParms
+       Native125
+         Local Object.GetRightMost.Text
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.GetRightMost.Idx
+     Native126
+       Local Object.GetRightMost.Text
+       Str "_"
+       EmptyParmValue
+       EmptyParmValue
+       EmptyParmValue
+       EndFunctionParms
+   Jump 27
+   Return
+     Local Object.GetRightMost.Text
+   Return
+     ReturnNothing Object.GetRightMost.ReturnValue
+   EndOfScript
+===== Object.JoinArray  (Final|Defined|Static|HasOptionalParms|Public|HasOutParms)
+   DefaultParmValue
+     Str ","
+   EndParmValue
+   DefaultParmValue
+     True
+   EndParmValue
+   Let
+     LocalOut Object.JoinArray.out_Result
+     Str ""
+   Let
+     Local Object.JoinArray.I
+     IntZero
+   JumpIfNot 236
+     Native150
+       Local Object.JoinArray.I
+       DynArrayLength
+         Local Object.JoinArray.StringArray
+       EndFunctionParms
+   JumpIfNot 222
+     Native132
+       Native123
+         DynArrayElem
+           Local Object.JoinArray.I
+           Local Object.JoinArray.StringArray
+         Str ""
+         EndFunctionParms
+       Skip
+         Native129
+           BoolVar
+             Local Object.JoinArray.bIgnoreBlanks
+           EndFunctionParms
+       EndFunctionParms
+   JumpIfNot 182
+     Native132
+       Native123
+         LocalOut Object.JoinArray.out_Result
+         Str ""
+         EndFunctionParms
+       Skip
+         Native130
+           Native129
+             BoolVar
+               Local Object.JoinArray.bIgnoreBlanks
+             EndFunctionParms
+           Skip
+             Native151
+               Local Object.JoinArray.I
+               IntZero
+               EndFunctionParms
+           EndFunctionParms
+       EndFunctionParms
+   EatReturnValue Object.ConcatEqual_StrStr.ReturnValue
+   Native322
+     LocalOut Object.JoinArray.out_Result
+     Local Object.JoinArray.delim
+     EndFunctionParms
+   EatReturnValue Object.ConcatEqual_StrStr.ReturnValue
+   Native322
+     LocalOut Object.JoinArray.out_Result
+     DynArrayElem
+       Local Object.JoinArray.I
+       Local Object.JoinArray.StringArray
+     EndFunctionParms
+   Native165
+     Local Object.JoinArray.I
+     EndFunctionParms
+   Jump 35
+   Return
+     Nothing
+   EndOfScript
+===== Object.ParseStringIntoArray  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.ParseStringIntoArray.BaseString
+   NativeParm Object.ParseStringIntoArray.Pieces
+   NativeParm Object.ParseStringIntoArray.delim
+   NativeParm Object.ParseStringIntoArray.bCullEmpty
+   Nothing
+   EndOfScript
+===== Object.SplitString  (Final|Defined|Static|HasOptionalParms|Public)
+   DefaultParmValue
+     Str ","
+   EndParmValue
+   Nothing
+   FinalFunction Object.ParseStringIntoArray
+     Local Object.SplitString.Source
+     Local Object.SplitString.Result
+     Local Object.SplitString.Delimiter
+     BoolVar
+       Local Object.SplitString.bCullEmpty
+     EndFunctionParms
+   Return
+     Local Object.SplitString.Result
+   Return
+     ReturnNothing Object.SplitString.ReturnValue
+   EndOfScript
+===== Object.PathName  (Final|Native|Static|Public)
+   NativeParm Object.PathName.CheckObject
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_ObjectObject  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_ObjectObject.A
+   NativeParm Object.EqualEqual_ObjectObject.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_ObjectObject  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_ObjectObject.A
+   NativeParm Object.NotEqual_ObjectObject.B
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_InterfaceInterface  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_InterfaceInterface.A
+   NativeParm Object.EqualEqual_InterfaceInterface.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_InterfaceInterface  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_InterfaceInterface.A
+   NativeParm Object.NotEqual_InterfaceInterface.B
+   Nothing
+   EndOfScript
+===== Object.ClassIsChildOf  (Final|Native|Static|Public)
+   NativeParm Object.ClassIsChildOf.TestClass
+   NativeParm Object.ClassIsChildOf.ParentClass
+   Nothing
+   EndOfScript
+===== Object.IsA  (Final|Native|Public)
+   NativeParm Object.IsA.ClassName
+   Nothing
+   EndOfScript
+===== Object.EqualEqual_NameName  (Final|Native|Operator|Static|Public)
+   NativeParm Object.EqualEqual_NameName.A
+   NativeParm Object.EqualEqual_NameName.B
+   Nothing
+   EndOfScript
+===== Object.NotEqual_NameName  (Final|Native|Operator|Static|Public)
+   NativeParm Object.NotEqual_NameName.A
+   NativeParm Object.NotEqual_NameName.B
+   Nothing
+   EndOfScript
+===== Object.Multiply_MatrixMatrix  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Multiply_MatrixMatrix.A
+   NativeParm Object.Multiply_MatrixMatrix.B
+   Nothing
+   EndOfScript
+===== Object.TransformVector  (Final|Native|Static|Public)
+   NativeParm Object.TransformVector.TM
+   NativeParm Object.TransformVector.A
+   Nothing
+   EndOfScript
+===== Object.InverseTransformVector  (Final|Native|Static|Public)
+   NativeParm Object.InverseTransformVector.TM
+   NativeParm Object.InverseTransformVector.A
+   Nothing
+   EndOfScript
+===== Object.TransformNormal  (Final|Native|Static|Public)
+   NativeParm Object.TransformNormal.TM
+   NativeParm Object.TransformNormal.A
+   Nothing
+   EndOfScript
+===== Object.InverseTransformNormal  (Final|Native|Static|Public)
+   NativeParm Object.InverseTransformNormal.TM
+   NativeParm Object.InverseTransformNormal.A
+   Nothing
+   EndOfScript
+===== Object.MakeRotationTranslationMatrix  (Final|Native|Static|Public)
+   NativeParm Object.MakeRotationTranslationMatrix.Translation
+   NativeParm Object.MakeRotationTranslationMatrix.Rotation
+   Nothing
+   EndOfScript
+===== Object.MakeRotationMatrix  (Final|Native|Static|Public)
+   NativeParm Object.MakeRotationMatrix.Rotation
+   Nothing
+   EndOfScript
+===== Object.MatrixGetRotator  (Final|Native|Static|Public)
+   NativeParm Object.MatrixGetRotator.TM
+   Nothing
+   EndOfScript
+===== Object.MatrixGetOrigin  (Final|Native|Static|Public)
+   NativeParm Object.MatrixGetOrigin.TM
+   Nothing
+   EndOfScript
+===== Object.MatrixGetAxis  (Final|Native|Static|Public)
+   NativeParm Object.MatrixGetAxis.TM
+   NativeParm Object.MatrixGetAxis.Axis
+   Nothing
+   EndOfScript
+===== Object.QuatProduct  (Final|Native|Static|Public)
+   NativeParm Object.QuatProduct.A
+   NativeParm Object.QuatProduct.B
+   Nothing
+   EndOfScript
+===== Object.QuatDot  (Final|Native|Static|Public)
+   NativeParm Object.QuatDot.A
+   NativeParm Object.QuatDot.B
+   Nothing
+   EndOfScript
+===== Object.QuatInvert  (Final|Native|Static|Public)
+   NativeParm Object.QuatInvert.A
+   Nothing
+   EndOfScript
+===== Object.QuatRotateVector  (Final|Native|Static|Public)
+   NativeParm Object.QuatRotateVector.A
+   NativeParm Object.QuatRotateVector.B
+   Nothing
+   EndOfScript
+===== Object.QuatFindBetween  (Final|Native|Static|Public)
+   NativeParm Object.QuatFindBetween.A
+   NativeParm Object.QuatFindBetween.B
+   Nothing
+   EndOfScript
+===== Object.QuatFromAxisAndAngle  (Final|Native|Static|Public)
+   NativeParm Object.QuatFromAxisAndAngle.Axis
+   NativeParm Object.QuatFromAxisAndAngle.Angle
+   Nothing
+   EndOfScript
+===== Object.QuatFromRotator  (Final|Native|Static|Public)
+   NativeParm Object.QuatFromRotator.A
+   Nothing
+   EndOfScript
+===== Object.QuatToRotator  (Final|Native|Static|Public)
+   NativeParm Object.QuatToRotator.A
+   Nothing
+   EndOfScript
+===== Object.QuatSlerp  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.QuatSlerp.A
+   NativeParm Object.QuatSlerp.B
+   NativeParm Object.QuatSlerp.Alpha
+   NativeParm Object.QuatSlerp.bShortestPath
+   Nothing
+   EndOfScript
+===== Object.Add_QuatQuat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_QuatQuat.A
+   NativeParm Object.Add_QuatQuat.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_QuatQuat  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_QuatQuat.A
+   NativeParm Object.Subtract_QuatQuat.B
+   Nothing
+   EndOfScript
+===== Object.Add_Vector2DVector2D  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Add_Vector2DVector2D.A
+   NativeParm Object.Add_Vector2DVector2D.B
+   Nothing
+   EndOfScript
+===== Object.Subtract_Vector2DVector2D  (Final|Native|Operator|Static|Public)
+   NativeParm Object.Subtract_Vector2DVector2D.A
+   NativeParm Object.Subtract_Vector2DVector2D.B
+   Nothing
+   EndOfScript
+===== Object.GetRangeValueByPct  (Final|Defined|Simulated|Static|Public)
+   Return
+     Native174
+       StructMember Object.Vector2D.X (of Vector2D)
+         Local Object.GetRangeValueByPct.Range
+       Native171
+         Native175
+           StructMember Object.Vector2D.Y (of Vector2D)
+             Local Object.GetRangeValueByPct.Range
+           StructMember Object.Vector2D.X (of Vector2D)
+             Local Object.GetRangeValueByPct.Range
+           EndFunctionParms
+         Local Object.GetRangeValueByPct.Pct
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.GetRangeValueByPct.ReturnValue
+   EndOfScript
+===== Object.GetRangePctByValue  (Final|Defined|Simulated|Static|Public)
+   Return
+     Conditional
+       Native180
+         StructMember Object.Vector2D.Y (of Vector2D)
+           Local Object.GetRangePctByValue.Range
+         StructMember Object.Vector2D.X (of Vector2D)
+           Local Object.GetRangePctByValue.Range
+         EndFunctionParms
+       StructMember Object.Vector2D.X (of Vector2D)
+         Local Object.GetRangePctByValue.Range
+       Native172
+         Native175
+           Local Object.GetRangePctByValue.Value
+           StructMember Object.Vector2D.X (of Vector2D)
+             Local Object.GetRangePctByValue.Range
+           EndFunctionParms
+         Native175
+           StructMember Object.Vector2D.Y (of Vector2D)
+             Local Object.GetRangePctByValue.Range
+           StructMember Object.Vector2D.X (of Vector2D)
+             Local Object.GetRangePctByValue.Range
+           EndFunctionParms
+         EndFunctionParms
+   Return
+     ReturnNothing Object.GetRangePctByValue.ReturnValue
+   EndOfScript
+===== Object.GetMappedRangeValue  (Final|Simulated|Native|Static|Public)
+   NativeParm Object.GetMappedRangeValue.InputRange
+   NativeParm Object.GetMappedRangeValue.OutputRange
+   NativeParm Object.GetMappedRangeValue.Value
+   Nothing
+   EndOfScript
+===== Object.vect2d  (Final|Defined|Static|Public|HasDefaults)
+   Let
+     StructMember Object.Vector2D.X (of Vector2D)
+       Local Object.vect2d.NewVect2d
+     Local Object.vect2d.InX
+   Let
+     StructMember Object.Vector2D.Y (of Vector2D)
+       Local Object.vect2d.NewVect2d
+     Local Object.vect2d.InY
+   Return
+     Local Object.vect2d.NewVect2d
+   Return
+     ReturnNothing Object.vect2d.ReturnValue
+   EndOfScript
+===== Object.EvalInterpCurveFloat  (Final|Native|Public)
+   NativeParm Object.EvalInterpCurveFloat.FloatCurve
+   NativeParm Object.EvalInterpCurveFloat.InVal
+   Nothing
+   EndOfScript
+===== Object.EvalInterpCurveVector  (Final|Native|Public)
+   NativeParm Object.EvalInterpCurveVector.VectorCurve
+   NativeParm Object.EvalInterpCurveVector.InVal
+   Nothing
+   EndOfScript
+===== Object.EvalInterpCurveVector2D  (Final|Native|Public)
+   NativeParm Object.EvalInterpCurveVector2D.Vector2DCurve
+   NativeParm Object.EvalInterpCurveVector2D.InVal
+   Nothing
+   EndOfScript
+===== Object.Subtract_ColorColor  (Final|Defined|Operator|Static|Public)
+   Native136
+     StructMember Object.Color.R (of Color)
+       Local Object.Subtract_ColorColor.A
+     StructMember Object.Color.R (of Color)
+       Local Object.Subtract_ColorColor.B
+     EndFunctionParms
+   Native136
+     StructMember Object.Color.G (of Color)
+       Local Object.Subtract_ColorColor.A
+     StructMember Object.Color.G (of Color)
+       Local Object.Subtract_ColorColor.B
+     EndFunctionParms
+   Native136
+     StructMember Object.Color.B (of Color)
+       Local Object.Subtract_ColorColor.A
+     StructMember Object.Color.B (of Color)
+       Local Object.Subtract_ColorColor.B
+     EndFunctionParms
+   Return
+     Local Object.Subtract_ColorColor.A
+   Return
+     ReturnNothing Object.Subtract_ColorColor.ReturnValue
+   EndOfScript
+===== Object.Multiply_FloatColor  (Final|Defined|Operator|Static|Public)
+   Native198
+     StructMember Object.Color.R (of Color)
+       Local Object.Multiply_FloatColor.B
+     Local Object.Multiply_FloatColor.A
+     EndFunctionParms
+   Native198
+     StructMember Object.Color.G (of Color)
+       Local Object.Multiply_FloatColor.B
+     Local Object.Multiply_FloatColor.A
+     EndFunctionParms
+   Native198
+     StructMember Object.Color.B (of Color)
+       Local Object.Multiply_FloatColor.B
+     Local Object.Multiply_FloatColor.A
+     EndFunctionParms
+   Return
+     Local Object.Multiply_FloatColor.B
+   Return
+     ReturnNothing Object.Multiply_FloatColor.ReturnValue
+   EndOfScript
+===== Object.Multiply_ColorFloat  (Final|Defined|Operator|Static|Public)
+   Native198
+     StructMember Object.Color.R (of Color)
+       Local Object.Multiply_ColorFloat.A
+     Local Object.Multiply_ColorFloat.B
+     EndFunctionParms
+   Native198
+     StructMember Object.Color.G (of Color)
+       Local Object.Multiply_ColorFloat.A
+     Local Object.Multiply_ColorFloat.B
+     EndFunctionParms
+   Native198
+     StructMember Object.Color.B (of Color)
+       Local Object.Multiply_ColorFloat.A
+     Local Object.Multiply_ColorFloat.B
+     EndFunctionParms
+   Return
+     Local Object.Multiply_ColorFloat.A
+   Return
+     ReturnNothing Object.Multiply_ColorFloat.ReturnValue
+   EndOfScript
+===== Object.Add_ColorColor  (Final|Defined|Operator|Static|Public)
+   Native135
+     StructMember Object.Color.R (of Color)
+       Local Object.Add_ColorColor.A
+     StructMember Object.Color.R (of Color)
+       Local Object.Add_ColorColor.B
+     EndFunctionParms
+   Native135
+     StructMember Object.Color.G (of Color)
+       Local Object.Add_ColorColor.A
+     StructMember Object.Color.G (of Color)
+       Local Object.Add_ColorColor.B
+     EndFunctionParms
+   Native135
+     StructMember Object.Color.B (of Color)
+       Local Object.Add_ColorColor.A
+     StructMember Object.Color.B (of Color)
+       Local Object.Add_ColorColor.B
+     EndFunctionParms
+   Return
+     Local Object.Add_ColorColor.A
+   Return
+     ReturnNothing Object.Add_ColorColor.ReturnValue
+   EndOfScript
+===== Object.MakeColor  (Final|Defined|Static|HasOptionalParms|Public|HasDefaults)
+   Nothing
+   Let
+     StructMember Object.Color.R (of Color)
+       Local Object.MakeColor.C
+     Local Object.MakeColor.R
+   Let
+     StructMember Object.Color.G (of Color)
+       Local Object.MakeColor.C
+     Local Object.MakeColor.G
+   Let
+     StructMember Object.Color.B (of Color)
+       Local Object.MakeColor.C
+     Local Object.MakeColor.B
+   Let
+     StructMember Object.Color.A (of Color)
+       Local Object.MakeColor.C
+     Local Object.MakeColor.A
+   Return
+     Local Object.MakeColor.C
+   Return
+     ReturnNothing Object.MakeColor.ReturnValue
+   EndOfScript
+===== Object.LerpColor  (Final|Defined|Static|Public|HasDefaults)
+   Let
+     StructMember Object.Vector.X (of Vector)
+       Local Object.LerpColor.FloatA
+     Cast 60
+       StructMember Object.Color.R (of Color)
+         Local Object.LerpColor.A
+   Let
+     StructMember Object.Vector.Y (of Vector)
+       Local Object.LerpColor.FloatA
+     Cast 60
+       StructMember Object.Color.G (of Color)
+         Local Object.LerpColor.A
+   Let
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.LerpColor.FloatA
+     Cast 60
+       StructMember Object.Color.B (of Color)
+         Local Object.LerpColor.A
+   Let
+     Local Object.LerpColor.AlphaA
+     Cast 60
+       StructMember Object.Color.A (of Color)
+         Local Object.LerpColor.A
+   Let
+     StructMember Object.Vector.X (of Vector)
+       Local Object.LerpColor.FloatB
+     Cast 60
+       StructMember Object.Color.R (of Color)
+         Local Object.LerpColor.B
+   Let
+     StructMember Object.Vector.Y (of Vector)
+       Local Object.LerpColor.FloatB
+     Cast 60
+       StructMember Object.Color.G (of Color)
+         Local Object.LerpColor.B
+   Let
+     StructMember Object.Vector.Z (of Vector)
+       Local Object.LerpColor.FloatB
+     Cast 60
+       StructMember Object.Color.B (of Color)
+         Local Object.LerpColor.B
+   Let
+     Local Object.LerpColor.AlphaB
+     Cast 60
+       StructMember Object.Color.A (of Color)
+         Local Object.LerpColor.B
+   Let
+     Local Object.LerpColor.FloatResult
+     Native215
+       Local Object.LerpColor.FloatA
+       Native212
+         Native216
+           Local Object.LerpColor.FloatB
+           Local Object.LerpColor.FloatA
+           EndFunctionParms
+         Native246
+           Local Object.LerpColor.Alpha
+           Float 0
+           Float 1
+           EndFunctionParms
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.LerpColor.FloatResultAlpha
+     Native174
+       Local Object.LerpColor.AlphaA
+       Native171
+         Native175
+           Local Object.LerpColor.AlphaB
+           Local Object.LerpColor.AlphaA
+           EndFunctionParms
+         Native246
+           Local Object.LerpColor.Alpha
+           Float 0
+           Float 1
+           EndFunctionParms
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     StructMember Object.Color.R (of Color)
+       Local Object.LerpColor.Result
+     Cast 67
+       StructMember Object.Vector.X (of Vector)
+         Local Object.LerpColor.FloatResult
+   Let
+     StructMember Object.Color.G (of Color)
+       Local Object.LerpColor.Result
+     Cast 67
+       StructMember Object.Vector.Y (of Vector)
+         Local Object.LerpColor.FloatResult
+   Let
+     StructMember Object.Color.B (of Color)
+       Local Object.LerpColor.Result
+     Cast 67
+       StructMember Object.Vector.Z (of Vector)
+         Local Object.LerpColor.FloatResult
+   Let
+     StructMember Object.Color.A (of Color)
+       Local Object.LerpColor.Result
+     Cast 67
+       Local Object.LerpColor.FloatResultAlpha
+   Return
+     Local Object.LerpColor.Result
+   Return
+     ReturnNothing Object.LerpColor.ReturnValue
+   EndOfScript
+===== Object.MakeLinearColor  (Final|Defined|Static|Public|HasDefaults)
+   Let
+     StructMember Object.LinearColor.R (of LinearColor)
+       Local Object.MakeLinearColor.LC
+     Local Object.MakeLinearColor.R
+   Let
+     StructMember Object.LinearColor.G (of LinearColor)
+       Local Object.MakeLinearColor.LC
+     Local Object.MakeLinearColor.G
+   Let
+     StructMember Object.LinearColor.B (of LinearColor)
+       Local Object.MakeLinearColor.LC
+     Local Object.MakeLinearColor.B
+   Let
+     StructMember Object.LinearColor.A (of LinearColor)
+       Local Object.MakeLinearColor.LC
+     Local Object.MakeLinearColor.A
+   Return
+     Local Object.MakeLinearColor.LC
+   Return
+     ReturnNothing Object.MakeLinearColor.ReturnValue
+   EndOfScript
+===== Object.ColorToLinearColor  (Final|Defined|Static|Public)
+   Return
+     FinalFunction Object.MakeLinearColor
+       Native172
+         Cast 60
+           StructMember Object.Color.R (of Color)
+             Local Object.ColorToLinearColor.OldColor
+         Float 255
+         EndFunctionParms
+       Native172
+         Cast 60
+           StructMember Object.Color.G (of Color)
+             Local Object.ColorToLinearColor.OldColor
+         Float 255
+         EndFunctionParms
+       Native172
+         Cast 60
+           StructMember Object.Color.B (of Color)
+             Local Object.ColorToLinearColor.OldColor
+         Float 255
+         EndFunctionParms
+       Native172
+         Cast 60
+           StructMember Object.Color.A (of Color)
+             Local Object.ColorToLinearColor.OldColor
+         Float 255
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.ColorToLinearColor.ReturnValue
+   EndOfScript
+===== Object.Multiply_LinearColorFloat  (Final|Defined|Operator|Static|Public)
+   Native182
+     StructMember Object.LinearColor.R (of LinearColor)
+       Local Object.Multiply_LinearColorFloat.LC
+     Local Object.Multiply_LinearColorFloat.Mult
+     EndFunctionParms
+   Native182
+     StructMember Object.LinearColor.G (of LinearColor)
+       Local Object.Multiply_LinearColorFloat.LC
+     Local Object.Multiply_LinearColorFloat.Mult
+     EndFunctionParms
+   Native182
+     StructMember Object.LinearColor.B (of LinearColor)
+       Local Object.Multiply_LinearColorFloat.LC
+     Local Object.Multiply_LinearColorFloat.Mult
+     EndFunctionParms
+   Return
+     Local Object.Multiply_LinearColorFloat.LC
+   Return
+     ReturnNothing Object.Multiply_LinearColorFloat.ReturnValue
+   EndOfScript
+===== Object.Subtract_LinearColorLinearColor  (Final|Defined|Operator|Static|Public)
+   Native185
+     StructMember Object.LinearColor.R (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.A
+     StructMember Object.LinearColor.R (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.B
+     EndFunctionParms
+   Native185
+     StructMember Object.LinearColor.G (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.A
+     StructMember Object.LinearColor.G (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.B
+     EndFunctionParms
+   Native185
+     StructMember Object.LinearColor.B (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.A
+     StructMember Object.LinearColor.B (of LinearColor)
+       Local Object.Subtract_LinearColorLinearColor.B
+     EndFunctionParms
+   Return
+     Local Object.Subtract_LinearColorLinearColor.A
+   Return
+     ReturnNothing Object.Subtract_LinearColorLinearColor.ReturnValue
+   EndOfScript
+===== Object.LogInternal  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.LogInternal.S
+   NativeParm Object.LogInternal.Tag
+   Nothing
+   EndOfScript
+===== Object.WarnInternal  (Final|Native|Static|Public)
+   NativeParm Object.WarnInternal.S
+   Nothing
+   EndOfScript
+===== Object.Localize  (Native|Static|Public)
+   NativeParm Object.Localize.SectionName
+   NativeParm Object.Localize.KeyName
+   NativeParm Object.Localize.PackageName
+   Nothing
+   EndOfScript
+===== Object.ParseLocalizedPropertyPath  (Final|Defined|Static|Public)
+   FinalFunction Object.ParseStringIntoArray
+     Local Object.ParseLocalizedPropertyPath.PathName
+     Local Object.ParseLocalizedPropertyPath.Pieces
+     Str "."
+     False
+     EndFunctionParms
+   JumpIfNot 97
+     Native153
+       DynArrayLength
+         Local Object.ParseLocalizedPropertyPath.Pieces
+       IntConstByte 3
+       EndFunctionParms
+   Return
+     VirtualFunction Localize
+       DynArrayElem
+         IntOne
+         Local Object.ParseLocalizedPropertyPath.Pieces
+       DynArrayElem
+         IntConstByte 2
+         Local Object.ParseLocalizedPropertyPath.Pieces
+       DynArrayElem
+         IntZero
+         Local Object.ParseLocalizedPropertyPath.Pieces
+       EndFunctionParms
+   Jump 100
+   Return
+     Str ""
+   Return
+     ReturnNothing Object.ParseLocalizedPropertyPath.ReturnValue
+   EndOfScript
+===== Object.ScriptTrace  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.DebugBreak  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   DefaultParmValue
+     Byte 0
+   EndParmValue
+   NativeParm Object.DebugBreak.UserFlags
+   NativeParm Object.DebugBreak.DebuggerType
+   Nothing
+   EndOfScript
+===== Object.GetFuncName  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.SetUTracing  (Final|Native|Static|Public)
+   NativeParm Object.SetUTracing.bShouldUTrace
+   Nothing
+   EndOfScript
+===== Object.IsUTracing  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.GotoState  (Final|Native|HasOptionalParms|Public)
+   Nothing
+   Nothing
+   Nothing
+   Nothing
+   NativeParm Object.GotoState.NewState
+   NativeParm Object.GotoState.Label
+   NativeParm Object.GotoState.bForceEvents
+   NativeParm Object.GotoState.bKeepStack
+   Nothing
+   EndOfScript
+===== Object.IsInState  (Final|Native|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.IsInState.TestState
+   NativeParm Object.IsInState.bTestStateStack
+   Nothing
+   EndOfScript
+===== Object.IsChildState  (Final|Native|Public)
+   NativeParm Object.IsChildState.TestState
+   NativeParm Object.IsChildState.TestParentState
+   Nothing
+   EndOfScript
+===== Object.GetStateName  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.PushState  (Final|Native|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.PushState.NewState
+   NativeParm Object.PushState.NewLabel
+   Nothing
+   EndOfScript
+===== Object.PopState  (Final|Native|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.PopState.bPopAll
+   Nothing
+   EndOfScript
+===== Object.DumpStateStack  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.BeginState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.EndState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.PushedState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.PoppedState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.PausedState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.ContinuedState  (Event|Public)
+   Return
+     Nothing
+   EndOfScript
+===== Object.Enable  (Final|Native|Public)
+   NativeParm Object.Enable.ProbeFunc
+   Nothing
+   EndOfScript
+===== Object.Disable  (Final|Native|Public)
+   NativeParm Object.Disable.ProbeFunc
+   Nothing
+   EndOfScript
+===== Object.GetEnum  (Final|Native|Static|Public)
+   NativeParm Object.GetEnum.E
+   NativeParm Object.GetEnum.I
+   Nothing
+   EndOfScript
+===== Object.DynamicLoadObject  (Final|Native|Static|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.DynamicLoadObject.ObjectName
+   NativeParm Object.DynamicLoadObject.ObjectClass
+   NativeParm Object.DynamicLoadObject.MayFail
+   Nothing
+   EndOfScript
+===== Object.FindObject  (Final|Native|Static|Public)
+   NativeParm Object.FindObject.ObjectName
+   NativeParm Object.FindObject.ObjectClass
+   Nothing
+   EndOfScript
+===== Object.SaveConfig  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.StaticSaveConfig  (Final|Native|Static|Public)
+   Nothing
+   EndOfScript
+===== Object.GetPerObjectConfigSections  (Final|Native|Static|HasOptionalParms|Public|HasOutParms)
+   Nothing
+   DefaultParmValue
+     Int 1024
+   EndParmValue
+   NativeParm Object.GetPerObjectConfigSections.SearchClass
+   NativeParm Object.GetPerObjectConfigSections.out_SectionNames
+   NativeParm Object.GetPerObjectConfigSections.ObjectOuter
+   NativeParm Object.GetPerObjectConfigSections.MaxResults
+   Nothing
+   EndOfScript
+===== Object.PointDistToLine  (Final|Native|HasOptionalParms|Public|HasOutParms)
+   Nothing
+   NativeParm Object.PointDistToLine.Point
+   NativeParm Object.PointDistToLine.Line
+   NativeParm Object.PointDistToLine.Origin
+   NativeParm Object.PointDistToLine.OutClosestPoint
+   Nothing
+   EndOfScript
+===== Object.PointDistToSegment  (Final|Native|HasOptionalParms|Public|HasOutParms)
+   Nothing
+   NativeParm Object.PointDistToSegment.Point
+   NativeParm Object.PointDistToSegment.StartPoint
+   NativeParm Object.PointDistToSegment.EndPoint
+   NativeParm Object.PointDistToSegment.OutClosestPoint
+   Nothing
+   EndOfScript
+===== Object.PointDistToPlane  (Final|Defined|Simulated|HasOptionalParms|Public|HasOutParms|HasDefaults)
+   Nothing
+   Native229
+     Local Object.PointDistToPlane.Orientation
+     Local Object.PointDistToPlane.AxisX
+     Local Object.PointDistToPlane.AxisY
+     Local Object.PointDistToPlane.AxisZ
+     EndFunctionParms
+   Let
+     Local Object.PointDistToPlane.fPointZ
+     Native219
+       Local Object.PointDistToPlane.Point
+       Local Object.PointDistToPlane.AxisZ
+       EndFunctionParms
+   Let
+     Local Object.PointDistToPlane.PointNoZ
+     Native216
+       Local Object.PointDistToPlane.Point
+       Native213
+         Local Object.PointDistToPlane.fPointZ
+         Local Object.PointDistToPlane.AxisZ
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.PointDistToPlane.OriginNoZ
+     Native216
+       Local Object.PointDistToPlane.Origin
+       Native213
+         Native219
+           Local Object.PointDistToPlane.Origin
+           Local Object.PointDistToPlane.AxisZ
+           EndFunctionParms
+         Local Object.PointDistToPlane.AxisZ
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.PointDistToPlane.fProjDistToAxis
+     Native219
+       Native216
+         Local Object.PointDistToPlane.PointNoZ
+         Local Object.PointDistToPlane.OriginNoZ
+         EndFunctionParms
+       Local Object.PointDistToPlane.AxisX
+       EndFunctionParms
+   Let
+     LocalOut Object.PointDistToPlane.out_ClosestPoint
+     Native215
+       Native215
+         Local Object.PointDistToPlane.OriginNoZ
+         Native213
+           Local Object.PointDistToPlane.fProjDistToAxis
+           Local Object.PointDistToPlane.AxisX
+           EndFunctionParms
+         EndFunctionParms
+       Native213
+         Local Object.PointDistToPlane.fPointZ
+         Local Object.PointDistToPlane.AxisZ
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     Native225
+       Native216
+         LocalOut Object.PointDistToPlane.out_ClosestPoint
+         Local Object.PointDistToPlane.Point
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     ReturnNothing Object.PointDistToPlane.ReturnValue
+   EndOfScript
+===== Object.PointProjectToPlane  (Final|Native|Static|Public)
+   NativeParm Object.PointProjectToPlane.Point
+   NativeParm Object.PointProjectToPlane.A
+   NativeParm Object.PointProjectToPlane.B
+   NativeParm Object.PointProjectToPlane.C
+   Nothing
+   EndOfScript
+===== Object.GetDotDistance  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.GetDotDistance.OutDotDist
+   NativeParm Object.GetDotDistance.Direction
+   NativeParm Object.GetDotDistance.AxisX
+   NativeParm Object.GetDotDistance.AxisY
+   NativeParm Object.GetDotDistance.AxisZ
+   Nothing
+   EndOfScript
+===== Object.GetAngularDistance  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.GetAngularDistance.OutAngularDist
+   NativeParm Object.GetAngularDistance.Direction
+   NativeParm Object.GetAngularDistance.AxisX
+   NativeParm Object.GetAngularDistance.AxisY
+   NativeParm Object.GetAngularDistance.AxisZ
+   Nothing
+   EndOfScript
+===== Object.GetAngularFromDotDist  (Final|Native|Static|Public|HasOutParms)
+   NativeParm Object.GetAngularFromDotDist.OutAngDist
+   NativeParm Object.GetAngularFromDotDist.DotDist
+   Nothing
+   EndOfScript
+===== Object.GetAngularDegreesFromRadians  (Final|Defined|Simulated|Static|Public|HasOutParms)
+   Let
+     StructMember Object.Vector2D.X (of Vector2D)
+       LocalOut Object.GetAngularDegreesFromRadians.OutFOV
+     Native171
+       StructMember Object.Vector2D.X (of Vector2D)
+         LocalOut Object.GetAngularDegreesFromRadians.OutFOV
+       Float 57.2958
+       EndFunctionParms
+   Let
+     StructMember Object.Vector2D.Y (of Vector2D)
+       LocalOut Object.GetAngularDegreesFromRadians.OutFOV
+     Native171
+       StructMember Object.Vector2D.Y (of Vector2D)
+         LocalOut Object.GetAngularDegreesFromRadians.OutFOV
+       Float 57.2958
+       EndFunctionParms
+   Return
+     Nothing
+   EndOfScript
+===== Object.GetHeadingAngle  (Final|Defined|Simulated|Static|Public)
+   Let
+     Local Object.GetHeadingAngle.Angle
+     FinalFunction Object.Acos
+       Native246
+         StructMember Object.Vector.X (of Vector)
+           Local Object.GetHeadingAngle.Dir
+         Float -1
+         Float 1
+         EndFunctionParms
+       EndFunctionParms
+   JumpIfNot 114
+     Native176
+       StructMember Object.Vector.Y (of Vector)
+         Local Object.GetHeadingAngle.Dir
+       Float 0
+       EndFunctionParms
+   Native182
+     Local Object.GetHeadingAngle.Angle
+     Float -1
+     EndFunctionParms
+   Return
+     Local Object.GetHeadingAngle.Angle
+   Return
+     ReturnNothing Object.GetHeadingAngle.ReturnValue
+   EndOfScript
+===== Object.FindDeltaAngle  (Final|Defined|Simulated|Static|Public)
+   Let
+     Local Object.FindDeltaAngle.Delta
+     Native175
+       Local Object.FindDeltaAngle.A2
+       Local Object.FindDeltaAngle.A1
+       EndFunctionParms
+   JumpIfNot 85
+     Native177
+       Local Object.FindDeltaAngle.Delta
+       Float 3.14159
+       EndFunctionParms
+   Let
+     Local Object.FindDeltaAngle.Delta
+     Native175
+       Local Object.FindDeltaAngle.Delta
+       Native171
+         Float 3.14159
+         Float 2
+         EndFunctionParms
+       EndFunctionParms
+   Jump 139
+   JumpIfNot 139
+     Native176
+       Local Object.FindDeltaAngle.Delta
+       Native169
+         Float 3.14159
+         EndFunctionParms
+       EndFunctionParms
+   Let
+     Local Object.FindDeltaAngle.Delta
+     Native174
+       Local Object.FindDeltaAngle.Delta
+       Native171
+         Float 3.14159
+         Float 2
+         EndFunctionParms
+       EndFunctionParms
+   Return
+     Local Object.FindDeltaAngle.Delta
+   Return
+     ReturnNothing Object.FindDeltaAngle.ReturnValue
+   EndOfScript
+===== Object.UnwindHeading  (Final|Defined|Simulated|Static|Public)
+   JumpIfNot 45
+     Native177
+       Local Object.UnwindHeading.A
+       Float 3.14159
+       EndFunctionParms
+   Native185
+     Local Object.UnwindHeading.A
+     Native171
+       Float 3.14159
+       Float 2
+       EndFunctionParms
+     EndFunctionParms
+   Jump 0
+   JumpIfNot 92
+     Native176
+       Local Object.UnwindHeading.A
+       Native169
+         Float 3.14159
+         EndFunctionParms
+       EndFunctionParms
+   Native184
+     Local Object.UnwindHeading.A
+     Native171
+       Float 3.14159
+       Float 2
+       EndFunctionParms
+     EndFunctionParms
+   Jump 45
+   Return
+     Local Object.UnwindHeading.A
+   Return
+     ReturnNothing Object.UnwindHeading.ReturnValue
+   EndOfScript
+===== Object.FloatToByte  (Final|Defined|Simulated|HasOptionalParms|Public)
+   Nothing
+   JumpIfNot 93
+     BoolVar
+       Local Object.FloatToByte.bSigned
+   JumpIfNot 39
+     Native177
+       Local Object.FloatToByte.inputFloat
+       Float 0.98
+       EndFunctionParms
+   Return
+     Byte 255
+   Jump 90
+   JumpIfNot 64
+     Native176
+       Local Object.FloatToByte.inputFloat
+       Float -0.98
+       EndFunctionParms
+   Return
+     Byte 0
+   Jump 90
+   Return
+     Cast 67
+       Native171
+         Native174
+           Local Object.FloatToByte.inputFloat
+           Float 1
+           EndFunctionParms
+         Float 128
+         EndFunctionParms
+   Jump 162
+   JumpIfNot 118
+     Native177
+       Local Object.FloatToByte.inputFloat
+       Float 0.9961
+       EndFunctionParms
+   Return
+     Byte 255
+   Jump 162
+   JumpIfNot 143
+     Native176
+       Local Object.FloatToByte.inputFloat
+       Float 0.004
+       EndFunctionParms
+   Return
+     Byte 0
+   Jump 162
+   Return
+     Cast 67
+       Native171
+         Local Object.FloatToByte.inputFloat
+         Float 255
+         EndFunctionParms
+   Return
+     ReturnNothing Object.FloatToByte.ReturnValue
+   EndOfScript
+===== Object.ByteToFloat  (Final|Defined|Simulated|HasOptionalParms|Public)
+   Nothing
+   JumpIfNot 43
+     BoolVar
+       Local Object.ByteToFloat.bSigned
+   Return
+     Native175
+       Native172
+         Cast 60
+           Local Object.ByteToFloat.inputByte
+         Float 128
+         EndFunctionParms
+       Float 1
+       EndFunctionParms
+   Jump 62
+   Return
+     Native172
+       Cast 60
+         Local Object.ByteToFloat.inputByte
+       Float 255
+       EndFunctionParms
+   Return
+     ReturnNothing Object.ByteToFloat.ReturnValue
+   EndOfScript
+===== Object.IsPendingKill  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.GetPackageName  (Final|Defined|Public)
+   Let
+     Local Object.GetPackageName.O
+     Self
+   JumpIfNot 90
+     Native119
+       Context
+         Local Object.GetPackageName.O
+         -> field Object.Outer
+         Inst Object.Outer
+       NoObject
+       EndFunctionParms
+   Let
+     Local Object.GetPackageName.O
+     Context
+       Local Object.GetPackageName.O
+       -> field Object.Outer
+       Inst Object.Outer
+   Jump 11
+   Return
+     Context
+       Local Object.GetPackageName.O
+       -> field Object.Name
+       Inst Object.Name
+   Return
+     ReturnNothing Object.GetPackageName.ReturnValue
+   EndOfScript
+===== Object.TransformVectorByRotation  (Final|Native|HasOptionalParms|Public)
+   Nothing
+   NativeParm Object.TransformVectorByRotation.SourceRotation
+   NativeParm Object.TransformVectorByRotation.SourceVector
+   NativeParm Object.TransformVectorByRotation.bInverse
+   Nothing
+   EndOfScript
+===== Object.TimeStamp  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.GetSystemTime  (Final|Native|Public|HasOutParms)
+   NativeParm Object.GetSystemTime.Year
+   NativeParm Object.GetSystemTime.Month
+   NativeParm Object.GetSystemTime.DayOfWeek
+   NativeParm Object.GetSystemTime.Day
+   NativeParm Object.GetSystemTime.Hour
+   NativeParm Object.GetSystemTime.Min
+   NativeParm Object.GetSystemTime.Sec
+   NativeParm Object.GetSystemTime.MSec
+   Nothing
+   EndOfScript
+===== Object.GetEngineVersion  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Object.GetBuildChangelistNumber  (Final|Native|Public)
+   Nothing
+   EndOfScript
+===== Commandlet.Main  (Native|Event|Public)
+   NativeParm Commandlet.Main.Params
+   Nothing
+   EndOfScript
+===== DistributionFloat.GetFloatValue  (Native|HasOptionalParms|Public)
+   DefaultParmValue
+     Float 0
+   EndParmValue
+   NativeParm DistributionFloat.GetFloatValue.F
+   Nothing
+   EndOfScript
+===== DistributionVector.GetVectorValue  (Native|HasOptionalParms|Public)
+   DefaultParmValue
+     Float 0
+   EndParmValue
+   DefaultParmValue
+     IntZero
+   EndParmValue
+   NativeParm DistributionVector.GetVectorValue.F
+   NativeParm DistributionVector.GetVectorValue.LastExtreme
+   Nothing
+   EndOfScript
+===== HelpCommandlet.Main  (Native|Event|Public)
+   NativeParm HelpCommandlet.Main.Params
+   Nothing
+   EndOfScript

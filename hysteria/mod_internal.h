@@ -2,12 +2,85 @@
 #define MOD_INTERNAL_H
 #include "hysteria_api.h"
 
+#define VT_PROCESSEVENT             67
+#define VT_PROCESSDELEGATE          68
+#define VT_PROCESSSTATE             69
+#define VT_PROCESSREMOTEFN          70
+
+#define RVA_UOBJECT_PROCESSEVENT    0x000B5270u
+#define ADDR_UOBJECT_PROCESSEVENT   0x004B5270u
+#define ADDR_AACTOR_PROCESSEVENT    0x006344C0u
+#define ADDR_GNATIVES               0x01413520u
+#define ADDR_EXEC_UNDEFINED         0x004A7460u
+#define ADDR_FFRAME_VTBL            0x01169F9Cu
+
+#define RVA_GNATIVES                0x01013520u
+#define RVA_EXEC_UNDEFINED          0x000A7460u
+#define RVA_EXEC_LOGINTERNAL        0x000BA400u
+#define RVA_EXEC_WARNINTERNAL       0x000BA4D0u
+#define RVA_APPFREE                 0x0007B950u
+#define RVA_GRUNTIMEUCFLAGS         0x00FEF96Cu
+
+#define GNATIVES_COUNT              0x1000
+#define NATIVE_LOGINTERNAL          231
+#define NATIVE_WARNINTERNAL         232
+#define NAME_SCRIPTLOG              0x302
+#define RUC_SKIPPEDOPTIONALPARM     0x02
+
+#define UOBJ_INTERNALINTEGER 0x04
+
+#define UF_CHILDREN         0x4C
+#define UF_PROPERTIESSIZE   0x50
+#define UF_SCRIPT           0x54
+#define UF_FUNCTIONFLAGS    0x90
+#define UF_INATIVE          0x94
+#define UF_PARMSSIZE        0xA2
+#define UF_RETURNVALUEOFF   0xA4
+#define UF_FUNC             0xAC
+#define UFIELD_SUPER        0x3C
+#define UFIELD_NEXT         0x40
+#define UPROP_ARRAYDIM      0x44
+#define UPROP_FLAGS         0x48
+#define UPROP_ELEMENTSIZE   0x50
+#define UPROP_OFFSET        0x64
+
+#define FUNC_NATIVE         0x00000400u
+
+#define CPF_OPTIONAL        0x00000010u
+#define CPF_PARM            0x00000080u
+#define CPF_OUTPARM         0x00000100u
+#define CPF_RETURNPARM      0x00000400u
+
+#define EX_LOCALVARIABLE      0x00
+#define EX_ENDFUNCTIONPARMS   0x16
+#define EX_FILLER             0x0B
+#define EX_DEBUGINFO          0x41
+
+#define FF_VTBL         0x00
+#define FF_NODE         0x10
+#define FF_OBJECT       0x14
+#define FF_CODE         0x18
+#define FF_LOCALS       0x1C
+#define FF_PREVFRAME    0x20
+#define FF_OUTPARMS     0x24
+#define FF_SIZE         0x28
 
 typedef void (__fastcall *PE_t)(void *obj, void *edx, void *fn, void *parms, void *res);
-extern PE_t g_peTramp;
+typedef void (__fastcall *Native_t)(void *obj, void *edx, void *frame, void *result);
+typedef void (__cdecl *AppFree_t)(void *ptr, int align);
 
+extern PE_t   g_peTramp;
+extern void  *g_peTarget;
+
+void pe_call(void *obj, void *fn, void *parms, void *res);
+int  call_intrinsic(void *obj, void *fn, void *parms, void *result);
+int  fn_inative(void *fn);
+int  fn_native(void *fn);
+void *fn_native_impl(void *fn);
 int  dispatch_event(void *obj, void *fn, void *parms, void *res);
 void dispatch_post(void *obj, void *fn, void *parms, void *res);
+void mod_gq_init(void);
+void mod_pump_game(void);
 void load_mods(void);
 void mod_do_reload(void);
 

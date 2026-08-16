@@ -1,0 +1,1268 @@
+#include "hysteria_api.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
+
+#define COOP_PORT 7777
+#define COOP_MAGIC 0x50434f41u
+#define COOP_STALE_MS 1000
+#define COOP_FOV_DEG 85.0f
+#define URU_TO_RAD (6.2831853f / 65536.0f)
+#define CAM_POV_OFFSET 0x36C
+
+typedef struct {
+  unsigned magic;
+  unsigned seq;
+  unsigned tick_ms;
+  float pos[3];
+  int rot[3];
+  float vel[3];
+  float health;
+  float half_height;
+} CoopPacket;
+
+static HysteriaAPI *A;
+static SOCKET sock = INVALID_SOCKET;
+static struct sockaddr_in peer_addr;
+static int peer_known;
+static int is_host;
+static unsigned seq_out;
+static unsigned sent_count;
+static unsigned recv_count;
+static unsigned bad_count;
+static CoopPacket last_in;
+static unsigned last_in_ms;
+static int net_up;
+static AObj ghost;
+static AObj ghost_anchor;
+static float ghost_pos[3];
+static int ghost_ready;
+static int ghost_enabled = 1;
+static unsigned ghost_try_ms;
+static int ghost_fail_logged;
+static unsigned ghost_watch_ms;
+static unsigned clone_req_ms;
+
+static AObj probe_game;
+static AObj probe_start;
+static void take_probe_game(AObj o) {
+  const char *n = A->name_of(o);
+  if (!probe_game && n && strncmp(n, "Default__", 9) != 0) probe_game = o;
+}
+static void take_probe_start(AObj o) {
+  const char *n = A->name_of(o);
+  if (!probe_start && n && strncmp(n, "Default__", 9) != 0) probe_start = o;
+}
+static int clone_mode = 1;
+
+static void ghost_unpossess(void);
+static void ghost_destroy(void);
+
+static const char *const GHOST_CLASSES[] = {"AlicePawn", "AliceClonePawn", "Pawn"};
+
+static void emit(const char *fmt, ...) {
+  char buf[512];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof buf, fmt, ap);
+  va_end(ap);
+  A->log(buf);
+}
+
+static int detect_second_instance(void) {
+  const char *cmd = GetCommandLineA();
+  if (!cmd) return 0;
+  return strstr(cmd, "-hysteria-multi") != 0 || strstr(cmd, "CONFIGSUBDIR=P") != 0;
+}
+
+static void net_close(void) {
+  if (sock != INVALID_SOCKET) closesocket(sock);
+  sock = INVALID_SOCKET;
+  net_up = 0;
+  peer_known = 0;
+}
+
+static void net_open(void) {
+  struct sockaddr_in bind_addr;
+  unsigned long nb = 1;
+  net_close();
+
+  sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (sock == INVALID_SOCKET) { emit("coop: socket() echec %d", WSAGetLastError()); return; }
+  ioctlsocket(sock, FIONBIO, &nb);
+
+  memset(&bind_addr, 0, sizeof bind_addr);
+  bind_addr.sin_family = AF_INET;
+  bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  bind_addr.sin_port = htons((unsigned short)(is_host ? COOP_PORT : COOP_PORT + 1));
+  if (bind(sock, (struct sockaddr *)&bind_addr, sizeof bind_addr) != 0) {
+    emit("coop: bind %d echec %d", is_host ? COOP_PORT : COOP_PORT + 1, WSAGetLastError());
+    net_close();
+    return;
+  }
+
+  memset(&peer_addr, 0, sizeof peer_addr);
+  peer_addr.sin_family = AF_INET;
+  peer_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  peer_addr.sin_port = htons((unsigned short)(is_host ? COOP_PORT + 1 : COOP_PORT));
+  peer_known = !is_host;
+
+  net_up = 1;
+  emit("coop: %s pret, ecoute sur %d, pair sur %d", is_host ? "HOTE" : "CLIENT",
+       is_host ? COOP_PORT : COOP_PORT + 1, is_host ? COOP_PORT + 1 : COOP_PORT);
+}
+
+static void send_state(void) {
+  CoopPacket p;
+  AObj pawn = A->player_pawn();
+  if (!net_up || !peer_known || !pawn) return;
+
+  memset(&p, 0, sizeof p);
+  p.magic = COOP_MAGIC;
+  p.seq = ++seq_out;
+  p.tick_ms = GetTickCount();
+  A->get_vec(pawn, "Location", p.pos);
+  A->get_rot(pawn, "Rotation", p.rot);
+  A->get_vec(pawn, "Velocity", p.vel);
+  A->get_float(pawn, "Health", &p.health);
+  {
+    AObj cyl = A->get_obj(pawn, "CylinderComponent");
+    int hi = 0;
+    p.half_height = 0.0f;
+    if (cyl && !A->get_float(cyl, "CollisionHeight", &p.half_height)) {
+      if (A->get_int(cyl, "CollisionHeight", &hi)) p.half_height = (float)hi;
+    }
+    if (p.half_height <= 1.0f) p.half_height = 44.0f;
+  }
+
+  if (sendto(sock, (const char *)&p, sizeof p, 0, (struct sockaddr *)&peer_addr,
+             sizeof peer_addr) == sizeof p)
+    sent_count++;
+}
+
+static void poll_in(void) {
+  CoopPacket p;
+  struct sockaddr_in from;
+  int flen = sizeof from;
+  int n;
+  if (!net_up) return;
+
+  while ((n = recvfrom(sock, (char *)&p, sizeof p, 0, (struct sockaddr *)&from,
+                       &flen)) > 0) {
+    if (n != sizeof p || p.magic != COOP_MAGIC) { bad_count++; continue; }
+    if (!peer_known) {
+      peer_addr = from;
+      peer_known = 1;
+      emit("coop: pair decouvert, port %d", ntohs(from.sin_port));
+    }
+    if (!recv_count)
+      A->log("coop: PREMIER PAQUET RECU — les deux jeux se parlent");
+    last_in = p;
+    last_in_ms = GetTickCount();
+    recv_count++;
+  }
+}
+
+static void ghost_drop(void) {
+  ghost = 0;
+  ghost_anchor = 0;
+  ghost_ready = 0;
+}
+
+static void ghost_destroy(void) {
+  if (ghost && !clone_mode) A->destroy(ghost);
+  ghost_drop();
+  A->log("coop: fantome relache");
+}
+
+static void ghost_request_clone(void) {
+  AObj pc = A->player_controller();
+  AObj pawn = A->player_pawn();
+  ACall c;
+  if (!pc || !pawn) return;
+  if (GetTickCount() - clone_req_ms < 3000) return;
+  clone_req_ms = GetTickCount();
+  c = A->call_begin(pc, "CloneButtonPressed");
+  if (!c) { A->log("coop: CloneButtonPressed introuvable"); return; }
+  A->call_arg_obj(c, "wp", A->get_obj(pawn, "Weapon"));
+  A->call_invoke(c);
+}
+
+static int ghost_adopt_clone(void) {
+  AObj pawn = A->player_pawn();
+  AObj clone = pawn ? A->get_obj(pawn, "MyClonePawn") : 0;
+  if (!clone) return 0;
+  ghost = clone;
+  ghost_anchor = pawn;
+  A->get_vec(ghost, "Location", ghost_pos);
+  A->set_byte(ghost, "Physics", 0);
+  A->set_bool(ghost, "bCollideActors", 0);
+  A->set_bool(ghost, "bBlockActors", 0);
+  A->set_bool(ghost, "bCollideWorld", 0);
+  A->set_bool(ghost, "bIgnoreForces", 1);
+  ghost_unpossess();
+  ghost_ready = 1;
+  emit("coop: clone adopte comme fantome — %s (%s)", A->name_of(ghost),
+       A->class_of(ghost));
+  return 1;
+}
+
+static AObj spawn_no_collision(const char *class_name, const float pos[3]) {
+  AObj cls = A->find_class(class_name);
+  AObj local = A->player_pawn();
+  ACall c;
+  if (!cls || !local) return 0;
+  c = A->call_begin(local, "Spawn");
+  if (!c) return 0;
+  A->call_arg_obj(c, "SpawnClass", cls);
+  A->call_arg_vec(c, "SpawnLocation", pos);
+  A->call_arg_bool(c, "bNoCollisionFail", 1);
+  A->call_invoke(c);
+  return A->call_out_obj(c, "ReturnValue");
+}
+
+static void ghost_spawn(void) {
+  AObj local = A->player_pawn();
+  float here[3];
+  int i;
+  if (!local || !recv_count) return;
+  if (GetTickCount() - ghost_try_ms < 2000) return;
+  ghost_try_ms = GetTickCount();
+
+  A->get_vec(local, "Location", here);
+  here[2] += 96.0f;
+
+  for (i = 0; i < 3 && !ghost; i++) {
+    ghost = spawn_no_collision(GHOST_CLASSES[i], last_in.pos);
+    if (!ghost) ghost = spawn_no_collision(GHOST_CLASSES[i], here);
+    if (ghost) emit("coop: fantome spawne via %s", GHOST_CLASSES[i]);
+  }
+  if (!ghost) ghost = A->spawn("AlicePawn", here[0], here[1], here[2]);
+
+  if (!ghost) {
+    if (!ghost_fail_logged) {
+      ghost_fail_logged = 1;
+      A->log("coop: aucune classe de fantome n'a pu etre spawnee (nouvel essai toutes les 2 s, silencieux)");
+    }
+    return;
+  }
+  ghost_fail_logged = 0;
+  ghost_anchor = local;
+  ghost_pos[0] = last_in.pos[0];
+  ghost_pos[1] = last_in.pos[1];
+  ghost_pos[2] = last_in.pos[2];
+  A->set_byte(ghost, "Physics", 0);
+  A->set_bool(ghost, "bCollideActors", 0);
+  A->set_bool(ghost, "bBlockActors", 0);
+  A->set_bool(ghost, "bCollideWorld", 0);
+  A->set_bool(ghost, "bIgnoreForces", 1);
+  A->set_bool(ghost, "bCanTeleport", 0);
+  ghost_unpossess();
+  ghost_ready = 1;
+  emit("coop: fantome pret, classe %s, en %.0f %.0f %.0f", A->class_of(ghost),
+       ghost_pos[0], ghost_pos[1], ghost_pos[2]);
+}
+
+typedef void(__fastcall *PE_fn)(void *obj, void *edx, void *fn, void *parms, void *res);
+
+static int detour_witness;
+static void detour_witness_cb(AEvent *e) { (void)e; detour_witness++; }
+
+static AObj body;
+static float body_home[3];
+static int body_index;
+static int body_scan_pos;
+static int body_prefer_alice;
+static char body_mesh[64];
+
+static void body_pick_cb(AObj o) {
+  const char *n = A->name_of(o);
+  const char *cn = A->class_of(o);
+  if (body) return;
+  if (!n || !cn || strncmp(n, "Default__", 9) == 0) return;
+  if (!strstr(cn, "MAT")) return;
+  if (body_prefer_alice && !strstr(cn, "Alice")) return;
+  if (body_scan_pos++ < body_index) return;
+  body = o;
+}
+
+static void body_release(void) {
+  if (body) {
+    A->set_vec(body, "Location", body_home);
+    emit("coop: corps relache, %s remis en place", A->name_of(body));
+  }
+  body = 0;
+}
+
+static void body_take(void) {
+  if (body) { body_release(); return; }
+  body_scan_pos = 0;
+  A->iter_objects("SkeletalMeshActor", body_pick_cb);
+  if (!body 
+      && body_prefer_alice) {
+    body_prefer_alice = 0;
+    body_scan_pos = 0;
+    A->iter_objects("SkeletalMeshActor", body_pick_cb);
+    A->log("coop: aucun acteur Alice, repli sur un MAT quelconque");
+  }
+  if (!body) {
+    body_index = 0;
+    A->log("coop: aucun candidat, index remis a zero");
+    return;
+  }
+  if (!A->get_vec(body, "Location", body_home)) {
+    A->log("coop: position d'origine illisible, abandon");
+    body = 0;
+    return;
+  }
+  A->set_byte(body, "Physics", 0);
+  A->set_bool(body, "bCollideActors", 0);
+  A->set_bool(body, "bBlockActors", 0);
+  A->set_bool(body, "bCollideWorld", 0);
+  {
+    int hid = -1;
+    AObj comp = A->get_obj(body, "SkeletalMeshComponent");
+    int refpose = -1, noskel = -1, pause = -1, updnr = -1, ignctrl = -1;
+    int updjoints = -1, tickoff = -1, isstatic = -1;
+    float maxdist = -1.0f;
+
+    A->get_bool(body, "bTickIsDisabled", &tickoff);
+    A->get_bool(body, "bStatic", &isstatic);
+    if (comp) {
+      A->get_int(comp, "bForceRefpose", &refpose);
+      A->get_bool(comp, "bNoSkeletonUpdate", &noskel);
+      A->get_bool(comp, "bPauseAnims", &pause);
+      A->get_bool(comp, "bUpdateSkelWhenNotRendered", &updnr);
+      A->get_bool(comp, "bIgnoreControllersWhenNotRendered", &ignctrl);
+      A->get_bool(comp, "bUpdateJointsFromAnimation", &updjoints);
+      A->get_float(comp, "MaxDistanceFactor", &maxdist);
+    }
+    emit("coop: AVANT  bForceRefpose=%d bNoSkeletonUpdate=%d bPauseAnims=%d",
+         refpose, noskel, pause);
+    emit("coop: AVANT  bUpdateSkelWhenNotRendered=%d bIgnoreControllers=%d bUpdateJoints=%d MaxDist=%.2f",
+         updnr, ignctrl, updjoints, maxdist);
+    emit("coop: AVANT  bTickIsDisabled=%d bStatic=%d", tickoff, isstatic);
+
+    A->set_bool(body, "bTickIsDisabled", 0);
+    A->set_bool(body, "bStatic", 0);
+    if (comp) {
+      A->set_int(comp, "bForceRefpose", 0);
+      A->set_bool(comp, "bNoSkeletonUpdate", 0);
+      A->set_bool(comp, "bPauseAnims", 0);
+      A->set_bool(comp, "bUpdateSkelWhenNotRendered", 1);
+      A->set_bool(comp, "bIgnoreControllersWhenNotRendered", 0);
+      A->set_bool(comp, "bUpdateJointsFromAnimation", 1);
+      A->set_bool(comp, "bSkipAllUpdateWhenPhysicsAsleep", 0);
+      A->set_float(comp, "MaxDistanceFactor", 1.0f);
+    }
+  }
+  {
+    int hid = -1;
+    AObj comp = A->get_obj(body, "SkeletalMeshComponent");
+    AObj mesh = comp ? A->get_obj(comp, "SkeletalMesh") : 0;
+    A->get_bool(body, "bHidden", &hid);
+    A->set_bool(body, "bHidden", 0);
+    if (comp) {
+      A->set_bool(comp, "HiddenGame", 0);
+      A->set_bool(comp, "bOwnerNoSee", 0);
+      A->set_bool(comp, "bOnlyOwnerSee", 0);
+    }
+    lstrcpynA(body_mesh, mesh ? A->name_of(mesh) : "(aucun)", sizeof body_mesh);
+    emit("coop: corps %s (%s) bHidden=%d -> 0  composant=%s  maillage=%s",
+         A->name_of(body), A->class_of(body), hid, comp ? "present" : "nul",
+         body_mesh);
+  }
+  emit("coop: origine %.0f %.0f %.0f", body_home[0], body_home[1], body_home[2]);
+}
+
+static int anim_listed;
+static char anim_pick[64];
+static AObj body_slot;
+static AObj body_comp_for_slot;
+
+static void anim_list_cb(AObj o) {
+  char full[256];
+  const char *n = A->name_of(o);
+  const char *leaf;
+  if (!n || strncmp(n, "Default__", 9) == 0) return;
+  A->full_name(o, full, sizeof full);
+  leaf = strrchr(full, '.');
+  leaf = leaf ? leaf + 1 : full;
+  if (!anim_pick[0]) {
+    char low[64];
+    int i;
+    lstrcpynA(low, leaf, sizeof low);
+    for (i = 0; low[i]; i++) low[i] = (char)tolower((unsigned char)low[i]);
+    if (strstr(low, "idle")) lstrcpynA(anim_pick, leaf, sizeof anim_pick);
+  }
+  if (anim_listed >= 30) return;
+  anim_listed++;
+  emit("    %-3d %s", anim_listed, full);
+}
+
+static void slot_find_cb(AObj o) {
+  if (body_slot || !body_comp_for_slot) return;
+  if (A->get_obj(o, "SkelComponent") == body_comp_for_slot) body_slot = o;
+}
+
+static void anim_probe(void) {
+  AObj pawn = A->player_pawn();
+  AObj mine = pawn ? A->get_obj(pawn, "Mesh") : 0;
+  AObj bcomp = body ? A->get_obj(body, "SkeletalMeshComponent") : 0;
+  A->log("---------- animations ----------");
+  emit("  composant d'Alice : %s   AnimTree=%s   Animations=%s",
+       mine ? "present" : "nul",
+       (mine && A->get_obj(mine, "AnimTreeTemplate")) ? "present" : "nul",
+       (mine && A->get_obj(mine, "Animations")) ? "present" : "nul");
+  emit("  composant du corps : %s   AnimTree=%s   Animations=%s",
+       bcomp ? "present" : "nul",
+       (bcomp && A->get_obj(bcomp, "AnimTreeTemplate")) ? "present" : "nul",
+       (bcomp && A->get_obj(bcomp, "Animations")) ? "present" : "nul");
+  anim_listed = 0;
+  anim_pick[0] = 0;
+  A->log("  sequences d'animation en memoire :");
+  A->iter_objects("AnimSequence", anim_list_cb);
+  emit("  (%d listees, candidat idle retenu : %s)", anim_listed,
+       anim_pick[0] ? anim_pick : "aucun");
+
+  body_slot = 0;
+  body_comp_for_slot = bcomp;
+  if (bcomp) {
+    A->iter_objects("AnimNodeSlot", slot_find_cb);
+    if (!body_slot) A->iter_objects("AnimNodeSequence", slot_find_cb);
+  }
+  emit("  noeud d'animation du corps : %s", body_slot ? A->class_of(body_slot) : "introuvable");
+
+  if (body_slot && anim_pick[0]) {
+    ACall c = A->call_begin(body_slot, "PlayCustomAnim");
+    if (!c) c = A->call_begin(body_slot, "PlayAnim");
+    if (!c) {
+      A->log("  aucune fonction de lecture sur ce noeud");
+    } else {
+      A->call_arg_str(c, "AnimName", anim_pick);
+      A->call_arg_float(c, "Rate", 1.0f);
+      A->call_arg_float(c, "BlendInTime", 0.0f);
+      A->call_arg_float(c, "BlendOutTime", 0.0f);
+      A->call_arg_bool(c, "bLooping", 1);
+      A->call_arg_bool(c, "bOverride", 1);
+      A->call_arg_float(c, "StartTime", 0.0f);
+      A->call_arg_bool(c, "bLoop", 1);
+      A->call_arg_float(c, "InRate", 1.0f);
+      A->call_invoke(c);
+      emit("  lecture tentee : %s sur %s", anim_pick, A->class_of(body_slot));
+    }
+  }
+  A->log("--------------------------------");
+}
+
+static void anim_try(const char *name) {
+  ACall c;
+  if (!body) { A->log("coop: pas de corps"); return; }
+  c = A->call_begin(body, "MAT_SetAnimPosition");
+  if (!c) { A->log("coop: MAT_SetAnimPosition non resolue sur ce corps"); return; }
+  A->call_arg_str(c, "SlotName", "FullBody");
+  A->call_arg_int(c, "ChannelIndex", 0);
+  A->call_arg_str(c, "InAnimSeqName", name);
+  A->call_arg_float(c, "InPosition", 0.0f);
+  A->call_arg_bool(c, "bFireNotifies", 0);
+  A->call_arg_bool(c, "bLooping", 1);
+  A->call_arg_int(c, "RootMotionLevel", 0);
+  A->call_invoke(c);
+  emit("coop: MAT_SetAnimPosition(\"%s\") emis", name);
+}
+
+static float body_z_adjust;
+static float cam_fov = COOP_FOV_DEG;
+static float anim_time;
+static unsigned anim_last_ms;
+static const char *anim_current = "";
+static int anim_logged;
+
+static void body_animate(void) {
+  ACall c;
+  float speed;
+  unsigned now = GetTickCount();
+  const char *want;
+
+  if (!body) return;
+  if (!anim_last_ms) anim_last_ms = now;
+  anim_time += (float)(now - anim_last_ms) / 1000.0f;
+  anim_last_ms = now;
+
+  speed = sqrtf(last_in.vel[0] * last_in.vel[0] + last_in.vel[1] * last_in.vel[1]);
+  want = (speed > 40.0f) ? "AliceL_Ch1_Misc_Walk" : "AliceL_Ch1_Misc_Idle";
+  if (strcmp(want, anim_current) != 0) {
+    anim_current = want;
+    anim_time = 0.0f;
+  }
+
+  c = A->call_begin(body, "MAT_SetAnimPosition");
+  if (!c) {
+    if (!anim_logged) {
+      anim_logged = 1;
+      A->log("coop: MAT_SetAnimPosition absente de ce corps (prends un corps Alice)");
+    }
+    return;
+  }
+  A->call_arg_name(c, "SlotName", "");
+  A->call_arg_int(c, "ChannelIndex", 0);
+  A->call_arg_name(c, "InAnimSeqName", want);
+  A->call_arg_float(c, "InPosition", anim_time);
+  A->call_arg_bool(c, "bFireNotifies", 0);
+  A->call_arg_bool(c, "bLooping", 1);
+  A->call_arg_int(c, "RootMotionLevel", 0);
+  A->call_invoke(c);
+  if (!anim_logged) {
+    anim_logged = 1;
+    emit("coop: animation pilotee, premiere sequence %s", want);
+  }
+}
+
+static void body_drive(void) {
+  float feet[3];
+  int rot[3];
+  if (!body || !recv_count) return;
+  if (GetTickCount() - last_in_ms > COOP_STALE_MS) return;
+  feet[0] = last_in.pos[0];
+  feet[1] = last_in.pos[1];
+  feet[2] = last_in.pos[2] - last_in.half_height + body_z_adjust;
+  rot[0] = 0;
+  rot[1] = last_in.rot[1];
+  rot[2] = 0;
+  A->set_vec(body, "Location", feet);
+  A->set_rot(body, "Rotation", rot);
+  A->set_vec(body, "Velocity", last_in.vel);
+  A->set_float(body, "GroundSpeed", 440.0f);
+  body_animate();
+}
+
+static int inv_count;
+static int inv_listed;
+static void inv_counter(AObj o);
+
+static AObj viewport_client;
+static AObj second_pawn;
+
+static void take_viewport(AObj o) {
+  const char *n = A->name_of(o);
+  if (viewport_client || !n || strncmp(n, "Default__", 9) == 0) return;
+  viewport_client = o;
+}
+
+static int count_class(const char *cls) {
+  inv_count = 0;
+  inv_listed = 99;
+  A->iter_objects(cls, inv_counter);
+  return inv_count;
+}
+
+static void second_player_find(AObj o) {
+  const char *n = A->name_of(o);
+  if (second_pawn || !n || strncmp(n, "Default__", 9) == 0) return;
+  if (o == A->player_pawn()) return;
+  if (strstr(n, "ArcheType") || strstr(n, "Archetype")) return;
+  second_pawn = o;
+}
+
+static void second_player_adopt(void) {
+  second_pawn = 0;
+  A->iter_objects("AlicePawn", second_player_find);
+  if (!second_pawn) { A->log("coop: pawn cree mais introuvable"); return; }
+  body_release();
+  body = second_pawn;
+  A->get_vec(body, "Location", body_home);
+  A->set_byte(body, "Physics", 0);
+  A->set_bool(body, "bCollideActors", 0);
+  A->set_bool(body, "bBlockActors", 0);
+  lstrcpynA(body_mesh, "AlicePawn complet", sizeof body_mesh);
+  emit("coop: SECONDE ALICE ADOPTEE — %s (%s)", A->name_of(body),
+       A->class_of(body));
+}
+
+static void spawn_via_inventory(void);
+
+static void second_player_create(void) {
+  ACall c;
+  int lp_before, lp_after, pawn_before, pawn_after;
+  AObj ret;
+
+  viewport_client = 0;
+  A->iter_objects("GameViewportClient", take_viewport);
+  if (!viewport_client) {
+    A->log("coop: GameViewportClient introuvable");
+    return;
+  }
+  emit("coop: viewport = %s", A->class_of(viewport_client));
+
+  lp_before = count_class("LocalPlayer");
+  pawn_before = count_class("AlicePawn");
+  emit("coop: AVANT  LocalPlayer=%d AlicePawn=%d", lp_before, pawn_before);
+
+  ret = 0;
+
+  c = A->call_begin(viewport_client, "DebugCreatePlayer");
+  if (!c) {
+    A->log("coop: DebugCreatePlayer non resolue sur le viewport");
+  } else {
+    A->call_arg_int(c, "ControllerId", 1);
+    A->call_invoke(c);
+    lp_after = count_class("LocalPlayer");
+    pawn_after = count_class("AlicePawn");
+    emit("coop: script DebugCreatePlayer -> LocalPlayer %d->%d  AlicePawn %d->%d",
+         lp_before, lp_after, pawn_before, pawn_after);
+  }
+
+  if (count_class("LocalPlayer") == lp_before) {
+    A->console(A->player_controller(), "DebugCreatePlayer 1");
+    lp_after = count_class("LocalPlayer");
+    pawn_after = count_class("AlicePawn");
+    emit("coop: console DebugCreatePlayer 1 -> LocalPlayer %d->%d  AlicePawn %d->%d",
+         lp_before, lp_after, pawn_before, pawn_after);
+  }
+
+  lp_after = count_class("LocalPlayer");
+  pawn_after = count_class("AlicePawn");
+
+  if (pawn_after > pawn_before) {
+    second_pawn = 0;
+    A->iter_objects("AlicePawn", second_player_find);
+    if (second_pawn) {
+      body_release();
+      body = second_pawn;
+      A->get_vec(body, "Location", body_home);
+      A->set_byte(body, "Physics", 0);
+      A->set_bool(body, "bCollideActors", 0);
+      A->set_bool(body, "bBlockActors", 0);
+      lstrcpynA(body_mesh, "AlicePawn complet", sizeof body_mesh);
+      emit("coop: SECONDE ALICE ADOPTEE — %s (%s)", A->name_of(body),
+           A->class_of(body));
+    }
+  } else {
+    A->log("coop: aucun pawn cree");
+  }
+}
+
+static void spawn_via_inventory(void) {
+  AObj pawn = A->player_pawn();
+  AObj invmgr = pawn ? A->get_obj(pawn, "InvManager") : 0;
+  AObj cls = A->find_class("AlicePawn");
+  ACall c;
+  AObj ret;
+  int before, after;
+
+  if (!pawn || !cls) { A->log("coop: pawn ou classe AlicePawn introuvable"); return; }
+  before = count_class("AlicePawn");
+  emit("coop: AlicePawn avant = %d   InvManager=%s", before,
+       invmgr ? A->class_of(invmgr) : "nul");
+
+  c = A->call_begin(pawn, "CreateInventory");
+  if (!c) {
+    A->log("coop: Pawn.CreateInventory non resolue");
+  } else {
+    A->call_arg_obj(c, "NewInvClass", cls);
+    A->call_arg_bool(c, "bDoNotActivate", 1);
+    A->call_invoke(c);
+    ret = A->call_out_obj(c, "ReturnValue");
+    after = count_class("AlicePawn");
+    emit("coop: Pawn.CreateInventory -> retour=%s  AlicePawn %d->%d  %s",
+         ret ? A->class_of(ret) : "nul", before, after,
+         (after > before) ? "CREE" : "rien");
+    if (after > before) { second_player_adopt(); return; }
+  }
+
+  if (invmgr) {
+    before = count_class("AlicePawn");
+    c = A->call_begin(invmgr, "CreateInventory");
+    if (!c) {
+      A->log("coop: InvManager.CreateInventory non resolue");
+    } else {
+      A->call_arg_obj(c, "NewInventoryItemClass", cls);
+      A->call_arg_bool(c, "bDoNotActivate", 1);
+      A->call_invoke(c);
+      ret = A->call_out_obj(c, "ReturnValue");
+      after = count_class("AlicePawn");
+      emit("coop: InvManager.CreateInventory -> retour=%s  AlicePawn %d->%d  %s",
+           ret ? A->class_of(ret) : "nul", before, after,
+           (after > before) ? "CREE" : "rien");
+      if (after > before) second_player_adopt();
+    }
+  }
+}
+
+static void second_player_remove(void) {
+  ACall c;
+  if (!viewport_client) return;
+  c = A->call_begin(viewport_client, "DebugRemovePlayer");
+  if (c) {
+    A->call_arg_int(c, "ControllerId", 1);
+    A->call_invoke(c);
+  }
+  A->console(A->player_controller(), "DebugRemovePlayer 1");
+  emit("coop: retrait demande, LocalPlayer=%d AlicePawn=%d",
+       count_class("LocalPlayer"), count_class("AlicePawn"));
+  body = 0;
+}
+
+static void inv_counter(AObj o) {
+  const char *n = A->name_of(o);
+  if (!n || strncmp(n, "Default__", 9) == 0) return;
+  inv_count++;
+  if (inv_listed < 6) {
+    inv_listed++;
+    emit("      %-22s %s", A->class_of(o), n);
+  }
+}
+
+static int inventory_of(const char *cls) {
+  inv_count = 0;
+  inv_listed = 0;
+  A->iter_objects(cls, inv_counter);
+  emit("    %-20s : %d instance(s) reelle(s)", cls, inv_count);
+  return inv_count;
+}
+
+static void body_probe(void) {
+  static const char *const KINDS[] = {"Pawn",        "SkeletalMeshActor",
+                                      "StaticMeshActor", "InterpActor",
+                                      "KActor",      "Emitter",
+                                      "DynamicSMActor"};
+  AObj gi = 0, start = 0, res;
+  ACall c;
+  int i, before, after;
+
+  A->log("---------- inventaire des corps disponibles ----------");
+  for (i = 0; i < 7; i++) inventory_of(KINDS[i]);
+
+  probe_game = 0;
+  probe_start = 0;
+  A->iter_objects("GameInfo", take_probe_game);
+  A->iter_objects("PlayerStart", take_probe_start);
+  gi = probe_game;
+  start = probe_start;
+
+  inv_count = 0; inv_listed = 99; A->iter_objects("Pawn", inv_counter);
+  before = inv_count;
+  emit("  Pawn avant SpawnDefaultPawnFor : %d", before);
+
+  if (gi) {
+    c = A->call_begin(gi, "SpawnDefaultPawnFor");
+    if (!c) {
+      A->log("  SpawnDefaultPawnFor non resolue");
+    } else {
+      A->call_arg_obj(c, "NewPlayer", A->player_controller());
+      A->call_arg_obj(c, "StartSpot", start);
+      A->call_invoke(c);
+      res = A->call_out_obj(c, "ReturnValue");
+      if (!res) res = A->call_out_obj(c, "ResultPawn");
+      inv_count = 0; inv_listed = 99; A->iter_objects("Pawn", inv_counter);
+      after = inv_count;
+      emit("  SpawnDefaultPawnFor : retour=%s   Pawn %d -> %d   %s",
+           res ? A->class_of(res) : "nul", before, after,
+           (after > before) ? "UN PAWN A ETE CREE" : "aucune creation");
+    }
+  }
+  A->log("------------------------------------------------------");
+}
+
+static void detour_probe(void) {
+  AObj pawn = A->player_pawn();
+  void **vt;
+  unsigned char *code;
+  AObj fnobj;
+  unsigned char blk[256];
+  int i, idx = -1, before, col_before = -1, col_after = -1;
+
+  if (!pawn) { A->log("  [detour] pas de pawn"); return; }
+
+  vt = *(void ***)pawn;
+  emit("  [detour] vtable du pawn = %p", (void *)vt);
+
+  for (i = 0; i < 200; i++) {
+    code = (unsigned char *)vt[i];
+    if (!code || IsBadReadPtr(code, 1)) continue;
+    if (code[0] == 0xE9)
+      emit("  [detour] vt[%d] = %p commence par JMP", i, (void *)code);
+  }
+  idx = 70;
+  code = (unsigned char *)vt[idx];
+  if (!code || IsBadReadPtr(code, 5)) {
+    A->log("  [detour] vt[70] illisible, test annule");
+    return;
+  }
+  emit("  [detour] cible retenue vt[70] = %p (doit valoir l'adresse ProcessEvent du log)",
+       (void *)code);
+  if (code[0] != 0xE9) {
+    A->log("  [detour] vt[70] n'est PAS detournee, test annule");
+    return;
+  }
+
+  fnobj = A->find_object("SetCollisionWithoutCheck");
+  emit("  [detour] find_object(SetCollisionWithoutCheck) = %p classe=%s", fnobj,
+       fnobj ? A->class_of(fnobj) : "nul");
+  if (!fnobj || !A->class_of(fnobj) || strcmp(A->class_of(fnobj), "Function") != 0) {
+    A->log("  [detour] objet Function introuvable, test annule");
+    return;
+  }
+
+  for (i = 0; i < 256; i++) blk[i] = 0;
+  *(unsigned *)blk = 0;
+
+  A->get_bool(pawn, "bCollideActors", &col_before);
+  before = detour_witness;
+  ((PE_fn)vt[idx])(pawn, 0, fnobj, blk, 0);
+  A->get_bool(pawn, "bCollideActors", &col_after);
+
+  emit("  [detour] appel par vt[%d] : mon hook declenche %d fois -> %s", idx,
+       detour_witness - before,
+       (detour_witness > before) ? "LE DISPATCHER A VU L'APPEL"
+                                 : "AUCUNE ARRIVEE AU DISPATCHER");
+  emit("  [detour] bCollideActors %d -> %d", col_before, col_after);
+  A->set_bool(pawn, "bCollideActors", col_before);
+}
+
+static void call_probe_body(void);
+
+static void call_probe_gt(void *user) {
+  (void)user;
+  A->log("coop: sonde executee sur le THREAD DU JEU");
+  call_probe_body();
+}
+
+static void call_probe(void) {
+  A->log("coop: sonde depuis on_tick (thread de rendu)");
+  call_probe_body();
+  A->run_on_game_thread(call_probe_gt, 0);
+}
+
+static void call_probe_body(void) {
+  AObj pawn = A->player_pawn();
+  AObj wi = A->world_info();
+  float gz_prop = 0.0f, gz_call = 0.0f;
+  int v;
+  ACall c;
+  if (!pawn) { A->log("coop: pas de pawn, test impossible"); return; }
+
+  A->log("---------- test du constructeur d'appel ----------");
+
+  if (wi && A->get_float(wi, "WorldGravityZ", &gz_prop))
+    emit("  lecture directe  WorldInfo.WorldGravityZ = %.1f", gz_prop);
+  else
+    A->log("  lecture directe  WorldGravityZ ILLISIBLE");
+
+  c = A->call_begin(pawn, "GetGravityZ");
+  if (!c) {
+    A->log("  appel GetGravityZ : call_begin ECHOUE (fonction non resolue)");
+  } else {
+    A->call_invoke(c);
+    if (A->call_out_float(c, "ReturnValue", &gz_call))
+      emit("  appel GetGravityZ -> %.1f   %s", gz_call,
+           (gz_call != 0.0f) ? "APPEL FONCTIONNEL" : "SUSPECT (zero)");
+    else
+      A->log("  appel GetGravityZ : retour illisible");
+  }
+
+  c = A->call_begin(pawn, "IsServer");
+  if (!c) {
+    A->log("  appel IsServer : call_begin ECHOUE");
+  } else {
+    v = -1;
+    A->call_invoke(c);
+    A->call_out_bool(c, "ReturnValue", &v);
+    emit("  appel IsServer -> %d   (attendu 1 en solo)", v);
+  }
+
+  c = A->call_begin(pawn, "IsStationary");
+  if (c) {
+    v = -1;
+    A->call_invoke(c);
+    A->call_out_bool(c, "ReturnValue", &v);
+    emit("  appel IsStationary -> %d", v);
+  }
+
+  c = A->call_begin(pawn, "GetTerminalVelocity");
+  if (c) {
+    float tv = 0.0f;
+    A->call_invoke(c);
+    A->call_out_float(c, "ReturnValue", &tv);
+    emit("  appel GetTerminalVelocity -> %.1f", tv);
+  }
+
+  {
+    AObj pc = A->player_controller();
+    float loc[3];
+    int rot[3];
+    A->get_vec(pawn, "Location", loc);
+    A->get_rot(pawn, "Rotation", rot);
+    loc[2] += 64.0f;
+    c = pc ? A->call_begin(pc, "CloneAlice") : 0;
+    if (!c) {
+      A->log("  CloneAlice non resolue");
+    } else {
+      A->call_arg_vec(c, "SpawnLocation", loc);
+      A->call_arg_rot(c, "SpawnRotator", rot);
+      A->call_arg_float(c, "InitSpeed", 0.0f);
+      A->call_invoke(c);
+      emit("  CloneAlice appelee -> MyClonePawn %s",
+           A->get_obj(pawn, "MyClonePawn") ? "PRESENT" : "toujours nul");
+    }
+  }
+  {
+    int col_before = -1, col_after = -1;
+    A->get_bool(pawn, "bCollideActors", &col_before);
+    c = A->call_begin(pawn, "SetCollisionWithoutCheck");
+    if (!c) {
+      A->log("  TEMOIN SetCollisionWithoutCheck non resolue");
+    } else {
+      A->call_arg_bool(c, "bEnable", 0);
+      A->call_invoke(c);
+      A->get_bool(pawn, "bCollideActors", &col_after);
+      emit("  TEMOIN script SetCollisionWithoutCheck(0) : bCollideActors %d -> %d   %s",
+           col_before, col_after,
+           (col_after != col_before) ? "LE SCRIPT S'EXECUTE"
+                                     : "AUCUN EFFET");
+      c = A->call_begin(pawn, "SetCollisionWithoutCheck");
+      if (c) { A->call_arg_bool(c, "bEnable", 1); A->call_invoke(c); }
+      A->set_bool(pawn, "bCollideActors", col_before);
+    }
+  }
+  {
+    AObj gi = 0, start = 0, res;
+    probe_game = 0;
+    probe_start = 0;
+    A->iter_objects("GameInfo", take_probe_game);
+    A->iter_objects("PlayerStart", take_probe_start);
+    gi = probe_game;
+    start = probe_start;
+    emit("  GameInfo=%s  PlayerStart=%s", gi ? A->class_of(gi) : "nul",
+         start ? A->name_of(start) : "nul");
+    if (gi) {
+      c = A->call_begin(gi, "SpawnDefaultPawnFor");
+      if (!c) {
+        A->log("  SpawnDefaultPawnFor non resolue");
+      } else {
+        A->call_arg_obj(c, "NewPlayer", A->player_controller());
+        A->call_arg_obj(c, "StartSpot", start);
+        A->call_arg_obj(c, "DefaultPlayerClass", A->find_class("AlicePawn"));
+        A->call_invoke(c);
+        res = A->call_out_obj(c, "ReturnValue");
+        if (!res) res = A->call_out_obj(c, "ResultPawn");
+        emit("  SpawnDefaultPawnFor -> %s", res ? A->class_of(res) : "nul");
+      }
+    }
+  }
+  emit("  MyClonePawn=%s  CloneArcheType=%s", A->get_obj(pawn, "MyClonePawn") ? "present" : "nul",
+       A->get_obj(pawn, "CloneArcheType") ? "present" : "nul");
+  emit("  PendingWeapon=%s  Inventory=%s  InvManager=%s",
+       A->get_obj(pawn, "PendingWeapon") ? "present" : "nul",
+       A->get_obj(pawn, "Inventory") ? "present" : "nul",
+       A->get_obj(pawn, "InvManager") ? "present" : "nul");
+  detour_probe();
+  A->log("--------------------------------------------------");
+}
+
+static void spawn_probe(void) {
+  static const char *const CANDIDATES[] = {
+      "Note",       "Emitter",    "StaticMeshActor", "SkeletalMeshActor",
+      "KActor",     "InterpActor","DynamicSMActor",  "Actor",
+      "Pawn",       "AliceClonePawn", "AlicePawn"};
+  AObj local = A->player_pawn();
+  float here[3];
+  int i;
+  if (!local) { A->log("coop: aucun pawn local, test impossible"); return; }
+  A->get_vec(local, "Location", here);
+  here[2] += 96.0f;
+  emit("---------- test de spawn en %.0f %.0f %.0f ----------", here[0], here[1], here[2]);
+  for (i = 0; i < 11; i++) {
+    AObj cls = A->find_class(CANDIDATES[i]);
+    ACall c;
+    AObj r;
+    if (!cls) { emit("  %-18s classe INTROUVABLE", CANDIDATES[i]); continue; }
+    c = A->call_begin(local, "Spawn");
+    if (!c) { emit("  %-18s call_begin(Spawn) ECHOUE", CANDIDATES[i]); continue; }
+    A->call_arg_obj(c, "SpawnClass", cls);
+    A->call_arg_vec(c, "SpawnLocation", here);
+    A->call_arg_bool(c, "bNoCollisionFail", 1);
+    A->call_invoke(c);
+    r = A->call_out_obj(c, "ReturnValue");
+    if (r) {
+      emit("  %-18s OK -> %s (%s)", CANDIDATES[i], A->name_of(r), A->class_of(r));
+      A->destroy(r);
+    } else {
+      emit("  %-18s Spawn renvoie None", CANDIDATES[i]);
+    }
+  }
+  A->log("--------------------------------------------------");
+}
+
+static void ghost_unpossess(void) {
+  AObj ctl;
+  if (!ghost) return;
+  ctl = A->get_obj(ghost, "Controller");
+  if (!ctl) return;
+  emit("coop: controleur %s detache du fantome", A->class_of(ctl));
+  A->destroy(ctl);
+}
+
+static void ghost_watch(void) {
+  AObj pc, owned;
+  if (GetTickCount() - ghost_watch_ms < 1000) return;
+  ghost_watch_ms = GetTickCount();
+  ghost_unpossess();
+  pc = A->player_controller();
+  owned = pc ? A->get_obj(pc, "Pawn") : 0;
+  if (owned && owned == ghost) {
+    A->log("coop: ALERTE — ton controleur a pris le fantome, fantome supprime");
+    ghost_destroy();
+  }
+}
+
+static void ghost_update(void) {
+  float d[3], dist2;
+  int i;
+  if (!ghost_enabled) {
+    if (ghost) ghost_destroy();
+    return;
+  }
+  if (ghost && A->player_pawn() != ghost_anchor) {
+    A->log("coop: pawn local change, fantome abandonne");
+    ghost_drop();
+    return;
+  }
+  if (!ghost) {
+    if (!recv_count || !A->player_pawn()) return;
+    if (clone_mode) {
+      if (!ghost_adopt_clone()) ghost_request_clone();
+    } else {
+      ghost_spawn();
+    }
+    return;
+  }
+  if (!ghost_ready) return;
+  ghost_watch();
+
+  for (i = 0; i < 3; i++) d[i] = last_in.pos[i] - ghost_pos[i];
+  dist2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+  if (dist2 > 250000.0f) {
+    for (i = 0; i < 3; i++) ghost_pos[i] = last_in.pos[i];
+  } else {
+    for (i = 0; i < 3; i++) ghost_pos[i] += d[i] * 0.35f;
+  }
+  A->set_vec(ghost, "Location", ghost_pos);
+  A->set_rot(ghost, "Rotation", last_in.rot);
+}
+
+static void draw_marker(int x, int y, const char *label, unsigned argb) {
+  int tw = (int)strlen(label) * 7 + 14;
+  A->hud_rect(x - tw / 2, y - 26, tw, 20, 0xB0101014);
+  A->hud_text(x - tw / 2 + 7, y - 23, argb, label);
+  A->hud_rect(x - 3, y - 4, 6, 6, argb);
+}
+
+static void draw_nameplate(void) {
+  AObj pawn = A->player_pawn();
+  AObj pc = A->player_controller();
+  float me[3], d[3], dist, view_yaw, view_pitch, rel_yaw, rel_pitch;
+  float half_h, half_v, aspect;
+  int rot[3], w, h, x, y;
+  char label[64];
+
+  if (!pawn || !pc || !recv_count) return;
+  if (GetTickCount() - last_in_ms > COOP_STALE_MS) return;
+  if (!A->screen_size(&w, &h) || w <= 0 || h <= 0) return;
+
+  {
+    AObj cam = A->get_obj(pc, "PlayerCamera");
+    struct { float loc[3]; int rot[3]; float fov; } pov;
+    if (cam && A->read_raw(cam, CAM_POV_OFFSET, &pov, sizeof pov) &&
+        pov.fov > 10.0f && pov.fov < 170.0f) {
+      me[0] = pov.loc[0];
+      me[1] = pov.loc[1];
+      me[2] = pov.loc[2];
+      rot[0] = pov.rot[0];
+      rot[1] = pov.rot[1];
+      rot[2] = pov.rot[2];
+      cam_fov = pov.fov;
+    } else if (!A->get_vec(pawn, "Location", me) ||
+               !A->get_rot(pc, "Rotation", rot)) {
+      return;
+    }
+  }
+
+  d[0] = last_in.pos[0] - me[0];
+  d[1] = last_in.pos[1] - me[1];
+  d[2] = last_in.pos[2] + last_in.half_height * 1.2f - me[2];
+  dist = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+  if (dist < 1.0f) return;
+
+  view_pitch = (float)rot[0] * URU_TO_RAD;
+  view_yaw = (float)rot[1] * URU_TO_RAD;
+  rel_yaw = atan2f(d[1], d[0]) - view_yaw;
+  while (rel_yaw > 3.1415927f) rel_yaw -= 6.2831853f;
+  while (rel_yaw < -3.1415927f) rel_yaw += 6.2831853f;
+  rel_pitch = asinf(d[2] / dist) - view_pitch;
+
+  aspect = (float)w / (float)h;
+  half_h = cam_fov * 0.5f * 3.1415927f / 180.0f;
+  half_v = atanf(tanf(half_h) / aspect);
+
+  snprintf(label, sizeof label, "%s  %.0fm", is_host ? "ALICE 2" : "ALICE 1",
+           dist / 100.0f);
+
+  if (fabsf(rel_yaw) > half_h * 0.98f) {
+    y = h / 2;
+    x = rel_yaw > 0 ? w - 40 : 40;
+    A->hud_rect(x - 4, y - 4, 8, 8, 0xFFE8836B);
+    A->hud_text(rel_yaw > 0 ? w - 130 : 56, y - 26, 0xFFE8836B, label);
+    return;
+  }
+
+  x = (int)(w * 0.5f + tanf(rel_yaw) / tanf(half_h) * w * 0.5f);
+  y = (int)(h * 0.5f - tanf(rel_pitch) / tanf(half_v) * h * 0.5f);
+  if (x < 0) x = 0;
+  if (x > w) x = w;
+  if (y < 20) y = 20;
+  if (y > h) y = h;
+  draw_marker(x, y, label, 0xFF7CE38B);
+}
+
+static void draw_hud(void) {
+  char line[192];
+  unsigned age = GetTickCount() - last_in_ms;
+  int live = recv_count && age < COOP_STALE_MS;
+  unsigned argb = live ? 0xFF7CE38B : 0xFFE8836B;
+
+  A->hud_rect(12, 12, 330, 102, 0xB0101014);
+  snprintf(line, sizeof line, "COOP  %s  %s", is_host ? "HOTE" : "CLIENT",
+           net_up ? (live ? "LIE" : "en attente") : "socket KO");
+  A->hud_text(20, 18, argb, line);
+  snprintf(line, sizeof line, "envoyes %u   recus %u   rejetes %u", sent_count,
+           recv_count, bad_count);
+  A->hud_text(20, 36, 0xFFBFC4D0, line);
+  if (recv_count) {
+    snprintf(line, sizeof line, "pair  %.0f %.0f %.0f   il y a %u ms",
+             last_in.pos[0], last_in.pos[1], last_in.pos[2], age);
+    A->hud_text(20, 54, 0xFFBFC4D0, line);
+  } else {
+    A->hud_text(20, 54, 0xFF8A90A0, "aucun paquet recu pour l'instant");
+  }
+  snprintf(line, sizeof line, "anim %s  z%+.0f", anim_current[0] ? anim_current : "-",
+           body_z_adjust);
+  A->hud_text(210, 90, 0xFFBFC4D0, line);
+  snprintf(line, sizeof line, "corps %d : %s", body_index,
+           body ? body_mesh : "aucun (Ctrl+Maj+X)");
+  A->hud_text(20, 90, body ? 0xFF7CE38B : 0xFF8A90A0, line);
+  snprintf(line, sizeof line, "fantome : %s",
+           !ghost_enabled ? "desactive" : ghost ? "actif" : "en attente");
+  A->hud_text(20, 72, ghost ? 0xFF7CE38B : 0xFF8A90A0, line);
+}
+
+static void tick(void) {
+  poll_in();
+  send_state();
+  ghost_update();
+  body_drive();
+  draw_nameplate();
+  draw_hud();
+  if (A->key_down(VK_CONTROL) && A->key_down(VK_SHIFT)) {
+    if (A->key_pressed('H')) {
+      is_host = !is_host;
+      emit("coop: bascule -> %s", is_host ? "HOTE" : "CLIENT");
+      net_open();
+    }
+    if (A->key_pressed('R')) net_open();
+    if (A->key_pressed('A')) call_probe();
+    if (A->key_pressed('S')) spawn_probe();
+    if (A->key_pressed('B')) body_probe();
+    if (A->key_pressed('2')) second_player_create();
+    if (A->key_pressed('3')) second_player_remove();
+    if (A->key_pressed('4')) spawn_via_inventory();
+    if (A->key_pressed('X')) { anim_logged = 0; body_take(); }
+    if (A->key_pressed('U')) {
+      body_z_adjust += 8.0f;
+      A->cfg_set_float("coop", "zadjust", body_z_adjust);
+      A->cfg_save("coop");
+      emit("coop: hauteur du corps %+.0f", body_z_adjust);
+    }
+    if (A->key_pressed('J')) {
+      body_z_adjust -= 8.0f;
+      A->cfg_set_float("coop", "zadjust", body_z_adjust);
+      A->cfg_save("coop");
+      emit("coop: hauteur du corps %+.0f", body_z_adjust);
+    }
+    if (A->key_pressed('K')) anim_probe();
+    if (A->key_pressed('N')) {
+      body_release();
+      body_prefer_alice = 1;
+      body_index = 0;
+      A->log("coop: recherche d'un acteur Alice");
+      body_take();
+      body_prefer_alice = 0;
+    }
+    if (A->key_pressed('V')) {
+      body_release();
+      body_index++;
+      emit("coop: candidat suivant, index %d", body_index);
+      body_take();
+    }
+    if (A->key_pressed('C')) {
+      clone_req_ms = 0;
+      ghost_request_clone();
+      A->log("coop: clone demande manuellement");
+    }
+    if (A->key_pressed('G')) {
+      ghost_enabled = !ghost_enabled;
+      emit("coop: fantome %s", ghost_enabled ? "active" : "desactive");
+    }
+  }
+}
+
+static void panel(void) {
+  A->ui_label(is_host ? "Role : HOTE" : "Role : CLIENT");
+  A->ui_label(net_up ? "Socket ouverte" : "Socket fermee");
+  if (A->ui_button("Basculer hote / client  (Ctrl+Maj+H)")) {
+    is_host = !is_host;
+    net_open();
+  }
+  if (A->ui_button("Reouvrir la socket  (Ctrl+Maj+R)")) net_open();
+  if (A->ui_button("Test des appels  (Ctrl+Maj+A)")) call_probe();
+  if (A->ui_button("Prendre / relacher un corps  (Ctrl+Maj+X)")) body_take();
+  A->ui_label(body_mesh);
+  A->ui_slider_float("Hauteur du corps", &body_z_adjust, -200.0f, 200.0f, 4.0f);
+  if (A->ui_button("Sonde animations  (Ctrl+Maj+K)")) anim_probe();
+  if (A->ui_button("Candidat suivant  (Ctrl+Maj+V)")) {
+    body_release();
+    body_index++;
+    body_take();
+  }
+  if (A->ui_button("2e Alice par l'inventaire  (Ctrl+Maj+4)")) spawn_via_inventory();
+  if (A->ui_button("Creer une 2e Alice  (Ctrl+Maj+2)")) second_player_create();
+  if (A->ui_button("Retirer la 2e Alice  (Ctrl+Maj+3)")) second_player_remove();
+  if (A->ui_button("Inventaire des corps  (Ctrl+Maj+B)")) body_probe();
+  if (A->ui_button("Test de spawn  (Ctrl+Maj+S)")) spawn_probe();
+  A->ui_checkbox("Utiliser le clone du jeu", &clone_mode);
+  if (A->ui_button("Demander un clone  (Ctrl+Maj+C)")) { clone_req_ms = 0; ghost_request_clone(); }
+  A->ui_checkbox("Fantome du pair", &ghost_enabled);
+  if (ghost && A->ui_button("Respawner le fantome")) ghost_destroy();
+  A->ui_separator();
+  A->ui_label("Ctrl+Maj+H bascule, Ctrl+Maj+R relance");
+}
+
+__declspec(dllexport) void ModMain(HysteriaAPI *api) {
+  WSADATA wsa;
+  A = api;
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    A->log("coop: WSAStartup echec");
+    return;
+  }
+  is_host = !detect_second_instance();
+  emit("coop charge — role detecte : %s (ligne de commande)",
+       is_host ? "HOTE" : "CLIENT");
+  net_open();
+  A->on("SetCollisionWithoutCheck", detour_witness_cb);
+  A->ui_panel("Coop", panel);
+  A->on_tick(tick);
+}

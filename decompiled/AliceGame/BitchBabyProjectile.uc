@@ -1,0 +1,37 @@
+class BitchBabyProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    AmbientSound="SFX_BitchBaby.sfx_bitbaby_ranged_projectile_loop01_Cue"
+    ProjFlightEffectTemplate="FX_NPC_BitchBaby.P_BitchBaby_MilkProjectile"
+    ProjFlightEffects="Default__BitchBabyProjectile.Particle"
+    AccelRate=3000.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Medium"
+    MinShotDist=300.0
+    MaxShotDist=3000.0
+    RadiusDamageTime=0.1
+    KnockBackID=3
+    ProjTrace="Default__BitchBabyProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__BitchBabyProjectile.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    Speed=2000.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=200.0
+    MyDamageType="DmgType_BitchBaby"
+    CylinderComponent="Default__BitchBabyProjectile.CollisionCylinder"
+    Components(0)="Default__BitchBabyProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__BitchBabyProjectile.CollisionCylinder"
+}

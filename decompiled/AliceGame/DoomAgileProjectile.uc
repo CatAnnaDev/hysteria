@@ -1,0 +1,40 @@
+class DoomAgileProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    bNoRadiusDamageWhenHitPawn=True
+    AmbientSound="SFX_CommE_Agile.sfx_npc_agile_projectile_loop01_Cue"
+    ProjFlightEffectTemplate="FX_NPC_DoomAgile.P_NPC_Agile_Bullet"
+    ProjFlightEffects="Default__DoomAgileProjectile.Particle"
+    AccelRate=2500.0
+    CheckRadius=25.0
+    CameraEffectRadius=10000.0
+    RadiusAttackMaxTriggerCount=5
+    RadiusAttackRetrigerTime=1.0
+    DamageStrength="EDSTR_Medium"
+    MinShotDist=350.0
+    MaxShotDist=4000.0
+    RadiusDamageTime=5.0
+    KnockBackID=2
+    RadiusDamageValue=4.0
+    ProjTrace="Default__DoomAgileProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__DoomAgileProjectile.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    Speed=1500.0
+    MaxSpeed=5500.0
+    bRotationFollowsVelocity=True
+    Damage=4.0
+    DamageRadius=100.0
+    MyDamageType="DmgType_DoomAgile"
+    CylinderComponent="Default__DoomAgileProjectile.CollisionCylinder"
+    Components(0)="Default__DoomAgileProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__DoomAgileProjectile.CollisionCylinder"
+}

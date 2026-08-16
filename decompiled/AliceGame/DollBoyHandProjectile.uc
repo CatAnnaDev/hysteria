@@ -1,0 +1,34 @@
+class DollBoyHandProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    ProjFlightEffectTemplate="FX_NPC_CannonCrab.P_CannonC_ProjFireBall"
+    ProjFlightEffects="Default__DollBoyHandProjectile.Particle"
+    AccelRate=3500.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=350.0
+    MaxShotDist=10000.0
+    RadiusDamageTime=0.1
+    KnockBackID=3
+    ProjTrace="Default__DollBoyHandProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__DollBoyHandProjectile.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    Speed=1300.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=20.0
+    DamageRadius=100.0
+    MyDamageType="DmgType_DollBoyHand_Range"
+    CylinderComponent="Default__DollBoyHandProjectile.CollisionCylinder"
+    Components(0)="Default__DollBoyHandProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__DollBoyHandProjectile.CollisionCylinder"
+}

@@ -1,0 +1,68 @@
+class AliceControlLayout extends Object
+    notplaceable
+    config(ControlLayout);
+
+var config array<KeyBind> KeyBindArray1;
+var config array<KeyBind> KeyBindArray2;
+var config int LayoutIndex;
+
+defaultproperties
+{
+    KeyBindArray1(0)=(Name="XboxTypeS_Back",Command="CheshireCatAppear|togglephysicsmode",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(1)=(Name="XboxTypeS_LeftShoulder",Command="QuitFPS|ChangeShrinkingMode|OnRelease UnShrinking",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(2)=(Name="XboxTypeS_RightTrigger",Command="EyeStaffFirePress|OnRelease EyeStaffFireRelease",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(3)=(Name="XboxTypeS_RightShoulder",Command="TeapotCannonFirePress",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(4)=(Name="XboxTypeS_X",Command="OnRelease ShootPinball|BoostSwim|PickUpActor|DropCarried|use|push|EjectAliceFromCannon | FireGiantWeapon | VorpalBladeFirePress | OnRelease VorpalBladeFireRelease | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(5)=(Name="XboxTypeS_Y",Command="GiantStomp| HobbyHorseFirePress| OnRelease HobbyHorseFireRelease | QuitFPS|TriggerHysteria",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(6)=(Name="XboxTypeS_DPad_Up",Command="togglephysicsmode | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(7)=(Name="XboxTypeS_DPad_Down",Command="BugItForGameController | ToggleGhost | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(8)=(Name="XboxTypeS_DPad_Left",Command="StatUnitAndStatFPS | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(9)=(Name="XboxTypeS_DPad_Right",Command="onRelease ShowMenu | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(10)=(Name="XboxTypeS_RightThumbstick",Command="ToggleGhost | OnRelease ToggleCloseFollowCamera |EnterFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(11)=(Name="XboxTypeS_LeftThumbstick",Command="QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(12)=(Name="XboxTypeS_LeftTrigger",Command="ChangeCameraMode true | OnRelease ChangeCameraMode false | TogglePOI true | OnRelease TogglePOI false | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(13)=(Name="XboxTypeS_Start",Command="ShowJournalMenu",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(14)=(Name="XboxTypeS_B",Command="CloneButtonPressed|OnRelease CloneButtonReleased|OnRelease  ExitFromCannon true|DropCarried| TryToCancelMatinee|OnEndUpgradeUI | QuitFPS|TriggerHysteria",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(15)=(Name="XboxTypeS_A",Command="Jump|EjectAliceFromCannon|PickUpActor|DropCarried|use|push|StartContextAction|LaunchFromJumpPad | OnRelease JumpButtonReleased | QuitFPS |TriggerBlock true| OnRelease TriggerBlock false | CycleFloatInput | ToggleSonar | MoveBlockPiece|Pickup | TiggerSprint true | OnRelease TiggerSprint false",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(16)=(Name="Escape",Command="CloseEditorViewport | onrelease ShowMenu |ShowJournalMenu",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(17)=(Name="One",Command="SwitchToVorpalBlade | QuitFPS | DiscardWatch",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(18)=(Name="Two",Command="SwitchToEyeStaff | QuitFPS | DiscardWatch",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(19)=(Name="Three",Command="SwitchToHobbyHorse | QuitFPS | DiscardWatch",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(20)=(Name="Four",Command="SwitchToTeapotCannon | QuitFPS | DiscardWatch",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(21)=(Name="T",Command="EnterFPSByRS | OnRelease ToggleCloseFollowCamera ",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(22)=(Name="E",Command="TriggerBlock true| OnRelease TriggerBlock false",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(23)=(Name="C",Command="TogglePOI true | OnRelease TogglePOI false | CheshireCatAppear| TurretCannonFire|OnRelease ShootPinball |ChargePinballCannon| SwimTurnBack180 | BoostRoll true|OnRelease BoostRoll false | PickUpActor | Pickup | DropCarried | use | push | EjectAliceFromCannon |FireGiantWeapon | QuitFPS  | StartContextAction | interactInLondonX | InteractBlockPiece ",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(24)=(Name="LeftMouseButton",Command="TurretCannonFire | MeleeAttack | OnRelease QuitWeaponAttack | DiscardWatch | StartContextAction | FireGiantWeapon | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(25)=(Name="RightMouseButton",Command="TurretMineFire|OnRelease SwimAttack|RangeWeaponFirePress|OnRelease RangeWeaponFireRelease | DiscardWatch | Button RightTrigger |GiantStomp",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(26)=(Name="Q",Command="CloneButtonPressed | OnRelease CloneButtonReleased",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(27)=(Name="LeftControl",Command="ChangeShrinkingMode | OnRelease UnShrinking",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(28)=(Name="MouseScrollUp",Command="SwitchToPG",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(29)=(Name="MouseScrollDown",Command="SwitchToTC",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(30)=(Name="Tab",Command="SwitchToLeftLockTarget",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(31)=(Name="CapsLock",Command="ChangeCameraMode true | OnRelease ChangeCameraMode false | QuitFPS | DiscardWatch",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(32)=(Name="SpaceBar",Command="Jump | TryToCancelMatinee | DiscardWatch|CycleFloatInputA|OnRelease ShootPinball|ChargePinballCannon|MoveBlockPiece",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(33)=(Name="Enter",Command="TriggerHysteria",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(34)=(Name="R",Command="SwitchMeleeWeapon",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray1(35)=(Name="LeftShift",Command="TriggerDodge true | OnRelease TriggerDodge false ",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(0)=(Name="XboxTypeS_Back",Command="CheshireCatAppear|togglephysicsmode",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(1)=(Name="XboxTypeS_LeftShoulder",Command="QuitFPS|CloneButtonPressed|OnRelease CloneButtonReleased",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(2)=(Name="XboxTypeS_RightTrigger",Command="EyeStaffFirePress|OnRelease EyeStaffFireRelease",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(3)=(Name="XboxTypeS_RightShoulder",Command="TeapotCannonFirePress",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(4)=(Name="XboxTypeS_X",Command="BoostSwim|PickUpActor|DropCarried|use|push|EjectAliceFromCannon | FireGiantWeapon | VorpalBladeFirePress | OnRelease VorpalBladeFireRelease | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(5)=(Name="XboxTypeS_Y",Command="GiantStomp| HobbyHorseFirePress| OnRelease HobbyHorseFireRelease | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(6)=(Name="E",Command="Use | push|PickUpActor | QuitFPS|SwitchWeaponGroup",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(7)=(Name="XboxTypeS_DPad_Up",Command="togglephysicsmode | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(8)=(Name="XboxTypeS_DPad_Down",Command="BugItForGameController | ToggleGhost |  QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(9)=(Name="XboxTypeS_DPad_Left",Command="StatUnitAndStatFPS | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(10)=(Name="XboxTypeS_DPad_Right",Command="onRelease ShowMenu | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(11)=(Name="XboxTypeS_RightThumbstick",Command="ToggleGhost | OnRelease ToggleCloseFollowCamera |EnterFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(12)=(Name="XboxTypeS_LeftThumbstick",Command="QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(13)=(Name="XboxTypeS_LeftTrigger",Command="ChangeCameraMode true | OnRelease ChangeCameraMode false | TogglePOI true | OnRelease TogglePOI false | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(14)=(Name="Escape",Command="CloseEditorViewport | onrelease ShowMenu ",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(15)=(Name="U",Command="ShowJournalMenu",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(16)=(Name="XboxTypeS_Start",Command="|ShowJournalMenu",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(17)=(Name="L",Command="OpenSamepleMenu",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(18)=(Name="XboxTypeS_B",Command="ChangeShrinkingMode|OnRelease UnShrinking|OnRelease  ExitFromCannon true|DropCarried| TryToCancelMatinee|OnEndUpgradeUI | QuitFPS",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    KeyBindArray2(19)=(Name="XboxTypeS_A",Command="OnRelease ShootPinball|TriggerBlock true| OnRelease TriggerBlock false|Jump|EjectAliceFromCannon|PickUpActor|DropCarried|use|push|StartContextAction|LaunchFromJumpPad | OnRelease JumpButtonReleased | QuitFPS | AButtonPressedWhenLockOn | OnRelease AButtonReleasedWhenLockOn",Control=False,Shift=False,Alt=False,bIgnoreCtrl=False,bIgnoreShift=False,bIgnoreAlt=False)
+    LayoutIndex=1
+}

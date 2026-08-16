@@ -1,0 +1,1407 @@
+### AlicePawn -- 718 own properties (offsets from live-process dump)
+  +0x988   LockedZones                                    ArrayProperty     
+  +0x994   bCamRevolBlending                              BoolProperty       mask=0x1
+  +0x994   bCameraMagnet                                  BoolProperty       mask=0x10
+  +0x994   bForceResetCamera                              BoolProperty       mask=0x1000
+  +0x994   bSoftResetCamera                               BoolProperty       mask=0x2000
+  +0x994   bCombatToStrafeCamWait                         BoolProperty       mask=0x10000
+  +0x994   bSwitchTargetDelay                             BoolProperty       mask=0x8000
+  +0x994   bAliceStartCombatCam                           BoolProperty       mask=0x400
+  +0x994   bYawOffsetRuntime                              BoolProperty       mask=0x100000
+  +0x994   bCanCombat                                     BoolProperty       mask=0x80000000
+  +0x994   bCanDoubleJump                                 BoolProperty       mask=0x10000000
+  +0x994   bCanFloat                                      BoolProperty       mask=0x20000000
+  +0x994   bJustPostBeginPlay                             BoolProperty       mask=0x80
+  +0x994   bOldSwitchTargetDelay                          BoolProperty       mask=0x4000
+  +0x994   bOldMiddleMode                                 BoolProperty       mask=0x80000
+  +0x994   bMiddleModeBlend                               BoolProperty       mask=0x40000
+  +0x994   bAliceCombatCamReady                           BoolProperty       mask=0x800
+  +0x994   bCombatToStrafeCamBlend                        BoolProperty       mask=0x20000
+  +0x994   bCloseFollowCamera                             BoolProperty       mask=0x2
+  +0x994   bCameraPreset                                  BoolProperty       mask=0x8
+  +0x994   bBlendCameraPresets                            BoolProperty       mask=0x100
+  +0x994   bStopSettingAbilityCamera                      BoolProperty       mask=0x200
+  +0x994   bCameraForcedStickTo                           BoolProperty       mask=0x20
+  +0x994   bEnableCameraMagnet                            BoolProperty       mask=0x40
+  +0x994   bUseCameraView                                 BoolProperty       mask=0x8000000
+  +0x994   bBlockFromCamera                               BoolProperty       mask=0x1000000
+  +0x994   bBlockFromPawn                                 BoolProperty       mask=0x800000
+  +0x994   bKimetAbilityCamera                            BoolProperty       mask=0x4
+  +0x994   bEnableTargetOnDestroyedActor                  BoolProperty       mask=0x200000
+  +0x994   bLockOnFromCamera                              BoolProperty       mask=0x400000
+  +0x994   bCycleSwitch                                   BoolProperty       mask=0x2000000
+  +0x994   bUsePotentialField                             BoolProperty       mask=0x4000000
+  +0x994   bCanSprint                                     BoolProperty       mask=0x40000000
+  +0x998   bCanLockon                                     BoolProperty       mask=0x2
+  +0x998   bCanShrink                                     BoolProperty       mask=0x1
+  +0x998   bCanClockBomb                                  BoolProperty       mask=0x40
+  +0x998   bCanDodge                                      BoolProperty       mask=0x400
+  +0x998   bCanBlock                                      BoolProperty       mask=0x100
+  +0x998   bCanHysteria                                   BoolProperty       mask=0x80
+  +0x998   bCanDeflect                                    BoolProperty       mask=0x200
+  +0x998   bCanAiming                                     BoolProperty       mask=0x4
+  +0x998   bCanShowPath                                   BoolProperty       mask=0x8
+  +0x998   bCanShowCat                                    BoolProperty       mask=0x10
+  +0x998   bCanEnableSonar                                BoolProperty       mask=0x20
+  +0x998   bAllowFacingTargetInSpeicalMove                BoolProperty       mask=0x40000000
+  +0x998   bUseStopMotion                                 BoolProperty       mask=0x8000000
+  +0x998   bDrawTargetCone                                BoolProperty       mask=0x80000000
+  +0x998   bCanDoubleJumpBackupWonderLand                 BoolProperty       mask=0x800
+  +0x998   bCanFloatBackupWonderLand                      BoolProperty       mask=0x1000
+  +0x998   bCanSprintBackupWonderLand                     BoolProperty       mask=0x2000
+  +0x998   bCanCombatBackupWonderLand                     BoolProperty       mask=0x4000
+  +0x998   bCanShrinkBackupWonderLand                     BoolProperty       mask=0x8000
+  +0x998   bCanLockonBackupWonderLand                     BoolProperty       mask=0x10000
+  +0x998   bCanAimingBackupWonderLand                     BoolProperty       mask=0x20000
+  +0x998   bCanShowPathBackupWonderLand                   BoolProperty       mask=0x40000
+  +0x998   bCanShowCatBackupWonderLand                    BoolProperty       mask=0x80000
+  +0x998   bCanEnableSonarBackupWonderLand                BoolProperty       mask=0x100000
+  +0x998   bCanClockBombBackupWonderLand                  BoolProperty       mask=0x200000
+  +0x998   bCanHysteriaBackupWonderLand                   BoolProperty       mask=0x400000
+  +0x998   bCanBlockBackupWonderLand                      BoolProperty       mask=0x800000
+  +0x998   bCanDeflectBackupWonderLand                    BoolProperty       mask=0x1000000
+  +0x998   bCanDodgeBackupWonderLand                      BoolProperty       mask=0x2000000
+  +0x998   bArchetypeWonderLand                           BoolProperty       mask=0x4000000
+  +0x998   bEnableNonLockOnAutoTargeting                  BoolProperty       mask=0x10000000
+  +0x998   bEnableNoNPCInCamLocking                       BoolProperty       mask=0x20000000
+  +0x99c   bInRollingMode                                 BoolProperty       mask=0x100
+  +0x99c   bInLockOnMode                                  BoolProperty       mask=0x4
+  +0x99c   bHasHealth                                     BoolProperty       mask=0x80000000
+  +0x99c   bFloatDown                                     BoolProperty       mask=0x800
+  +0x99c   NoCamOffsetYWhenNoTarget                       BoolProperty       mask=0x1
+  +0x99c   DynamicCamOffsetY                              BoolProperty       mask=0x2
+  +0x99c   bIsSprinting                                   BoolProperty       mask=0x10000000
+  +0x99c   EnableShadowCameraZoom                         BoolProperty       mask=0x10
+  +0x99c   bShrinkingModeActive                           BoolProperty       mask=0x20
+  +0x99c   bHoldToTriggerFloat                            BoolProperty       mask=0x400
+  +0x99c   bInLondon                                      BoolProperty       mask=0x200
+  +0x99c   bInGiantMode                                   BoolProperty       mask=0x80
+  +0x99c   bEnableEndurance                               BoolProperty       mask=0x4000
+  +0x99c   bCommandDress                                  BoolProperty       mask=0x8
+  +0x99c   bIsConversing                                  BoolProperty       mask=0x80000
+  +0x99c   bWantToConverse                                BoolProperty       mask=0x100000
+  +0x99c   bWantToUseCommLink                             BoolProperty       mask=0x20000
+  +0x99c   bInSwimCloth                                   BoolProperty       mask=0x8000000
+  +0x99c   bUsingCommLink                                 BoolProperty       mask=0x10000
+  +0x99c   bBoostingSwim                                  BoolProperty       mask=0x800000
+  +0x99c   UnshrinkOnBase                                 BoolProperty       mask=0x40
+  +0x99c   bInPushOrPull                                  BoolProperty       mask=0x1000
+  +0x99c   bCollideWithSomething                          BoolProperty       mask=0x2000
+  +0x99c   bUpdateEyeheight                               BoolProperty       mask=0x8000
+  +0x99c   bInCommLinkStance                              BoolProperty       mask=0x40000
+  +0x99c   bUseDeathMaterial                              BoolProperty       mask=0x200000
+  +0x99c   bSwimKnockBack                                 BoolProperty       mask=0x400000
+  +0x99c   bBoostCoolDownFinished                         BoolProperty       mask=0x1000000
+  +0x99c   bIdleToSwimEnd                                 BoolProperty       mask=0x2000000
+  +0x99c   bSwitchToSwim                                  BoolProperty       mask=0x4000000
+  +0x99c   bSprintRTHold                                  BoolProperty       mask=0x20000000
+  +0x99c   bStopUpdating                                  BoolProperty       mask=0x40000000
+  +0x9a0   bClockBombCountingDown                         BoolProperty       mask=0x1
+  +0x9a0   bHoldingWatch                                  BoolProperty       mask=0x2
+  +0x9a0   bShouldBeHide                                  BoolProperty       mask=0x2000
+  +0x9a0   bIsDoubleJumping                               BoolProperty       mask=0x80
+  +0x9a0   bIsDoingContextAction                          BoolProperty       mask=0x20
+  +0x9a0   bDeathInLondon                                 BoolProperty       mask=0x1000
+  +0x9a0   bFloatFixCamera                                BoolProperty       mask=0x4000
+  +0x9a0   bOldShowBlobShadow                             BoolProperty       mask=0x40000000
+  +0x9a0   bJustLeaveEdge                                 BoolProperty       mask=0x80000000
+  +0x9a0   bIsJumping                                     BoolProperty       mask=0x40
+  +0x9a0   bJustLeaveHover                                BoolProperty       mask=0x100000
+  +0x9a0   bAfterHoverJump                                BoolProperty       mask=0x400000
+  +0x9a0   bFloatAfterHover                               BoolProperty       mask=0x80000
+  +0x9a0   bJustLeaveSteam                                BoolProperty       mask=0x200000
+  +0x9a0   bInShield                                      BoolProperty       mask=0x800000
+  +0x9a0   bColdBreathActive                              BoolProperty       mask=0x20000
+  +0x9a0   bBubbleEffectActive                            BoolProperty       mask=0x40000
+  +0x9a0   bEnableGlideCameraInertia                      BoolProperty       mask=0x100
+  +0x9a0   bGlideYawEnd                                   BoolProperty       mask=0x200
+  +0x9a0   bGlidePitchEnd                                 BoolProperty       mask=0x400
+  +0x9a0   bRepulsor                                      BoolProperty       mask=0x20000000
+  +0x9a0   bClockBombIsRecharging                         BoolProperty       mask=0x4
+  +0x9a0   DoRootTranslationForContext                    BoolProperty       mask=0x8
+  +0x9a0   DoRootRotationForContext                       BoolProperty       mask=0x10
+  +0x9a0   bSlideOffPawnWhenFalling                       BoolProperty       mask=0x800
+  +0x9a0   bStepUp                                        BoolProperty       mask=0x8000
+  +0x9a0   bStepDown                                      BoolProperty       mask=0x10000
+  +0x9a0   bRollingCurrentSlide                           BoolProperty       mask=0x1000000
+  +0x9a0   bRollingSlideActive                            BoolProperty       mask=0x2000000
+  +0x9a0   bRollingSlideFast                              BoolProperty       mask=0x4000000
+  +0x9a0   bRollingCurrentSlideFast                       BoolProperty       mask=0x8000000
+  +0x9a0   bAttractedByCannon                             BoolProperty       mask=0x10000000
+  +0x9a4   bInHysteriaMode                                BoolProperty       mask=0x1
+  +0x9a4   bExitFloatWhenMissWindow                       BoolProperty       mask=0x40000
+  +0x9a4   bActivateHysterialAnytime                      BoolProperty       mask=0x20000000
+  +0x9a4   bDisableHPDrops                                BoolProperty       mask=0x40000000
+  +0x9a4   bSonarAlwaysVisible                            BoolProperty       mask=0x80000000
+  +0x9a4   bJumpPadHeightestPositionKeep                  BoolProperty       mask=0x80000
+  +0x9a4   bHasDodgeInAir                                 BoolProperty       mask=0x4000000
+  +0x9a4   bIsFrozen                                      BoolProperty       mask=0x10000
+  +0x9a4   bHysteriaGodMode                               BoolProperty       mask=0x800
+  +0x9a4   bTryToEndDeflectBeforeMinTime                  BoolProperty       mask=0x800000
+  +0x9a4   bCanPlayHurtAnim                               BoolProperty       mask=0x8000000
+  +0x9a4   bDelayedChangeWonderlandDress                  BoolProperty       mask=0x8000
+  +0x9a4   bOnQuitHysteriaMode                            BoolProperty       mask=0x40
+  +0x9a4   bRecoverHealth                                 BoolProperty       mask=0x1000
+  +0x9a4   bRecoverHealthAtHysterialBegin                 BoolProperty       mask=0x2000
+  +0x9a4   bCanHysteriaRetrigger                          BoolProperty       mask=0x8
+  +0x9a4   bEverAboveRetriggerHealth                      BoolProperty       mask=0x10
+  +0x9a4   bMatchHysteriaModeCondition                    BoolProperty       mask=0x20
+  +0x9a4   bDeferredLeaveHysteriaMode                     BoolProperty       mask=0x80
+  +0x9a4   bHysteriaTriggered                             BoolProperty       mask=0x4
+  +0x9a4   bHysteriaPlaying                               BoolProperty       mask=0x2
+  +0x9a4   bEnableHysteria                                BoolProperty       mask=0x100
+  +0x9a4   bAllowToDropExpPickUp                          BoolProperty       mask=0x200
+  +0x9a4   bAllowToDropHpPickUp                           BoolProperty       mask=0x400
+  +0x9a4   bIADuringHysteria                              BoolProperty       mask=0x4000
+  +0x9a4   bInPickRadius                                  BoolProperty       mask=0x20000
+  +0x9a4   bShrinkFlowerEating                            BoolProperty       mask=0x100000
+  +0x9a4   ShowPathTriggerParticleFinished                BoolProperty       mask=0x200000
+  +0x9a4   bIsDeflectSpinning                             BoolProperty       mask=0x400000
+  +0x9a4   bNewHoverControl                               BoolProperty       mask=0x1000000
+  +0x9a4   bCanDodgeToEndGrabbed                          BoolProperty       mask=0x2000000
+  +0x9a4   bDoingTeapotCannonFireSpecialMove              BoolProperty       mask=0x10000000
+  +0x9a8   MODDLC_Flesh_DLCVB_HysterialAnytime            BoolProperty       mask=0x1
+  +0x9a8   MODDLC_Cheshire_DLCHH_DisableHPDrops           BoolProperty       mask=0x2
+  +0x9a8   MODDLC_Caterpillar_DLCVB_SonarAlwaysVisible    BoolProperty       mask=0x4
+  +0x9ac   CurCameraMagnet                                ObjectProperty    
+  +0x9b0   CurCameraMagnetElapsedTime                     FloatProperty     
+  +0x9b4   CurCameraMagnetRotSpeed                        IntProperty       
+  +0x9b8   CurCameraMagnetSpeedTime                       FloatProperty     
+  +0x9bc   CurCameraMagnetEaseOut                         FloatProperty     
+  +0x9c0   CloseFollowCamera                              StructProperty    
+  +0x9d0   CamClosestThreshold                            FloatProperty     
+  +0x9d4   CameraRotationSpeed                            FloatProperty     
+  +0x9d8   CamPPEffectNames                               ArrayProperty     
+  +0x9e4   CamLocDelay                                    FloatProperty     
+  +0x9e8   CamRotDelay                                    FloatProperty     
+  +0x9ec   CamFOVDelay                                    FloatProperty     
+  +0x9f0   CamDistDelay                                   FloatProperty     
+  +0x9f4   CamRevolutionDelay                             FloatProperty     
+  +0x9f8   CamOffsetDelay                                 FloatProperty     
+  +0x9fc   CamHeightExt                                   FloatProperty     
+  +0xa00   IdleCameraTimeOutDuration                      FloatProperty     
+  +0xa04   IdleCameraTimeOutAnim                          ObjectProperty    
+  +0xa08   FPSCameraFOVOnTarget                           FloatProperty     
+  +0xa0c   ClosestCameraThreshold                         FloatProperty     
+  +0xa10   AliceFPSCameraFOV                              FloatProperty     
+  +0xa14   CamHeightUpDelay                               FloatProperty     
+  +0xa18   CamHeightDownDelay                             FloatProperty     
+  +0xa1c   CameraElapsedBlendTime                         FloatProperty     
+  +0xa20   CameraBlendTime                                FloatProperty     
+  +0xa24   AliceCameraRevolAccelTime                      FloatProperty     
+  +0xa28   AliceCameraRevolAccelExponent                  FloatProperty     
+  +0xa2c   AliceCameraDistance                            FloatProperty     
+  +0xa30   AliceCameraMaxDistance                         FloatProperty     
+  +0xa34   AliceCameraMinDistance                         FloatProperty     
+  +0xa38   AliceCameraOrientation                         StructProperty    
+  +0xa44   AliceCameraFOV                                 FloatProperty     
+  +0xa48   AliceCameraOffset                              StructProperty    
+  +0xa54   CamRevolutionSpeed                             StructProperty    
+  +0xa60   CamBehaviorStyle                               ByteProperty      
+  +0xa61   GlideType                                      ByteProperty      
+  +0xa62   PushPullState                                  ByteProperty      
+  +0xa63   RadialPushPullState                            ByteProperty      
+  +0xa64   CarryState                                     ByteProperty      
+  +0xa65   ArcheTypeID                                    ByteProperty      
+  +0xa66   SlideState                                     ByteProperty      
+  +0xa67   CurWonderlandDress                             ByteProperty      
+  +0xa68   PendingWonderlandDress                         ByteProperty      
+  +0xa69   AliceDressLoadStep                             ByteProperty      
+  +0xa6c   CamInitRevolutionSpeed                         StructProperty    
+  +0xa78   POICameraOffset                                StructProperty    
+  +0xa84   CamDistScale                                   FloatProperty     
+  +0xa88   CamDistDelayScale                              FloatProperty     
+  +0xa8c   CamPPEffects                                   ArrayProperty     
+  +0xa98   OldAliceCameraOffset                           StructProperty    
+  +0xaa4   AliceCameraDistScale                           FloatProperty     
+  +0xaa8   AliceCameraExtraOffset                         StructProperty    
+  +0xab4   OldCamMaxDistance                              FloatProperty     
+  +0xab8   OldCamMinDistance                              FloatProperty     
+  +0xabc   DelayedAliceCameraFOV                          FloatProperty     
+  +0xac0   OldAliceEyeLoc                                 StructProperty    
+  +0xacc   IdleCamera                                     StructProperty    
+  +0xb44   WalkCamera                                     StructProperty    
+  +0xbbc   SprintCamera                                   StructProperty    
+  +0xc34   RunCamera                                      StructProperty    
+  +0xcac   JumpCamera                                     StructProperty    
+  +0xd24   FloatCamera                                    StructProperty    
+  +0xd9c   SlideCamera                                    StructProperty    
+  +0xe14   SteamVentCamera                                StructProperty    
+  +0xe8c   ShrinkCamera                                   StructProperty    
+  +0xf04   JumpPadsCamera                                 StructProperty    
+  +0xf7c   PushPullCamera                                 StructProperty    
+  +0xff4   CombatCamera                                   StructProperty    
+  +0x106c  SwimCamera                                     StructProperty    
+  +0x10e4  FastSwimCamera                                 StructProperty    
+  +0x115c  WaterWalkCamera                                StructProperty    
+  +0x11d4  InhabitPushPullCamera                          StructProperty    
+  +0x124c  StrafeCamera                                   StructProperty    
+  +0x12c4  FPSCamera                                      StructProperty    
+  +0x133c  DefaultCamera                                  StructProperty    
+  +0x13b4  pCurAbilityCamera                              StructProperty    
+  +0x13b8  pCurCameraPreset                               StructProperty    
+  +0x13bc  ActiveCameraPresets                            ArrayProperty     
+  +0x13c8  pPreAbilityCamera                              StructProperty    
+  +0x13cc  IntNormalCamera                                StructProperty    
+  +0x1444  IntShrinkCamera                                StructProperty    
+  +0x14bc  ExtPlatformCamera                              StructProperty    
+  +0x1534  ExtFarCamera                                   StructProperty    
+  +0x15ac  ExtNearCamera                                  StructProperty    
+  +0x1624  BackupCamera                                   StructProperty    
+  +0x169c  TargetCamera                                   StructProperty    
+  +0x1714  PreCameraPreset                                StructProperty    
+  +0x178c  CombinedCameraPreset                           StructProperty    
+  +0x1804  CameraPresetBlendTimeToGo                      FloatProperty     
+  +0x1808  CameraPresetBlendParams                        StructProperty    
+  +0x181c  CurCameraPresetStyle                           IntProperty       
+  +0x1820  TmpCamera                                      StructProperty    
+  +0x1898  TmpTargetCamera                                StructProperty    
+  +0x1910  SwimmingMinSpeedCameraAnim                     ObjectProperty    
+  +0x1914  SwimmingMaxSpeedCameraAnim                     ObjectProperty    
+  +0x1918  CurrentCameraAnimInst                          ObjectProperty    
+  +0x191c  CurrentCameraAnim                              ObjectProperty    
+  +0x1920  OldCameraAnim                                  ObjectProperty    
+  +0x1924  CameraAnimInfo                                 ArrayProperty     
+  +0x1930  OldForceResetCameraElapsedTime                 FloatProperty     
+  +0x1934  ForceResetCameraElapsedTime                    FloatProperty     
+  +0x1938  ForceResetCameraWaitTime                       FloatProperty     
+  +0x193c  MaxLockOnPitchDeclination                      FloatProperty     
+  +0x1940  MaxLockOnYawDeclination                        FloatProperty     
+  +0x1944  OutOfFrameRotSpeed                             FloatProperty     
+  +0x1948  BorderFOV                                      FloatProperty     
+  +0x194c  LockOnCameraRotSpeed                           FloatProperty     
+  +0x1950  ReadjustBlendSpeed                             FloatProperty     
+  +0x1954  SwitchTargetBlendDelay                         FloatProperty     
+  +0x1958  LockOnSwitchTargetBlendTime                    FloatProperty     
+  +0x195c  OldLockOnAimTarget                             StructProperty    
+  +0x1968  LockOnTargetCount                              IntProperty       
+  +0x196c  CombatToStrafeCamBlendDelay                    FloatProperty     
+  +0x1970  LockOnSocketOffset                             StructProperty    
+  +0x197c  CombatToStrafeCamBlendTime                     FloatProperty     
+  +0x1980  MiddleModeBlendTime                            FloatProperty     
+  +0x1984  MiddleModeBlendElapsedTime                     FloatProperty     
+  +0x1988  SwitchMiddleModeFOVScale                       FloatProperty     
+  +0x198c  OldLockOnTargetLoc                             StructProperty    
+  +0x1998  OldRotation                                    StructProperty    
+  +0x19a4  LockOnYawOffset                                FloatProperty     
+  +0x19a8  LockOnElapsedTime                              FloatProperty     
+  +0x19ac  TargetOnDestroyedActorTimer                    FloatProperty     
+  +0x19b0  LockConeAngle                                  FloatProperty     
+  +0x19b4  RSHoldSwitchDuration                           FloatProperty     
+  +0x19b8  RTTapThreshold                                 FloatProperty     
+  +0x19bc  FOVScale                                       FloatProperty     
+  +0x19c0  MinNPCToCamDistance                            FloatProperty     
+  +0x19c4  MaxNPCToCamDistance                            FloatProperty     
+  +0x19c8  MinLockUIScale                                 FloatProperty     
+  +0x19cc  MaxLockUIScale                                 FloatProperty     
+  +0x19d0  Zrear                                          FloatProperty     
+  +0x19d4  Zfar                                           FloatProperty     
+  +0x19d8  Zxyfar                                         FloatProperty     
+  +0x19dc  Xfar                                           FloatProperty     
+  +0x19e0  Yfar                                           FloatProperty     
+  +0x19e4  KynapseHandle                                  ComponentProperty 
+  +0x19e8  ExtraSplinRollLimitWhenRunning                 FloatProperty     
+  +0x19ec  ExtraHeadRollLimitWhenRunning                  FloatProperty     
+  +0x19f0  ExtraSplinYawLimitWhenRunning                  FloatProperty     
+  +0x19f4  ExtraHeadYawLimitWhenRunning                   FloatProperty     
+  +0x19f8  TargetingSearchRadius                          FloatProperty     
+  +0x19fc  CamRotDelayCombatTargeting                     FloatProperty     
+  +0x1a00  PostProcessEffectCombatTargeting               NameProperty      
+  +0x1a08  LungeRange                                     FloatProperty     
+  +0x1a0c  CombatJumpZ                                    FloatProperty     
+  +0x1a10  AdditionalOffsetForAutoRotateDistanceCheck     FloatProperty     
+  +0x1a14  NonLockOnAutoTargetAngleRange                  FloatProperty     
+  +0x1a18  NonLockOnAutoTargetDistance                    FloatProperty     
+  +0x1a1c  fNoNPCInCamLockingRadius                       FloatProperty     
+  +0x1a20  fNoNPCInCamLockingHeight                       FloatProperty     
+  +0x1a24  DelayTimeForNextDodge                          FloatProperty     
+  +0x1a28  CurrentTouchingBlockingActor                   ObjectProperty    
+  +0x1a2c  AimOffsetPct                                   StructProperty    
+  +0x1a34  VorpalBlade_StrafeSpeed                        StructProperty    
+  +0x1a44  TeapotCannon_StrafeSpeed                       StructProperty    
+  +0x1a54  TeapotCannon_Charge_StrafeSpeed                StructProperty    
+  +0x1a64  EyeStaff_StrafeSpeed                           StructProperty    
+  +0x1a74  HobbyHorse_StrafeSpeed                         StructProperty    
+  +0x1a84  EyeStaff_StrafeSpeed_Aiming                    StructProperty    
+  +0x1a94  TeapotCannon_StrafeSpeed_Aiming                StructProperty    
+  +0x1aa4  TeapotCannon_Charge_StrafeSpeed_Aiming         StructProperty    
+  +0x1ab4  CamLockOnDOFSettings                           StructProperty    
+  +0x1ad8  TargetRangeForDynamicYOffset                   FloatProperty     
+  +0x1adc  DynamicPitchExponentModifier                   FloatProperty     
+  +0x1ae0  TargetCameraOffsetY                            FloatProperty     
+  +0x1ae4  OldAliceDir                                    StructProperty    
+  +0x1af0  MaxDistForLockOnCamDrop                        FloatProperty     
+  +0x1af4  TimeDelayToCancelLockOnCameraParameters        FloatProperty     
+  +0x1af8  LightEnvironment                               ComponentProperty 
+  +0x1afc  AliceCurrentDress                              NameProperty      
+  +0x1b04  CommandDress                                   NameProperty      
+  +0x1b0c  ShadowCameraZoomType                           IntProperty       
+  +0x1b10  ShadowCameraZoomIn                             FloatProperty     
+  +0x1b14  ShadowCameraZoomOut                            FloatProperty     
+  +0x1b18  ShadowCameraZoomNormal                         FloatProperty     
+  +0x1b1c  SoundCueToPlay                                 ObjectProperty    
+  +0x1b20  ShrinkingSound                                 ObjectProperty    
+  +0x1b24  ShrinkBubbleSound                              ObjectProperty    
+  +0x1b28  UnShrinkingSound                               ObjectProperty    
+  +0x1b2c  ShrinkingCollisionScale                        FloatProperty     
+  +0x1b30  ShrinkBaseEyeHeight                            FloatProperty     
+  +0x1b34  ShrinkJumpHeight                               FloatProperty     
+  +0x1b38  ShrinkMaxWalkingSpeed                          FloatProperty     
+  +0x1b3c  ShrinkMaxRunningSpeed                          FloatProperty     
+  +0x1b40  ShrinkParticleIntermittentTime                 FloatProperty     
+  +0x1b44  StartShrink                                    ObjectProperty    
+  +0x1b48  EndShrink                                      ObjectProperty    
+  +0x1b4c  ShrunkSprintSpeed                              FloatProperty     
+  +0x1b50  ShrinkSpeed                                    FloatProperty     
+  +0x1b54  UnShrinkSpeed                                  FloatProperty     
+  +0x1b58  UnshrinkRadius                                 FloatProperty     
+  +0x1b5c  UnshrinkHeight                                 FloatProperty     
+  +0x1b60  LastSafeVerifyUnShrinkPoint                    StructProperty    
+  +0x1b6c  ShrinkEmitter                                  ObjectProperty    
+  +0x1b70  LowJumpAccel                                   FloatProperty     
+  +0x1b74  OldAirControl                                  FloatProperty     
+  +0x1b78  OldTerminalVelocity                            FloatProperty     
+  +0x1b7c  TimeToCancelFloatModeWhenNoTapping             FloatProperty     
+  +0x1b80  FloatDownGravityZ                              FloatProperty     
+  +0x1b84  MaxFloatBoundSpeed                             FloatProperty     
+  +0x1b88  MinFloatBoundSpeed                             FloatProperty     
+  +0x1b8c  GlideDownGravityZ                              FloatProperty     
+  +0x1b90  ForceIgnoreInputWindow                         FloatProperty     
+  +0x1b94  FirstCycle                                     FloatProperty     
+  +0x1b98  CycleRatio                                     FloatProperty     
+  +0x1b9c  GlideAC                                        ComponentProperty 
+  +0x1ba0  GlideLoopingCue                                ObjectProperty    
+  +0x1ba4  JumpCue                                        ObjectProperty    
+  +0x1ba8  FloatFadeInTime                                FloatProperty     
+  +0x1bac  FloatFadeOutTime                               FloatProperty     
+  +0x1bb0  FloatFadeInVolume                              FloatProperty     
+  +0x1bb4  FloatFadeOutVolume                             FloatProperty     
+  +0x1bb8  PushSpeed                                      FloatProperty     
+  +0x1bbc  SuperPushGridNumber                            IntProperty       
+  +0x1bc0  HoldJumpTime                                   FloatProperty     
+  +0x1bc4  TriggerFloatDownTime                           FloatProperty     
+  +0x1bc8  MinFallingVelocityZ                            FloatProperty     
+  +0x1bcc  MaxFloatDuration                               FloatProperty     
+  +0x1bd0  PrePreDuration                                 FloatProperty     
+  +0x1bd4  PreDuration                                    FloatProperty     
+  +0x1bd8  MaxCycleFloat                                  IntProperty       
+  +0x1bdc  HoldFloatTime                                  FloatProperty     
+  +0x1be0  Hair                                           ObjectProperty    
+  +0x1be4  HairComponent                                  ComponentProperty 
+  +0x1be8  HairDebugMaterials                             ArrayProperty     
+  +0x1bf4  HysteriaHair                                   StructProperty    
+  +0x1c6c  WaterHair                                      StructProperty    
+  +0x1ce4  WRabbitHair                                    StructProperty    
+  +0x1d5c  MadHatterHair                                  StructProperty    
+  +0x1dd4  DefaultHair                                    StructProperty    
+  +0x1e4c  CurHair                                        StructProperty    
+  +0x1ec4  HairFloatForce                                 StructProperty    
+  +0x1ed0  HairFloatPerturbAmplitude                      StructProperty    
+  +0x1edc  HairFloatDamping                               FloatProperty     
+  +0x1ee0  SkirtComponent                                 ComponentProperty 
+  +0x1ee4  BowComponent                                   ComponentProperty 
+  +0x1ee8  RibbonComponent                                ComponentProperty 
+  +0x1eec  SkirtFloatRadialForceDisplacement              StructProperty    
+  +0x1ef8  SkirtFloatRadialForceMagnitude                 FloatProperty     
+  +0x1efc  SkirtFallingRadialForceDisplacement            StructProperty    
+  +0x1f08  SkirtFallingRadialForceMagnitudeScale          FloatProperty     
+  +0x1f0c  SkirtFallingRadialForceMagnitudeMax            FloatProperty     
+  +0x1f10  RibbonFloatRadialForceMagnitude                FloatProperty     
+  +0x1f14  RibbonFallingRadialForceMagnitudeScale         FloatProperty     
+  +0x1f18  RibbonFallingRadialForceMagnitudeMax           FloatProperty     
+  +0x1f1c  SkirtFloatInitialDuration                      FloatProperty     
+  +0x1f20  SkirtFloatInitialScale                         FloatProperty     
+  +0x1f24  SkirtFloatInitialDisplacement                  StructProperty    
+  +0x1f30  EarComponent                                   ComponentProperty 
+  +0x1f34  HairLastPerturbAmplitude                       StructProperty    
+  +0x1f40  HairPerturbAmplitudeScale                      StructProperty    
+  +0x1f4c  RibbonLastPerturbAmplitude                     StructProperty    
+  +0x1f58  RibbonPerturbAmplitudeScale                    StructProperty    
+  +0x1f64  UpperBodyComponent                             ComponentProperty 
+  +0x1f68  SonarRadius                                    FloatProperty     
+  +0x1f6c  SonarDuration                                  FloatProperty     
+  +0x1f70  SonarCameraAnim                                ObjectProperty    
+  +0x1f74  ShrinkDuration                                 FloatProperty     
+  +0x1f78  HallucinationCameraAnim                        ObjectProperty    
+  +0x1f7c  HallucinationWaitTime                          FloatProperty     
+  +0x1f80  DodgeEmitter                                   ObjectProperty    
+  +0x1f84  DummyWeapon                                    ObjectProperty    
+  +0x1f88  CurEndurance                                   FloatProperty     
+  +0x1f8c  Endurance                                      StructProperty    
+  +0x1fa0  RightHandSocketName                            NameProperty      
+  +0x1fa8  Umbrella                                       ComponentProperty 
+  +0x1fac  AccumulateDamage                               FloatProperty     
+  +0x1fb0  OldInvManager                                  ObjectProperty    
+  +0x1fb4  TestMesh                                       ObjectProperty    
+  +0x1fb8  TestPhysicsAsset                               ObjectProperty    
+  +0x1fbc  RagdollPhysicsAsset                            ObjectProperty    
+  +0x1fc0  BackUpBodyPhysicsAsset                         ObjectProperty    
+  +0x1fc4  DeathRagdollDelay                              FloatProperty     
+  +0x1fc8  DeathRagdollParticleArray                      ArrayProperty     
+  +0x1fd4  DeathMaterialArray                             ArrayProperty     
+  +0x1fe0  DeathSoundFX                                   ObjectProperty    
+  +0x1fe4  RespawnRagdollDelay                            FloatProperty     
+  +0x1fe8  RespawnRagdollParticleArray                    ArrayProperty     
+  +0x1ff4  RespawnMaterialArray                           ArrayProperty     
+  +0x2000  RespawnSoundFX                                 ObjectProperty    
+  +0x2004  SwimCameraHeight                               FloatProperty     
+  +0x2008  Turn180DegreeCamAnim                           ObjectProperty    
+  +0x200c  SwimCameraInertia                              FloatProperty     
+  +0x2010  SwimTurnSpeed                                  FloatProperty     
+  +0x2014  BarrelRollDelayTime                            FloatProperty     
+  +0x2018  curBarrelRollDelayTime                         FloatProperty     
+  +0x201c  BoostSwimSpeed                                 FloatProperty     
+  +0x2020  BoostSwimTurnSpeed                             FloatProperty     
+  +0x2024  BoostCoolDownTime                              FloatProperty     
+  +0x2028  BootSwimTime                                   FloatProperty     
+  +0x202c  SlowSwimSpeed                                  FloatProperty     
+  +0x2030  ChangeSwimModleParticle                        ObjectProperty    
+  +0x2034  SwimAttackParticle                             ObjectProperty    
+  +0x2038  AttackRadius                                   FloatProperty     
+  +0x203c  SwimAmbientSoundCue                            ObjectProperty    
+  +0x2040  SwimAttackSoundCue                             ObjectProperty    
+  +0x2044  SwimAmbientAudio                               ComponentProperty 
+  +0x2048  SwimKnockBackDir                               StructProperty    
+  +0x2054  curSwimSpeed                                   FloatProperty     
+  +0x2058  curSwimTurnSpeed                               FloatProperty     
+  +0x205c  LastSwimSpeed                                  StructProperty    
+  +0x2068  DirAfterTurn180                                StructProperty    
+  +0x2074  SwimSkeletalMeshComponent                      ComponentProperty 
+  +0x2078  WaterWalkSkeletalMeshComponent                 ComponentProperty 
+  +0x207c  WaterWalkBow                                   ComponentProperty 
+  +0x2080  WaterWalkLight                                 ComponentProperty 
+  +0x2084  WaterWalkTailfin                               ComponentProperty 
+  +0x2088  SwimBow                                        ComponentProperty 
+  +0x208c  SwimLight                                      ComponentProperty 
+  +0x2090  SwimTailfin                                    ComponentProperty 
+  +0x2094  SwimHairPhysicsAsset                           ObjectProperty    
+  +0x2098  SwimHair                                       ObjectProperty    
+  +0x209c  SwimBoostDamage                                FloatProperty     
+  +0x20a0  SwimSpeedInertia                               FloatProperty     
+  +0x20a4  SlowSwimSpeedInertia                           FloatProperty     
+  +0x20a8  WaterWalkCameraHeight                          FloatProperty     
+  +0x20ac  WaterWalkCameraInertia                         FloatProperty     
+  +0x20b0  SprintSpeed                                    FloatProperty     
+  +0x20b4  SprintOffSpeed                                 FloatProperty     
+  +0x20b8  PreSprintDuration                              FloatProperty     
+  +0x20bc  HorizonThreshold                               FloatProperty     
+  +0x20c0  VerticalThreshold                              FloatProperty     
+  +0x20c4  GlideEmitter                                   ObjectProperty    
+  +0x20c8  TempProjPS                                     ObjectProperty    
+  +0x20cc  TempSplashPS                                   ObjectProperty    
+  +0x20d0  TempSplashLocationOffset                       StructProperty    
+  +0x20dc  MorphTime_EyeStaff                             FloatProperty     
+  +0x20e0  MorphTime_TeapotCannon                         FloatProperty     
+  +0x20e4  MorphTime_HobbyHorse                           FloatProperty     
+  +0x20e8  MorphTime_VorpalBlade                          FloatProperty     
+  +0x20ec  MorphNameSrc                                   NameProperty      
+  +0x20f4  MorphNameDest                                  NameProperty      
+  +0x20fc  MorphNameDefault                               NameProperty      
+  +0x2104  MorphWindForce                                 StructProperty    
+  +0x2110  MorphWindPerturbAmplitude                      StructProperty    
+  +0x211c  WeaponFadeInTime                               FloatProperty     
+  +0x2120  WeaponFadeInDelay                              FloatProperty     
+  +0x2124  WeaponFadeOutTime                              FloatProperty     
+  +0x2128  ShowWeaponParticles                            ArrayProperty     
+  +0x2134  HideWeaponParticles                            ArrayProperty     
+  +0x2140  SlideTurnSpeed                                 FloatProperty     
+  +0x2144  SlideBrakeSpeed                                FloatProperty     
+  +0x2148  SlideBoostSpeed                                FloatProperty     
+  +0x214c  SlideTurnCorrectionTime                        FloatProperty     
+  +0x2150  SlideMinSpeedToRotate                          FloatProperty     
+  +0x2154  SlideParticleEmitter                           ObjectProperty    
+  +0x2158  SlideBumpDamage                                FloatProperty     
+  +0x215c  RollBumpDamage                                 FloatProperty     
+  +0x2160  InputJoyUp                                     FloatProperty     
+  +0x2164  InputJoyRight                                  FloatProperty     
+  +0x2168  RegenDelay                                     FloatProperty     
+  +0x216c  HealthLevels                                   ArrayProperty     
+  +0x2178  MyClonePawn                                    ObjectProperty    
+  +0x217c  WatchComponent                                 ComponentProperty 
+  +0x2180  RespawnCloneDelay                              FloatProperty     
+  +0x2184  DamageArray                                    ArrayProperty     
+  +0x2190  CurHealthLevel                                 IntProperty       
+  +0x2194  OldHealthLevel                                 IntProperty       
+  +0x2198  HealthRegenWaitCount                           FloatProperty     
+  +0x219c  HealthRegen                                    FloatProperty     
+  +0x21a0  CurrentContextActor                            ObjectProperty    
+  +0x21a4  AnimSeqForContext                              NameProperty      
+  +0x21ac  LastJumpHeight                                 FloatProperty     
+  +0x21b0  OldJumpPitch                                   FloatProperty     
+  +0x21b4  MinJumpPitch                                   FloatProperty     
+  +0x21b8  JumpPitchFactor                                FloatProperty     
+  +0x21bc  AButtonPress                                   FloatProperty     
+  +0x21c0  VelocityOfSlideOffPawn                         StructProperty    
+  +0x21cc  DeathCamera                                    ObjectProperty    
+  +0x21d0  RespawnCamera                                  ObjectProperty    
+  +0x21d4  DeathParticle                                  ObjectProperty    
+  +0x21d8  RespawnParticle                                ObjectProperty    
+  +0x21dc  DeathSound                                     ObjectProperty    
+  +0x21e0  RespawnSound                                   ObjectProperty    
+  +0x21e4  DeathParticleEmitter                           ObjectProperty    
+  +0x21e8  DoubleJumpParticleEmitter                      ObjectProperty    
+  +0x21ec  BlinkTime                                      FloatProperty     
+  +0x21f0  BlinkMinTime                                   IntProperty       
+  +0x21f4  BlinkDeltaTime                                 IntProperty       
+  +0x21f8  PhysMaterial                                   ObjectProperty    
+  +0x21fc  PhysicalMaterialSocket                         NameProperty      
+  +0x2204  SmokeParticleEmitter                           ObjectProperty    
+  +0x2208  SmokeSkinMaterial                              ObjectProperty    
+  +0x220c  SmartDropHealthEasyLevel                       ArrayProperty     
+  +0x2218  SmartDropHealthNormalLevel                     ArrayProperty     
+  +0x2224  SmartDropHealthHardLevel                       ArrayProperty     
+  +0x2230  SmartDropHealthVeryHardLevel                   ArrayProperty     
+  +0x223c  CheshireCatSkelActor                           ObjectProperty    
+  +0x2240  fStepUpAccumZ                                  FloatProperty     
+  +0x2244  fStepUpBugZ                                    FloatProperty     
+  +0x2248  ColdBreathParticle                             ObjectProperty    
+  +0x224c  BubbleParticle                                 ObjectProperty    
+  +0x2250  EntryInhabitParticle                           ObjectProperty    
+  +0x2254  LeaveInhabitParticle                           ObjectProperty    
+  +0x2258  EntryInhaitSound                               ObjectProperty    
+  +0x225c  LeaveInhaitSound                               ObjectProperty    
+  +0x2260  AliceShield                                    StructProperty    
+  +0x228c  RollPhysicsAsset                               ObjectProperty    
+  +0x2290  RollSphere                                     ComponentProperty 
+  +0x2294  RollMesh                                       ObjectProperty    
+  +0x2298  RollMaxAngularVelocity                         FloatProperty     
+  +0x229c  RollMoveImpulse                                FloatProperty     
+  +0x22a0  RollJumpImpulse                                FloatProperty     
+  +0x22a4  RollHorizontalDamping                          FloatProperty     
+  +0x22a8  RollVerticalDamping                            FloatProperty     
+  +0x22ac  RollExtraGravity                               FloatProperty     
+  +0x22b0  RollJumpTraceHeight                            FloatProperty     
+  +0x22b4  RollJumpTraceDistance                          FloatProperty     
+  +0x22b8  RollingSlideSoundComponent_Slow                ComponentProperty 
+  +0x22bc  RollingSlideSoundComponent_Fast                ComponentProperty 
+  +0x22c0  RollingSlideSound_Slow                         ObjectProperty    
+  +0x22c4  RollingSlideSound_Fast                         ObjectProperty    
+  +0x22c8  RollingSlideThreshold_Slow                     FloatProperty     
+  +0x22cc  RollingSlideThreshold_Fast                     FloatProperty     
+  +0x22d0  RollingSlideRefireDelay                        FloatProperty     
+  +0x22d4  RollingSlideDisableDelay                       FloatProperty     
+  +0x22d8  RollingSlideSoundFadeInTime                    FloatProperty     
+  +0x22dc  RollingSlideSoundFadeOutTime                   FloatProperty     
+  +0x22e0  RollingLastSlideTime                           FloatProperty     
+  +0x22e4  RollingImpactSound                             ObjectProperty    
+  +0x22e8  RollingImpactSoundComponent                    ComponentProperty 
+  +0x22ec  RollingImpactThreshold                         FloatProperty     
+  +0x22f0  RollingImpactRefireDelay                       FloatProperty     
+  +0x22f4  RollingLastImpactTime                          FloatProperty     
+  +0x22f8  HeadSwitchStep                                 IntProperty       
+  +0x22fc  HeadSwitchTime                                 FloatProperty     
+  +0x2300  HeadSwitch                                     ObjectProperty    
+  +0x2304  HeadSwitchStep2TickTime                        FloatProperty     
+  +0x2308  Pinball_Cannon                                 ObjectProperty    
+  +0x230c  CloneArcheType                                 ObjectProperty    
+  +0x2310  pVorpalBlade                                   ObjectProperty    
+  +0x2314  pHobbyHorse                                    ObjectProperty    
+  +0x2318  FakeBase                                       ObjectProperty    
+  +0x231c  StompDamege                                    IntProperty       
+  +0x2320  RepulsorSecond                                 FloatProperty     
+  +0x2324  StompDamageType                                ClassProperty     
+  +0x2328  Repulsion                                      FloatProperty     
+  +0x232c  AnimSlowFactor                                 FloatProperty     
+  +0x2330  DashBreakPhysicsAsset                          ObjectProperty    
+  +0x2334  DelayToActivateAimingModeWhenQuitLockOn        FloatProperty     
+  +0x2338  ViewPictchMaxWhenAiming                        FloatProperty     
+  +0x233c  ViewPictchMinWhenAiming                        FloatProperty     
+  +0x2340  AimingFOVBlendTime                             FloatProperty     
+  +0x2344  AimingFOVOffBlendTime                          FloatProperty     
+  +0x2348  AimingZoomDelay                                FloatProperty     
+  +0x234c  AimingZoomDelayElapsed                         FloatProperty     
+  +0x2350  AimingFOVOffBlendTimeElapsed                   FloatProperty     
+  +0x2354  AimingFOVBlendTimeElapsed                      FloatProperty     
+  +0x2358  TerminationDistance                            FloatProperty     
+  +0x235c  FadeDistance                                   FloatProperty     
+  +0x2360  MinDistance                                    FloatProperty     
+  +0x2364  BlobShadow                                     StructProperty    
+  +0x23a0  ShadowScale                                    FloatProperty     
+  +0x23a4  DistanceScale                                  FloatProperty     
+  +0x23a8  BlobShadowMatAlpha                             NameProperty      
+  +0x23b0  BlobShadowComponent                            ComponentProperty 
+  +0x23b4  OldBlobShadowLoc                               StructProperty    
+  +0x23c0  OldShadowScale                                 FloatProperty     
+  +0x23c4  MaxTimeFallingEdgeToJump                       FloatProperty     
+  +0x23c8  AttachNPCSockets                               ArrayProperty     
+  +0x23d4  TimeDelayToCauseDamageWhenNPCAttached          FloatProperty     
+  +0x23d8  TimeIntervalToCauseDamageWhenNPCAttached       FloatProperty     
+  +0x23dc  NbOfAttachedNPC                                IntProperty       
+  +0x23e0  AttachedNPCBiteAliceSoundCue                   ObjectProperty    
+  +0x23e4  AttachedNPCAliceDamagedSoundCue                ObjectProperty    
+  +0x23e8  AttachedNPCScareAliceSoundComp                 ComponentProperty 
+  +0x23ec  AttachedNPCScareAliceSoundRepeatDelay          FloatProperty     
+  +0x23f0  HysteriaLeftTime                               FloatProperty     
+  +0x23f4  HysteriaClockCounter                           IntProperty       
+  +0x23f8  HysteriaDuration                               FloatProperty     
+  +0x23fc  IncraseDamagePercent                           FloatProperty     
+  +0x2400  TriggrHealth                                   FloatProperty     
+  +0x2404  ReactiveHealth                                 FloatProperty     
+  +0x2408  RecoverHealth                                  FloatProperty     
+  +0x240c  HysteriaReadySound                             ObjectProperty    
+  +0x2410  HysteriaParticle                               ObjectProperty    
+  +0x2414  TriggerAnimSequence                            ArrayProperty     
+  +0x2420  TriggerCameraAnim                              ObjectProperty    
+  +0x2424  HysteriaCameraAnim                             ObjectProperty    
+  +0x2428  EnterHysteriaParticle                          ObjectProperty    
+  +0x242c  EnterHysteriaSnd                               ObjectProperty    
+  +0x2430  EnterHysteriaSnd2                              ObjectProperty    
+  +0x2434  HysteriaDress                                  StructProperty    
+  +0x2448  DefaultDress                                   StructProperty    
+  +0x245c  DomainDress                                    StructProperty    
+  +0x2470  DelayedDressData                               StructProperty    
+  +0x247c  pAliceDressLoadingGFXMovieCallBack             ObjectProperty    
+  +0x2480  MaxFrozenTime                                  FloatProperty     
+  +0x2484  TimeLimitToCountFreezingHit                    FloatProperty     
+  +0x2488  FreezingHitTimesToTriggerFrozenState           IntProperty       
+  +0x248c  StartFrozenSound                               ObjectProperty    
+  +0x2490  EndFrozenSound                                 ObjectProperty    
+  +0x2494  DelayTimeToShowDodgeToEscapeUI                 FloatProperty     
+  +0x2498  FrozenParticle                                 ObjectProperty    
+  +0x249c  FrozenBreakParticle                            ObjectProperty    
+  +0x24a0  FrozenLoopPS                                   ComponentProperty 
+  +0x24a4  CurFrozenTime                                  FloatProperty     
+  +0x24a8  LastTimeOfFreezingHit                          FloatProperty     
+  +0x24ac  CurFreezingHitTimes                            IntProperty       
+  +0x24b0  XPToTokenConversion                            IntProperty       
+  +0x24b4  T2SmlXPAmount                                  StructProperty    
+  +0x24c4  T2MedXPAmount                                  StructProperty    
+  +0x24d4  T2LgeXPAmount                                  StructProperty    
+  +0x24e4  T1MedXPAmount                                  StructProperty    
+  +0x24f4  T1LgeXPAmount                                  StructProperty    
+  +0x2504  T1BossXPAmount                                 StructProperty    
+  +0x2514  SmallAmountXP                                  IntProperty       
+  +0x2518  MiddleAmountXP                                 IntProperty       
+  +0x251c  LargeAmountXP                                  IntProperty       
+  +0x2520  ShrinkFlower                                   ObjectProperty    
+  +0x2524  ShowPathTriggerParticle                        ObjectProperty    
+  +0x2528  ShowPathTrailParticle                          ObjectProperty    
+  +0x252c  ShowPathLifeTime                               FloatProperty     
+  +0x2530  NearestSplineActor                             ObjectProperty    
+  +0x2534  ShowPathParticleLocation                       StructProperty    
+  +0x2540  UmbrellaArcheType                              ObjectProperty    
+  +0x2544  UmbrellaAttachSocketName                       NameProperty      
+  +0x254c  MinDeflectTime                                 FloatProperty     
+  +0x2550  MaxDeflectTime                                 FloatProperty     
+  +0x2554  MaxDeflectSpinningTime                         FloatProperty     
+  +0x2558  CylinderRadiusWhileDeflect                     FloatProperty     
+  +0x255c  bCanDeflectSpin                                IntProperty       
+  +0x2560  UmbrellaInstance                               ObjectProperty    
+  +0x2564  DeflectTime                                    FloatProperty     
+  +0x2568  HoverJumpZ                                     FloatProperty     
+  +0x256c  MediumFallingHeight                            FloatProperty     
+  +0x2570  HeavyFallingHeight                             FloatProperty     
+  +0x2574  WeaponDefence_Percent                          FloatProperty     
+  +0x2578  ClothDefence_Percent                           FloatProperty     
+  +0x257c  ClothWithWeaponDefence_Percent                 FloatProperty     
+  +0x2580  NPCDropMoreXP_Percent                          FloatProperty     
+  +0x2584  NPCDropMoreHP_Percent                          FloatProperty     
+  +0x2588  BreakableDropMoreXP_Percent                    FloatProperty     
+  +0x258c  BreakableDropMoreHP_Percent                    FloatProperty     
+  +0x2590  ShrinkRecoverHPTimePerHP_AbsValue              FloatProperty     
+  +0x2594  ShrinkFlower_RecoverHPTimePerHP_AbsValue       FloatProperty     
+  +0x2598  ShrinkHPRecoverAccumulateTime                  FloatProperty     
+  +0x259c  HPMaxClamp                                     IntProperty       
+  +0x25a0  SonarVisibleTimeInc_Percent                    FloatProperty     
+  +0x25a4  XPInsteadOfHP_AbsValue                         IntProperty       
+  +0x25a8  AttackInc_Percent                              FloatProperty     
+  +0x25ac  RecoverHPTimePerHP_AbsValue                    FloatProperty     
+  +0x25b0  HPRecoverAccumulateTime                        FloatProperty     
+  +0x25b4  MODDLC_Flesh_NPCDropMoreXP_Percent             FloatProperty     
+  +0x25b8  MODDLC_Chess_NPCDropMoreHP_Percent             FloatProperty     
+  +0x25bc  MODDLC_MadHatter_BreakableDropMoreXP_Percent   FloatProperty     
+  +0x25c0  MODDLC_MadHatter_BreakableDropMoreHP_Percent   FloatProperty     
+  +0x25c4  MODDLC_Rabbit_HPShrinkRecPerHP_AbsValue        FloatProperty     
+  +0x25c8  MODDLC_Cheshire_HPMaxClamp_AbsValue            IntProperty       
+  +0x25cc  MODDLC_Caterpillar_SonarVisibleTimeInc_Percent FloatProperty     
+  +0x25d0  MODDLC_MatHatter_DLCTC_XPToHP_AbsValue         IntProperty       
+  +0x25d4  MODDLC_Chess_DLCHH_AttackInc_Percent           FloatProperty     
+  +0x25d8  MODDLC_Rabbit_DLCPG_AutoHPRecTimePerHP_AbsValue FloatProperty     
+
+### AlicePawn -- 343 functions (path / native-script / storage bytes / flags)
+  SCRIPT   AlicePawn.ActivateContextEventClass                              143    Final|Defined|Simulated|HasOptionalParms|Public|HasOutParms
+        (byte InContextItem@0x0, array EventList@0x4, array ActivateIndices@0x10, bool bTest@0x1c, array ActivatedEvents@0x20, bool ReturnValue@0x2c, object Evt@0x30, object ContextEvt@0x34, array ContextEvents@0x38)
+  SCRIPT   AlicePawn.ActivateDamage                                         133    Defined|Simulated|Public|HasDefaults
+        (byte DamageStrength@0x0, struct DE@0x4, int I@0x14)
+  SCRIPT   AlicePawn.ActivateHealthLevel                                    156    Defined|Simulated|Public|HasDefaults
+        (int Index@0x0, struct HL@0x4)
+  NATIVE   AlicePawn.ActivateShieldBlocking                                 7      Native|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePawn.AddMorphWindEffect                                     173    Defined|Event|Public
+        (float Scale@0x0, component HairCom@0x4, component ClothComponent@0x8)
+  SCRIPT   AlicePawn.AdjustCameraDistInLockOn                               415    Defined|Simulated|Public
+        (object NPCPawn@0x0, float DistAliceToNPC@0x4, float CamDistDiff@0x8, float NPCDistDiff@0xc, float factor@0x10)
+  SCRIPT   AlicePawn.AdjustCameraDistInLockOnBActor                         415    Defined|Simulated|Public
+        (object NPCPawn@0x0, float DistAliceToNPC@0x4, float CamDistDiff@0x8, float NPCDistDiff@0xc, float factor@0x10)
+  SCRIPT   AlicePawn.AdjustCombatCameraRotation                             1519   Defined|Simulated|Public|HasOutParms|HasDefaults
+        (struct CamLocation@0x0, float fDeltaTime@0xc, struct AliceEyeRot@0x10, object APC@0x1c, object AliceCamera@0x20, struct NpcLocation@0x24, struct Middle@0x30, struct NPCDir@0x3c, struct AliceDir@0x48, struct BiasAngle@0x54, float DeltaAngle@0x60, float MiddleDelay@0x64, float Weight@0x68, float fPosX@0x6c, float fPosY@0x70, int DeltaRot@0x74, int FlagX@0x78, int FlagY@0x7c, bool bOutOfSight@0x80, bool bCurMiddleMode@0x84)
+  SCRIPT   AlicePawn.AdjustSteamVentVelocity                                160    Defined|Event|Public|HasOutParms
+        (object Volume@0x0, struct Curvelocity@0x4, float DeltaTime@0x10, struct ReturnValue@0x14, object HVolume@0x20)
+  SCRIPT   AlicePawn.AliceForcePlayCameraAnim                               207    Defined|Simulated|Public|HasDefaults
+        (object CameraAnimation@0x0, bool bLoop@0x4, object ReturnValue@0x8, object Camera@0xc, struct CAInfo@0x10)
+  SCRIPT   AlicePawn.AliceForceStopCameraAnim                               187    Defined|Simulated|Public
+        (object CameraAnimation@0x0, object Camera@0x4, int Index@0x8)
+  SCRIPT   AlicePawn.AliceHairAir                                           229    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.AliceHairWater                                         229    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.AlicePlayCameraAnim                                    14     Defined|Simulated|Public
+        (object CameraAnimation@0x0)
+  NATIVE   AlicePawn.AliceSetMorphWeight                                    17     Simulated|Native|Public
+        (component Component@0x0, name MorphNodeName@0x4, float MorphWeight@0xc)
+  SCRIPT   AlicePawn.AliceStopCameraAnim                                    10     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.AliceStopMotion                                        78     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.AliceUpdateCameraAnim                                  332    Defined|Event|Public
+        (object Camera@0x0, object APC@0x4)
+  SCRIPT   AlicePawn.AllowNPCAttach                                         44     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.ApplyCameraOffset                                      173    Defined|Simulated|Public|HasDefaults
+        (struct eyePos@0x0, struct ViewRot@0xc, struct Offset@0x18, struct ReturnValue@0x24, struct NewPos@0x30, struct NewOffset@0x3c, struct X@0x48, struct Y@0x54, struct Z@0x60)
+  SCRIPT   AlicePawn.AttachNPC                                              536    Defined|Public
+        (object PawnToBeAttached@0x0, bool ReturnValue@0x4, int SocketIndex@0x8, bool bSucceed@0xc, object APC@0x10, int Count@0x14)
+  NATIVE   AlicePawn.AttachToEvent                                          7      Native|Public
+        (class DesiredClass@0x0)
+  SCRIPT   AlicePawn.AttachUmbrella                                         126    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.AttachWatch                                            245    Defined|Public|HasDefaults
+        (struct RelRot@0x0)
+  SCRIPT   AlicePawn.BackupAliceCameraProperties                            223    Defined|Simulated|Event|Public|HasOutParms
+        (struct ACP@0x0)
+  SCRIPT   AlicePawn.BackupAliceCameraPropertiesWithFlags                   473    Defined|Simulated|Public|HasOutParms
+        (struct Flag_ACP@0x0, struct ACP@0x78)
+  SCRIPT   AlicePawn.BaseChange                                             286    Defined|Singular|Event|Public
+        (object Dyn@0x0, bool bBaseChangeSuccess@0x4)
+  SCRIPT   AlicePawn.BlendAliceCameraFloat                                  57     Defined|Simulated|Public|HasOutParms
+        (float out_Float@0x0, float in_FlagFloat@0x4, float dest_Float@0x8, float src_Float@0xc, float BlendWeight@0x10)
+  SCRIPT   AlicePawn.BlendAliceCameraProperties                             683    Defined|Simulated|Public
+        (struct ACP@0x0, struct DestACP@0x78, struct SrcACP@0xf0, float BlendWeight@0x168)
+  SCRIPT   AlicePawn.BlendAliceCameraRotator                                309    Defined|Simulated|Public|HasOutParms
+        (struct out_Rotator@0x0, struct in_FlagRotator@0xc, struct dest_Rotator@0x18, struct src_Rotator@0x24, float BlendWeight@0x30)
+  SCRIPT   AlicePawn.BlendAliceCameraVector                                 297    Defined|Simulated|Public|HasOutParms
+        (struct out_vector@0x0, struct in_FlagVector@0xc, struct dest_Vector@0x18, struct src_Vector@0x24, float BlendWeight@0x30)
+  SCRIPT   AlicePawn.BlendCameraPreset                                      535    Defined|Simulated|Public|HasDefaults
+        (float DeltaTime@0x0, struct CamPreset@0x4, float DurationPct@0x7c, float BlendPct@0x80)
+  SCRIPT   AlicePawn.BlendFPSCameraSettings                                 533    Defined|Simulated|Public
+        (float fDeltaTime@0x0, bool bEnter@0x4, float Weight@0x8)
+  SCRIPT   AlicePawn.BlendShrinkCameraDistance                              727    Defined|Simulated|HasOptionalParms|Public
+        (float fDeltaTime@0x0, bool bShrinking@0x4, bool bForceSet@0x8, float Weight@0xc)
+  SCRIPT   AlicePawn.BlendToTargetCameraDistance                            183    Defined|Simulated|Public
+        (float Weight@0x0)
+  SCRIPT   AlicePawn.Bump                                                   46     Defined|Event|Public
+        (object Other@0x0, component OtherComp@0x4, struct HitNormal@0x8)
+  SCRIPT   AlicePawn.CacheAnimNodes                                         320    Defined|Simulated|Public
+        (object Node@0x0, int I@0x4)
+  SCRIPT   AlicePawn.CalcCamera                                             657    Defined|Simulated|Public|HasOutParms
+        (float fDeltaTime@0x0, struct out_CamLoc@0x4, struct out_CamRot@0x10, float out_FOV@0x1c, bool ReturnValue@0x20, bool Result@0x24, object APC@0x28)
+  SCRIPT   AlicePawn.CalcCamera2D                                           600    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object APC@0x0, float fDeltaTime@0x4, struct out_CamLoc@0x8, struct out_CamRot@0x14, bool ReturnValue@0x20, struct pos@0x24, struct AliceEyeLoc@0x30, float CamDistance@0x3c, float CamDistanceDelay@0x40, object AliceCamera@0x44, struct AliceEyeRot@0x48)
+  SCRIPT   AlicePawn.CalcCamera3D                                           2039   Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object APC@0x0, float fDeltaTime@0x4, struct out_CamLoc@0x8, struct out_CamRot@0x14, bool ReturnValue@0x20, struct pos@0x24, struct POILocation@0x30, struct AliceEyeLoc@0x3c, struct DirY@0x48, struct DirX@0x54, struct TargetCamOffset@0x60, struct CamOffset@0x6c, float CamDistance@0x78, float CamMaxDistance@0x7c, float CamMinDistance@0x80, float CamDistanceDelay@0x84, float DeltaYaw@0x88, object AliceCamera@0x8c, struct PosOffset@0x90, struct AliceEyeRot@0x9c)
+  SCRIPT   AlicePawn.CalcCameraInterp                                       171    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object APC@0x0, float fDeltaTime@0x4, struct out_CamLoc@0x8, struct out_CamRot@0x14, bool ReturnValue@0x20, struct AliceEyeLoc@0x24, struct AliceEyeRot@0x30, float fElapsedTime@0x3c, object AliceCamera@0x40)
+  SCRIPT   AlicePawn.CalcCameraSpecial                                      389    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object APC@0x0, float fDeltaTime@0x4, struct out_CamLoc@0x8, struct out_CamRot@0x14, bool ReturnValue@0x20, float CamDistance@0x24, struct AliceEyeLoc@0x28, struct OffsetVector@0x34, struct AliceEyeRot@0x40, struct TargetEyeRot@0x4c, struct RM@0x60, object AliceCamera@0xa0)
+  NATIVE   AlicePawn.CalcPositionOnLedge                                    7      Native|Public
+        (object L@0x0, struct ReturnValue@0x4)
+  SCRIPT   AlicePawn.CalcPotentialValue                                     349    Defined|Public|HasOutParms
+        (struct TargetLoc@0x0, struct NewCoorLoc@0xc, float ReturnValue@0x18, float fResult@0x1c, float X@0x20, float Y@0x24, float Z@0x28, float P@0x2c, float Q@0x30, float A@0x34, float B@0x38, float C@0x3c, float D@0x40)
+  SCRIPT   AlicePawn.CanDoContextAction                                     183    Defined|Simulated|Public
+        (bool bClockBomb@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.CanJump                                                824    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.CanPlayHysteriaAnim                                    68     Defined|Public
+        (bool ReturnValue@0x0, object APC@0x4)
+  NATIVE   AlicePawn.CanUnShrinking                                         2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.CannotJumpNow                                          96     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.CannotUnShrink                                         20     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.ChangeFloatCamera                                      23     Defined|Public
+        ()
+  SCRIPT   AlicePawn.ChangeWeaponLevelForHysteriaMode                       687    Defined|Public
+        (bool bEnter@0x0, object W@0x4)
+  SCRIPT   AlicePawn.ChangeWonderlandDress                                  128    Defined|HasOptionalParms|Public
+        (byte NewDress@0x0, bool bShouldBlock@0x4, object pGFXMovie@0x8, bool bWithoutDressCheck@0xc, int ReturnValue@0x10)
+  SCRIPT   AlicePawn.CheckCurrentHealth                                     517    Defined|Simulated|Public
+        (float DeltaTime@0x0, int I@0x4, float HPPercentage@0x8)
+  SCRIPT   AlicePawn.CheckHysteriaMode                                      1105   Defined|Public
+        (float DeltaTime@0x0, object Horse@0x4, int CurrentHysteriaCounter@0x8, float HysteriaTriggerHealth@0xc, float HysteriaReactiveHealth@0x10)
+  SCRIPT   AlicePawn.CheckPendingAndCurrentDress                            45     Defined|Public
+        (byte DressID@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.CheckSwitchTargetDelay                                 143    Defined|Simulated|Public
+        (float fDeltaTime@0x0)
+  SCRIPT   AlicePawn.ClampAngle                                             264    Defined|Public|HasOutParms
+        (struct Angle@0x0)
+  SCRIPT   AlicePawn.ClampVector                                            214    Defined|Public|HasDefaults
+        (struct V@0x0, struct Min@0xc, struct Max@0x18, struct ReturnValue@0x24, struct vResult@0x30)
+  SCRIPT   AlicePawn.ClearAliceCameraDelays                                 91     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.ClearCamMatEffects                                     199    Defined|Simulated|Public
+        (object LP@0x0, int I@0x4, object PPEffect@0x8)
+  SCRIPT   AlicePawn.ClearDelayAttachWeapon                                 63     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.ClearTimerToHideWeapon                                 38     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.ClimbEdge                                              290    Defined|Public
+        (object L@0x0, bool bAboveBeam@0x4)
+  SCRIPT   AlicePawn.ConvertToPawnSpace                                     267    Defined|Public|HasOutParms|HasDefaults
+        (struct InLoc@0x0, float X@0xc, float Y@0x10, float Z@0x14, struct _NewCoorLoc@0x18, struct NewLoc@0x24, struct cameraLoc@0x30, struct NewRot@0x3c, struct cameraRot@0x48)
+  SCRIPT   AlicePawn.CostEndurance                                          78     Defined|Public
+        (float DeltaTime@0x0, byte CostType@0x4, float costSpeed@0x8)
+  SCRIPT   AlicePawn.CreateGhost                                            97     Defined|Event|Public
+        (object ReturnValue@0x0, object Ghost@0x4)
+  SCRIPT   AlicePawn.DeactivateDamage                                       132    Defined|Simulated|Public|HasDefaults
+        (byte DamageStrength@0x0, struct DE@0x4, int I@0x14)
+  SCRIPT   AlicePawn.DeactivateHealthLevel                                  155    Defined|Simulated|Public|HasDefaults
+        (int Index@0x0, struct HL@0x4)
+  SCRIPT   AlicePawn.DebugLeaveHysteria                                     11     Defined|Public
+        ()
+  SCRIPT   AlicePawn.DelayAttachWeapon                                      191    Defined|Simulated|Public|HasDefaults
+        (struct tempweaponpara@0x0)
+  SCRIPT   AlicePawn.DelayWeaponFadeIn                                      123    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.DelayedChangeWonderlandDress                           204    Defined|HasOptionalParms|Public
+        (byte NewDress@0x0, bool bShouldBlock@0x4, object pGFXMovie@0x8, int ReturnValue@0xc)
+  STUB     AlicePawn.DeliverDataWhenSwitched                                3      Event|Public
+        (object NewPawn@0x0)
+  SCRIPT   AlicePawn.Destroyed                                              193    Defined|Simulated|Event|Public
+        ()
+  SCRIPT   AlicePawn.DetachNPC                                              451    Defined|Public
+        (object PawnToBeDetached@0x0, bool ReturnValue@0x4, int SocketIndex@0x8, bool bSucceed@0xc, bool bIsAnyDetachedNPC@0x10, object APC@0x14)
+  SCRIPT   AlicePawn.DetachWatch                                            43     Defined|Public
+        ()
+  SCRIPT   AlicePawn.Died                                                   125    Defined|Public
+        (object Killer@0x0, class DamageType@0x4, struct HitLocation@0x8, bool ReturnValue@0x14)
+  NATIVE   AlicePawn.DisableCameraPreset                                    18     Simulated|Native|HasOptionalParms|Public|HasOutParms
+        (int nCameraPreset@0x0, struct BlendParams@0x4, struct UserPreset@0x18)
+  NATIVE   AlicePawn.DisactiveCameraPreset                                  7      Native|Public|HasOutParms
+        (struct ACP@0x0)
+  NATIVE   AlicePawn.DisactiveCurCameraPreset                               2      Native|Public
+        ()
+  SCRIPT   AlicePawn.DiscardWatch                                           41     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.DisplayDebug                                           4451   Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object HUD@0x0, float out_YL@0x4, float out_YPos@0x8, float XL@0xc, float k0@0x10, float b0@0x14, float k1@0x18, float b1@0x1c, object Canvas@0x20, struct DrawColor@0x24, struct Hpdrawlocation@0x28, object APC@0x34, int I@0x38, str ActorNames@0x3c, str sJumpStuck@0x48)
+  SCRIPT   AlicePawn.DoDamageEffects                                        73     Defined|Public
+        (float Damage@0x0, object InstigatedBy@0x4, struct HitLocation@0x8, class DamageType@0x14, struct Momentum@0x18, struct HitInfo@0x24)
+  SCRIPT   AlicePawn.DoHitShieldReaction                                    46     Defined|Event|Public
+        ()
+  SCRIPT   AlicePawn.DoJump                                                 1825   Defined|Public
+        (bool bUpdating@0x0, bool ReturnValue@0x4, float OldVelocityZ@0x8)
+  NATIVE   AlicePawn.DoesWonderlandDressPackageExist                        7      Native|Public
+        (byte Dress@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.Draw3Dtext                                             351    Defined|Public|HasDefaults
+        (object in_canvas@0x0, struct TextLocation@0x4, str Text@0x10, struct TextColor@0x1c, struct tempScreen@0x20)
+  SCRIPT   AlicePawn.DrawTargetCone                                         18     Defined|Exec|Public
+        ()
+  NATIVE   AlicePawn.EnableAirControl                                       7      Native|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePawn.EnableCamPPEffects                                     90     Defined|Simulated|Event|Public
+        (bool bEnable@0x0, int I@0x4)
+  NATIVE   AlicePawn.EnableCameraPreset                                     18     Simulated|Native|HasOptionalParms|Public|HasOutParms
+        (int nCameraPreset@0x0, struct BlendParams@0x4, struct UserPreset@0x18)
+  SCRIPT   AlicePawn.EnableEndurance                                        65     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.EnableHysteriaMeshes                                   656    Defined|Public|HasDefaults
+        (bool bEnabled@0x0, struct tempweaponpara@0x4)
+  SCRIPT   AlicePawn.EnablePPEffect                                         288    Defined|Simulated|Public|HasOutParms
+        (array PPEffectName@0x0, array PPEffects@0xc, bool bEnable@0x18, object LP@0x1c, object PPEffect@0x20, int I@0x24)
+  SCRIPT   AlicePawn.EnableSwitchLockOnCamera                               32     Defined|Simulated|Public
+        (float fDeltaTime@0x0, bool ReturnValue@0x4)
+  NATIVE   AlicePawn.EnableTranslateIK                                      7      Native|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePawn.EndFrozen                                              44     Defined|Public
+        ()
+  SCRIPT   AlicePawn.EndGlideLoopingEffect                                  43     Defined|Public
+        ()
+  SCRIPT   AlicePawn.EndGrabbed                                             68     Defined|Public
+        ()
+  SCRIPT   AlicePawn.EnduanceUsedUp                                         64     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.EntryHysteriaMode                                      888    Defined|Public
+        (object TC@0x0)
+  SCRIPT   AlicePawn.FadeInUmbrella                                         112    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.FadeInWeapon                                           511    Defined|Simulated|Public|HasDefaults
+        (struct Loc@0x0, struct Rot@0xc, int iWeaponType@0x18, name SktName@0x1c, struct tempweaponpara@0x24)
+  SCRIPT   AlicePawn.FadeOutUmbrella                                        142    Defined|Simulated|Event|Public
+        ()
+  SCRIPT   AlicePawn.FadeOutWeapon                                          414    Defined|Simulated|HasOptionalParms|Public|HasDefaults
+        (bool bDetachFromPawn@0x0, struct Loc@0x4, struct Rot@0x10, int iWeaponType@0x1c, name SktName@0x20)
+  NATIVE   AlicePawn.FarMoveSetLocation                                     12     Final|Native|Public
+        (struct SetLocation@0x0, bool bNoCheck@0xc)
+  SCRIPT   AlicePawn.FindCamPPEffects                                       182    Defined|Simulated|Public
+        (object LP@0x0, object PPEffect@0x4, int I@0x8)
+  SCRIPT   AlicePawn.FindoutCollisionHeightWhenClimbing                     328    Defined|Public
+        (object L@0x0)
+  SCRIPT   AlicePawn.ForceAttachWatchAfterDodge                             189    Defined|Public|HasDefaults
+        (struct RelRot@0x0)
+  SCRIPT   AlicePawn.ForceDetachAllNPC                                      132    Defined|Public
+        (int I@0x0)
+  SCRIPT   AlicePawn.ForceDoJumpSpecialMove                                 71     Defined|Simulated|Event|Public
+        (bool bForce@0x0)
+  SCRIPT   AlicePawn.ForceHideFadeOutUmbrella                               47     Defined|Public
+        ()
+  SCRIPT   AlicePawn.ForceWeaponSetHidden                                   20     Defined|Public
+        (bool Set@0x0)
+  NATIVE   AlicePawn.GetActiveCameraPreset                                  12     Native|Public|HasOutParms
+        (int I@0x0, struct ACP@0x4, bool ReturnValue@0x7c)
+  NATIVE   AlicePawn.GetActiveCameraPresetNum                               2      Native|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetActorEyesViewPoint                                  90     Defined|Simulated|Event|Public|HasOutParms
+        (struct out_Location@0x0, struct out_Rotation@0xc)
+  SCRIPT   AlicePawn.GetAdjustedAimFor                                      223    Defined|Simulated|Public|HasDefaults
+        (object W@0x0, struct StartFireLoc@0x4, struct ReturnValue@0x10, struct CrossHairLocation@0x1c, struct AimDir@0x28, struct Loc@0x34, struct Rot@0x40)
+  SCRIPT   AlicePawn.GetAliceFootPoint                                      106    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (struct Point@0x0, struct LeftSoleLoc@0xc, struct RightSoleLoc@0x18, struct Rot@0x24)
+  SCRIPT   AlicePawn.GetCamDistScaleWhenFacingCam                           86     Defined|Simulated|Public|HasDefaults
+        (float ReturnValue@0x0, struct ACP@0x4)
+  SCRIPT   AlicePawn.GetCheshireCatSkelActor                                47     Defined|Public
+        (object ReturnValue@0x0)
+  NATIVE   AlicePawn.GetContextEvents                                       12     Native|Public|HasOutParms
+        (class DesiredClass@0x0, array OutContextEvents@0x4)
+  NATIVE   AlicePawn.GetCurAbilityCamera                                    7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  NATIVE   AlicePawn.GetCurCameraPreset                                     7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  NATIVE   AlicePawn.GetCurrentAttackTargetActor                            2      Native|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetCurrentWeaponType                                   321    Defined|Event|HasOptionalParms|Public
+        (bool bCheckHidden@0x0, int ReturnValue@0x4, int Id@0x8, object AliceWeapon@0xc, object APC@0x10)
+  SCRIPT   AlicePawn.GetDefaultWonderlandDress                              177    Defined|Public
+        ()
+  SCRIPT   AlicePawn.GetHairInfoFromHairComponent                           524    Defined|Event|Public|HasOutParms
+        (struct HairInfo@0x0)
+  NATIVE   AlicePawn.GetHobbyHorse                                          2      Native|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetLookAtPriority                                      13     Defined|Simulated|Public
+        (object PC@0x0, int DefaultPriority@0x4, int ReturnValue@0x8)
+  SCRIPT   AlicePawn.GetMaxStrafeSpeed                                      1127   Defined|Public|HasDefaults
+        (float ReturnValue@0x0, float BlendedStrafeSpeed@0x4, struct sWeaponStrafeSpeed@0x8, float A@0x18, float B@0x1c, float InputSize@0x20, struct vInput@0x24)
+  NATIVE   AlicePawn.GetPreviousAbilityCamera                               7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  NATIVE   AlicePawn.GetShieldKnockBackDistScale                            7      Native|Public
+        (int ShieldIndex@0x0, float ReturnValue@0x4)
+  NATIVE   AlicePawn.GetShieldKnockBackTimeScale                            7      Native|Public
+        (int ShieldIndex@0x0, float ReturnValue@0x4)
+  SCRIPT   AlicePawn.GetSmartDropHealthArray                                99     Defined|Public
+        (array ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetSpeedThresholdWalkNRun                              33     Defined|Simulated|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetSteamVentAccel                                      148    Defined|Event|Public
+        (object Volume@0x0, struct ReturnValue@0x4, object HVolume@0x10)
+  SCRIPT   AlicePawn.GetT1BossXPAmount                                      143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetT1LgeXPAmount                                       143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetT1MedXPAmount                                       143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetT2LgeXPAmount                                       143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetT2MedXPAmount                                       143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetT2SmlXPAmount                                       143    Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetTokenAmount                                         49     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetUnshrinkBaseOffsetZ                                 49     Defined|Event|Public
+        (float ReturnValue@0x0)
+  NATIVE   AlicePawn.GetUserWonderlandDress                                 2      Native|Public
+        (byte ReturnValue@0x0)
+  NATIVE   AlicePawn.GetVorpalBlade                                         2      Native|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetWeaponMorphTime                                     157    Defined|Simulated|Public
+        (object DesiredWeapon@0x0, float ReturnValue@0x4)
+  SCRIPT   AlicePawn.GetWeaponStartTraceLocation                            56     Defined|Simulated|Event|HasOptionalParms|Public
+        (object CurrentWeapon@0x0, struct ReturnValue@0x4)
+  SCRIPT   AlicePawn.GetXPValue                                             13     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePawn.GetaUp                                                 31     Defined|Event|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePawn.GiantStomp                                             806    Defined|Event|Public|HasDefaults
+        (float HitRadius@0x0, float HitAngle@0x4, object CrowdAgent@0x8, object BreakableActor@0xc, struct pos@0x10, struct Start@0x1c, struct End@0x28, struct HitLoc@0x34, struct HitNorm@0x40, object npc@0x4c, float Angle@0x50, object DestructibleActor@0x54, struct LPos@0x58)
+  SCRIPT   AlicePawn.HideAlicePawn                                          28     Defined|Event|Public
+        (bool bHide@0x0)
+  SCRIPT   AlicePawn.HitWall                                                269    Defined|Event|Public|HasDefaults
+        (struct HitNormal@0x0, object Wall@0xc, component WallComp@0x10, struct NewLoc@0x14)
+  SCRIPT   AlicePawn.InitShadowMode                                         23     Defined|Public
+        ()
+  SCRIPT   AlicePawn.InteractBlockPiece                                     54     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.IsAliceCameraFloatDirty                                26     Defined|Simulated|Public
+        (float in_Float@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.IsAliceCameraRotatorDirty                              93     Defined|Simulated|Public
+        (struct in_Rotator@0x0, bool ReturnValue@0xc)
+  SCRIPT   AlicePawn.IsAliceCameraVectorDirty                               93     Defined|Simulated|Public
+        (struct in_Vector@0x0, bool ReturnValue@0xc)
+  SCRIPT   AlicePawn.IsAliceHoldingWatch                                    14     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsAttachedByNPCs                                       39     Defined|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePawn.IsCurAbilityCamera                                     7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  SCRIPT   AlicePawn.IsCurCameraMagnet                                      33     Defined|Simulated|Public
+        (object Candidate@0x0, bool ReturnValue@0x4)
+  NATIVE   AlicePawn.IsCurCameraPreset                                      7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  SCRIPT   AlicePawn.IsCycleExpired                                         49     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsCycleExpiredEX                                       49     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsDoubleJumping                                        14     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsFighting                                             33     Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsInContextActorRange                                  16     Defined|Simulated|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsInShadowMode                                         21     Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePawn.IsLoadingWonderlandDressPackage                        7      Native|Public
+        (byte Dress@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.IsLockOnBlocked                                        625    Defined|Public|HasDefaults
+        (struct TargetLoc@0x0, bool ReturnValue@0xc, bool bCameraBlock@0x10, bool bPawnBlock@0x14, struct out_HitLocation@0x18, struct out_HitNormal@0x24, struct TraceExtent@0x30, struct cameraLoc@0x3c, struct cameraRot@0x48, object TraceActor@0x54, struct HitInfo@0x58)
+  SCRIPT   AlicePawn.IsMeleeFiring                                          157    Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsNewSteamVent                                         50     Defined|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePawn.IsPreviousAbilityCamera                                7      Native|Public|HasOutParms
+        (struct ACP@0x0, bool ReturnValue@0x78)
+  SCRIPT   AlicePawn.IsRangeFiring                                          14     Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.IsReadyToCollectBlockPiece                             94     Defined|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePawn.IsShieldBlocking                                       2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.JumpButtonReleased                                     90     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.JumpOffPawn                                            98     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AlicePawn.KillAllNpc                                             198    Defined|Exec|Public
+        (object NPCPawn@0x0)
+  SCRIPT   AlicePawn.Landed                                                 954    Defined|Event|Public
+        (struct HitNormal@0x0, object FloorActor@0xc)
+  SCRIPT   AlicePawn.LeaveHysteriaMode                                      501    Defined|Public
+        (object TC@0x0)
+  SCRIPT   AlicePawn.LeaveSprintState                                       131    Defined|Public
+        (object PlayerState@0x0)
+  SCRIPT   AlicePawn.LeaveSwimMode                                          51     Defined|Public
+        ()
+  SCRIPT   AlicePawn.LoadCurCameraDistFOVInfo                               91     Defined|Simulated|Public
+        ()
+  NATIVE   AlicePawn.LoadWonderlandDressPackage                             17     Native|Public
+        (byte Dress@0x0, bool bShouldBlock@0x4, object pGFXMovie@0x8, int ReturnValue@0xc)
+  SCRIPT   AlicePawn.LockOnModeCameraOffsetAdjustment                       890    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (float fDeltaTime@0x0, struct CamOffset@0x4, struct TargetDir@0x10, struct AliceDir@0x1c, struct DirCross@0x28, object APC@0x34, float TargetAliceAngle@0x38)
+  SCRIPT   AlicePawn.MergeACP                                               583    Defined|Simulated|Event|Public|HasOutParms
+        (struct NewACP@0x0, struct ACP@0x78)
+  SCRIPT   AlicePawn.ModifyCameraPostProcessSettings                        952    Defined|Event|Public|HasOutParms
+        (struct PPSettings@0x0, bool bGamePlayCamera@0xe8, object APC@0xec, float DistToCamera@0xf0, int FlagX@0xf4, int FlagY@0xf8, int FlagZ@0xfc)
+  STUB     AlicePawn.ModifyCameraPostProcessSettings_AfterSuper             3      Event|Public|HasOutParms
+        (struct PPSettings@0x0, bool bGamePlayCamera@0xe8)
+  NATIVE   AlicePawn.MoveMe                                                 7      Native|Public
+        (struct Delta@0x0)
+  SCRIPT   AlicePawn.NameAbilityCameras                                     362    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.NotifyAllNpcAliceTakeDamage                            218    Defined|Public
+        (object NPCPawn@0x0)
+  SCRIPT   AlicePawn.NotifyAttachNPC                                        69     Defined|Event|Public
+        (object AttachPawn@0x0, object kPawn@0x4)
+  SCRIPT   AlicePawn.NotifyDetachNPC                                        45     Defined|Event|Public
+        (object DetachPawn@0x0, object kPawn@0x4)
+  SCRIPT   AlicePawn.OnAnimEnd                                              164    Defined|Event|Public
+        (object SeqNode@0x0, float PlayedTime@0x4, float ExcessTime@0x8)
+  SCRIPT   AlicePawn.OnSlideToTargetEnd                                     101    Defined|Public
+        ()
+  SCRIPT   AlicePawn.OnSwitchLockOnTarget                                   29     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.PendingHideWeapon                                      183    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.PickedUpNewWeapon                                      336    Defined|Public|HasDefaults
+        (class NewWeaponClass@0x0, bool ReturnValue@0x4, struct NewWeaponPara@0x8, object NewW@0x4c)
+  SCRIPT   AlicePawn.PlayAttackForceFeedback                                76     Defined|Event|Public
+        (object ConfigPawn@0x0)
+  SCRIPT   AlicePawn.PlayBubbleEffect                                       69     Defined|Public|HasDefaults
+        (struct SocketLoc@0x0, struct SocketRot@0xc)
+  SCRIPT   AlicePawn.PlayColdBreath                                         69     Defined|Public|HasDefaults
+        (struct SocketLoc@0x0, struct SocketRot@0xc)
+  SCRIPT   AlicePawn.PlayDeathEffect                                        22     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.PlayDeathParticleAndSound                              501    Defined|Event|Public|HasDefaults
+        (int Index@0x0, struct Loc@0x4, struct Rot@0x10, object pMaterial@0x1c)
+  NATIVE   AlicePawn.PlayDeathRagdoll                                       2      Native|Public
+        ()
+  SCRIPT   AlicePawn.PlayEnterHysteriaEffect                                38     Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayEnterHysteriaEffect2                               38     Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayEnterHysteriaEffect3                               40     Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayFrozenBreakParticle                                60     Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayFrozenParticle                                     130    Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayGlideBeginParticle                                 109    Defined|Public
+        (object GlideBeginEmitter@0x0)
+  SCRIPT   AlicePawn.PlayGlideParticle                                      141    Defined|Public
+        (bool bTurnOn@0x0)
+  SCRIPT   AlicePawn.PlayHealthDamageEffect                                 210    Defined|Simulated|HasOptionalParms|Public|HasOutParms
+        (bool bHealth@0x0, object Sound@0x4, object CameraAnimation@0x8, bool bLoopCameraAnim@0xc, object FFWaveform@0x10, array PPEffectName@0x14, array PPEffects@0x20, object Ctrl@0x2c)
+  SCRIPT   AlicePawn.PlayLandedParticle                                     376    Defined|Public|HasDefaults
+        (object LandedEmitter@0x0, struct TraceStart@0x4, struct TraceDest@0x10, struct out_HitLocation@0x1c, struct out_HitNormal@0x28, struct TraceExtent@0x34, struct ParticleLoc@0x40, struct HitInfo@0x4c, object TraceActor@0x68, object PM@0x6c, object LandedParticle@0x70, object LandedSound@0x74)
+  SCRIPT   AlicePawn.PlayParticle                                           161    Defined|HasOptionalParms|Public
+        (struct Loc@0x0, struct Rot@0xc, object NewTemplate@0x18, bool bDestroyOnFinish@0x1c, object MyBase@0x20, object ParticleEmitter@0x24)
+  SCRIPT   AlicePawn.PlayRespawnEffect                                      22     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.PlaySlideCameraAnim                                    49     Defined|Public
+        ()
+  SCRIPT   AlicePawn.PlayWeaponSwitch                                       251    Defined|Simulated|Public|HasDefaults
+        (object OldWeapon@0x0, object NewWeapon@0x4, struct tempweaponpara@0x8, object NewW@0x4c)
+  SCRIPT   AlicePawn.PostBeginPlay                                          1382   Defined|Event|Public
+        (int Idx@0x0, object APC@0x4, object AliceCamera@0x8)
+  SCRIPT   AlicePawn.PostDealWithDataAfterSwitched                          31     Defined|Event|Public
+        ()
+  SCRIPT   AlicePawn.PostSetPhysFalling                                     63     Defined|Event|Public
+        (bool bForce@0x0)
+  STUB     AlicePawn.PostWeaponListInit                                     3      Simulated|Public
+        ()
+  SCRIPT   AlicePawn.PreBeginPlay                                           438    Defined|Simulated|Event|Public
+        ()
+  SCRIPT   AlicePawn.PreLoadCheckpoint                                      13     Defined|Event|Public
+        ()
+  NATIVE   AlicePawn.PrepareEndingOfJumpToAnotherLedge                      2      Native|Public
+        ()
+  SCRIPT   AlicePawn.PrepareForSwitchArchetype                              59     Defined|Simulated|Public
+        ()
+  NATIVE   AlicePawn.PrepareStartingOfJumpToAnotherLedge                    7      Native|Public
+        (byte jumpDir@0x0)
+  SCRIPT   AlicePawn.RecoverEndurance                                       107    Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePawn.ResetAliceCameraDelays                                 113    Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.ResetAliceCameraProperties                             327    Defined|Simulated|Event|HasOptionalParms|Public
+        (bool bClearCurAbilityCamera@0x0)
+  SCRIPT   AlicePawn.ResetDressMorphingData                                 47     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.ResetEdgeJump                                          11     Defined|Public
+        ()
+  SCRIPT   AlicePawn.ResetGlideCameraInertiaFlags                           27     Defined|Public
+        ()
+  NATIVE   AlicePawn.ResetMorphingData                                      7      Simulated|Native|Public
+        (name MorphNodeName@0x0)
+  SCRIPT   AlicePawn.ResetRepulsor                                          11     Defined|Public
+        ()
+  SCRIPT   AlicePawn.ResetRotation                                          58     Defined|Public|HasDefaults
+        (struct NewRotation@0x0)
+  SCRIPT   AlicePawn.ResetTimeVaryingMaterials                              118    Defined|Public
+        (int Index@0x0, object MITV@0x4)
+  SCRIPT   AlicePawn.ResetUpperBodyComponent                                49     Defined|Public
+        ()
+  NATIVE   AlicePawn.RestorePreviousAbilityCamera                           2      Native|Public
+        ()
+  SCRIPT   AlicePawn.RevertDeathMaterial                                    501    Defined|Event|Public|HasDefaults
+        (int Index@0x0, struct Loc@0x4, struct Rot@0x10, object pMaterial@0x1c)
+  NATIVE   AlicePawn.RevertDeathRagdoll                                     2      Native|Public
+        ()
+  SCRIPT   AlicePawn.SaveCurCameraDistFOVInfo                               91     Defined|Simulated|Public
+        ()
+  NATIVE   AlicePawn.SavePreviousAbilityCamera                              2      Native|Public
+        ()
+  SCRIPT   AlicePawn.SaveTargetCameraDistFOVInfo                            91     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.SetAliceAbilityCamera                                  726    Defined|Simulated|Event|HasOptionalParms|Public|HasOutParms|HasDefaults
+        (struct ACP@0x0, bool bSetBackToDefault@0x78, bool bChangeAnim@0x7c, struct CamPreset@0x80, struct FlagACP@0xf8, int I@0x170)
+  SCRIPT   AlicePawn.SetAliceCameraFloat                                    29     Defined|Simulated|Public|HasOutParms
+        (float out_Float@0x0, float in_FlagFloat@0x4, float in_Float@0x8)
+  SCRIPT   AlicePawn.SetAliceCameraProperties                               1046   Defined|Simulated|Event|HasOptionalParms|Public
+        (struct ACP@0x0, bool bSetBackToDefault@0x78, bool bChangeAnim@0x7c)
+  SCRIPT   AlicePawn.SetAliceCameraRotator                                  180    Defined|Simulated|Public|HasOutParms
+        (struct out_Rotator@0x0, struct in_FlagRotator@0xc, struct in_Rotator@0x18)
+  SCRIPT   AlicePawn.SetAliceCameraVector                                   180    Defined|Simulated|Public|HasOutParms
+        (struct out_vector@0x0, struct in_FlagVector@0xc, struct in_Vector@0x18)
+  SCRIPT   AlicePawn.SetBaseEyeheight                                       79     Defined|Simulated|Public
+        (object APC@0x0)
+  SCRIPT   AlicePawn.SetBlankACP                                            446    Defined|Simulated|Event|Public|HasOutParms
+        (struct ACP@0x0)
+  SCRIPT   AlicePawn.SetBubbleEffect                                        53     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SetCameraMagnet                                        412    Defined|Simulated|Public
+        (object Candidate@0x0, object LookAtAct@0x4)
+  SCRIPT   AlicePawn.SetCameraStickToAlice                                  122    Defined|Simulated|Public|HasDefaults
+        (bool bEnable@0x0, struct ACP@0x4)
+  SCRIPT   AlicePawn.SetCanSpin                                             31     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.SetClothSpec                                           36     Defined|Exec|Public
+        (name TargetClothName@0x0, float NewGuideRestitutionDecay@0x8)
+  SCRIPT   AlicePawn.SetColdBreath                                          53     Defined|Event|Public
+        ()
+  NATIVE   AlicePawn.SetCollisionWithoutCheck                               7      Native|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePawn.SetConversing                                          130    Defined|Simulated|Event|HasOptionalParms|Public
+        (bool bConv@0x0, bool bUseCommLink@0x4)
+  NATIVE   AlicePawn.SetCurAbilityCamera                                    7      Native|Public|HasOutParms
+        (struct ACP@0x0)
+  NATIVE   AlicePawn.SetCurAbilityCameraNull                                2      Native|Public
+        ()
+  NATIVE   AlicePawn.SetCurCameraPreset                                     7      Native|Public|HasOutParms
+        (struct ACP@0x0)
+  NATIVE   AlicePawn.SetCurCameraPresetNull                                 2      Native|Public
+        ()
+  SCRIPT   AlicePawn.SetDamageEffect                                        165    Defined|Simulated|Public
+        (object DamageCauser@0x0, object APC@0x4, object localProjectile@0x8)
+  SCRIPT   AlicePawn.SetDelayedCameraPOV                                    305    Defined|Public|HasOutParms
+        (struct CameraPOV@0x0, float fDeltaTime@0x1c, object APC@0x20)
+  SCRIPT   AlicePawn.SetForegroundUIDOFParameters                           85     Defined|Public|HasOutParms
+        (struct PPSettings@0x0)
+  SCRIPT   AlicePawn.SetGlideType                                           40     Defined|Public
+        (int iType@0x0)
+  SCRIPT   AlicePawn.SetHairInfoToHairComponent                             535    Defined|Event|Public|HasOutParms
+        (struct HairInfo@0x0)
+  STUB     AlicePawn.SetLockOnCameraParameters                              3      Public
+        ()
+  SCRIPT   AlicePawn.SetLockOnDOFParameters                                 258    Defined|Public|HasOutParms
+        (struct PPSettings@0x0)
+  SCRIPT   AlicePawn.SetMaterialsIntoAliceSkelComponents                    196    Defined|Public
+        (int Index@0x0)
+  SCRIPT   AlicePawn.SetNormalWalkParameters                                9      Defined|Public
+        ()
+  SCRIPT   AlicePawn.SetSwimParameters                                      26     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SetTimerToHideWeapon                                   64     Defined|Simulated|Public
+        ()
+  NATIVE   AlicePawn.SetUserWonderlandDress                                 7      Native|Public
+        (byte Dress@0x0)
+  SCRIPT   AlicePawn.SetUsingCommLink                                       165    Defined|Simulated|Public
+        (bool bUsing@0x0)
+  SCRIPT   AlicePawn.SetWaterWalkParameters                                 26     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SetWonderlandDress                                     1047   Defined|Event|Public|HasOutParms
+        (struct NewDress@0x0, bool bUpdateHair@0x14, byte NextDress@0x18)
+  SCRIPT   AlicePawn.SetWonderlandDressDLCMODInfo                           554    Defined|Simulated|Public
+        (byte UserDress@0x0, object APC@0x4)
+  SCRIPT   AlicePawn.SetWonderlandDressWithWeaponDLCMODInfo                 461    Defined|Simulated|Public
+        (byte UserDress@0x0, object APC@0x4)
+  SCRIPT   AlicePawn.SetXPValue                                             14     Defined|Public
+        (int Value@0x0)
+  SCRIPT   AlicePawn.ShieldDamage                                           36     Defined|Event|HasOptionalParms|Public
+        (int Damage@0x0, object InstigatedBy@0x4, struct HitLocation@0x8, struct Momentum@0x14, class DamageType@0x20, struct HitInfo@0x24, object DamageCauser@0x40)
+  SCRIPT   AlicePawn.ShouldDoKnockBack                                      48     Defined|Simulated|Public
+        (byte DmgStrength@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePawn.SmokeParticleTest                                      112    Defined|Event|Public
+        ()
+  SCRIPT   AlicePawn.SmokeSkinTest                                          248    Defined|Event|Public
+        (int I@0x0, component ClothComponent@0x4, component Local_HairComponent@0x8, component SkeletalMeshComponent@0xc)
+  NATIVE   AlicePawn.StandUpToFloor                                         7      Native|Public
+        (float DeltaFloor@0x0)
+  NATIVE   AlicePawn.StartAliceMorphing                                     17     Native|Public
+        (name CurMorphName@0x0, name NextMorphName@0x8, float MorphTime@0x10)
+  SCRIPT   AlicePawn.StartCombatToStrafeCamBlendDelay                       22     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePawn.StartFrozen                                            229    Defined|Public
+        (object APC@0x0)
+  SCRIPT   AlicePawn.StartGlideLoopingEffect                                76     Defined|Public
+        ()
+  SCRIPT   AlicePawn.StartHysteriaMode                                      11     Defined|Public
+        ()
+  SCRIPT   AlicePawn.StartRoll                                              508    Defined|Event|Public
+        (component Local_HairComponent@0x0, component Local_SkeletalMeshComponent@0x4)
+  SCRIPT   AlicePawn.StopAllAliceCameraAnims                                251    Defined|Simulated|Public
+        (object Camera@0x0, int Index@0x4)
+  SCRIPT   AlicePawn.StopHealthDamageEffect                                 129    Defined|Simulated|HasOptionalParms|Public|HasOutParms
+        (bool bHealth@0x0, object Sound@0x4, object CameraAnimation@0x8, object FFWaveform@0xc, array PPEffectName@0x10, array PPEffects@0x1c, object Ctrl@0x28)
+  SCRIPT   AlicePawn.StopHysteriaMode                                       11     Defined|Public
+        ()
+  SCRIPT   AlicePawn.StopRoll                                               199    Defined|Event|Public
+        (component Local_HairComponent@0x0)
+  SCRIPT   AlicePawn.StopSlideCameraAnim                                    20     Defined|Public
+        ()
+  NATIVE   AlicePawn.StopUpdate                                             7      Native|Public
+        (bool bStop@0x0)
+  STUB     AlicePawn.StopUpdateSpecialComponents                            3      Event|Public
+        (bool bStop@0x0)
+  SCRIPT   AlicePawn.StopWeaponFire                                         140    Defined|Public
+        ()
+  SCRIPT   AlicePawn.StopWeaponParticleTrail                                31     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SwimmingDressTest                                      358    Defined|Exec|Public
+        (component ClothComponent@0x0)
+  SCRIPT   AlicePawn.SwitchCameraZoom                                       99     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SwitchHairInTransition                                 78     Defined|Public
+        ()
+  SCRIPT   AlicePawn.SwitchHowToTriggerFloatMode                            18     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.SwitchLockOnCamera                                     87     Defined|Public
+        (bool bCombat@0x0)
+  SCRIPT   AlicePawn.SwitchToDress                                          270    Defined|Simulated|Public
+        (int Index@0x0, bool ReturnValue@0x4, array DressNames@0x8)
+  SCRIPT   AlicePawn.SwitchToWaterWalkDress                                 496    Defined|Exec|Public
+        (component ClothComponent@0x0)
+  SCRIPT   AlicePawn.TakeDamage                                             1394   Defined|Event|HasOptionalParms|Public|HasDefaults
+        (int Damage@0x0, object InstigatedBy@0x4, struct HitLocation@0x8, struct Momentum@0x14, class DamageType@0x20, struct HitInfo@0x24, object DamageCauser@0x40, struct NewRot@0x44, int I@0x50, bool bbb@0x54)
+  STUB     AlicePawn.TakeFallingDamage                                      3      Public
+        ()
+  SCRIPT   AlicePawn.ThrowWeapon                                            60     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.Tick                                                   960    Defined|Simulated|Public
+        (float DeltaTime@0x0, component hc@0x4, component CC@0x8, object wv@0xc, int Idx@0x10)
+  SCRIPT   AlicePawn.ToggleCloseFollowCamera                                102    Defined|Simulated|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePawn.ToggleCommLink                                         76     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePawn.TranferToCombatCamera                                  162    Defined|Simulated|Public|HasOutParms
+        (struct AliceEyeLoc@0x0, struct AliceEyeRot@0xc, struct out_CamLoc@0x18, object APC@0x24)
+  SCRIPT   AlicePawn.TriggerCameraEvent                                     26     Defined|Event|Public
+        (int ActivateIndex@0x0)
+  SCRIPT   AlicePawn.TriggerContextEventClass                               75     Defined|Simulated|HasOptionalParms|Public|HasOutParms
+        (byte ContextItem@0x0, int ActivateIndex@0x4, bool bTest@0x8, array ActivatedEvents@0xc, bool ReturnValue@0x18, array ActivateIndices@0x1c)
+  SCRIPT   AlicePawn.TriggerDressPhysic                                     375    Defined|Public
+        (bool TurnOn@0x0, float Intensity@0x4)
+  SCRIPT   AlicePawn.TriggerEdgeJump                                        30     Defined|Event|Public
+        ()
+  NATIVE   AlicePawn.TriggerEnterHysteriaRadiusDamage                       2      Native|Public
+        ()
+  SCRIPT   AlicePawn.TriggerFloatDown                                       209    Defined|Exec|Public
+        (bool bTriggerFloatDown@0x0)
+  SCRIPT   AlicePawn.TriggerHysteria                                        76     Defined|Exec|Public
+        (float HysterialTriggerHealth@0x0)
+  SCRIPT   AlicePawn.TriggerPushDown                                        11     Defined|Simulated|Event|Public
+        ()
+  SCRIPT   AlicePawn.TryToResetSprintCameraAnim                             130    Defined|Public
+        (object PlayerState@0x0)
+  NATIVE   AlicePawn.UpdateAliceDressLoading                                2      Native|Public
+        ()
+  SCRIPT   AlicePawn.UpdateBlobShadow                                       796    Defined|Public|HasDefaults
+        (object HitActor@0x0, struct Downward@0x4, struct HitLocation@0x10, struct HitNormal@0x1c, struct vEnd@0x28, struct vStart@0x34, float HitDistance@0x40, float fOpacity@0x44, float fScale@0x48, bool bShowBlobShadow@0x4c)
+  SCRIPT   AlicePawn.UpdateCameraMagnet                                     802    Defined|Simulated|Public|HasDefaults
+        (float DeltaTime@0x0, int J@0x4, float fDistance@0x8, object APC@0xc, bool bIgnore@0x10, bool bResetCamera@0x14, bool bDisabled@0x18, struct MagnetScreenPos@0x20)
+  SCRIPT   AlicePawn.UpdateFreezingHit                                      180    Defined|Public
+        (float DeltaTime@0x0, float CurHitTime@0x4)
+  SCRIPT   AlicePawn.UpdateInUIMode                                         227    Defined|Simulated|Public
+        (float DeltaTime@0x0, object APC@0x4)
+  SCRIPT   AlicePawn.WeaponSetHidden                                        93     Defined|HasOptionalParms|Public
+        (bool Set@0x0, bool bForce@0x4)
+  SCRIPT   AlicePawn.checkFakeAttached                                      72     Defined|Public
+        (object interpBase@0x0)
+  SCRIPT   AlicePawn.clearFakeAttached                                      30     Defined|Public
+        ()
+  SCRIPT   AlicePawn.drawlineFacingSlideTarget                              109    Defined|Public
+        (object Target@0x0)
+  SCRIPT   AlicePawn.getUnshrinkExtent                                      54     Defined|Event|Public
+        (struct ReturnValue@0x0)
+  SCRIPT   AlicePawn.isAButtonPressed                                       25     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.isInConversationMode                                   14     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.isInEncroachState                                      14     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.isNewCycleControl                                      54     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePawn.showHysteriaInfo                                       720    Defined|Public|HasOutParms
+        (object Canvas@0x0, float out_YL@0x4, float out_YPos@0x8)
+  SCRIPT   AlicePawn.showSaveLoadConfigInfo                                 1625   Defined|Public
+        (str ReturnValue@0x0, str Info@0xc)
+  SCRIPT   AlicePawn.tryResolveEncroach                                     44     Defined|Public|HasDefaults
+        (struct NewLocation@0x0)

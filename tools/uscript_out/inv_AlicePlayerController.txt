@@ -1,0 +1,1763 @@
+### AlicePlayerController -- 264 own properties (offsets from live-process dump)
+  +0x614   MyAlicePawn                                    ObjectProperty    
+  +0x618   SecondPlayerInput                              ObjectProperty    
+  +0x61c   bShowFPS_Reticule                              BoolProperty       mask=0x10
+  +0x61c   bCameraRightStickFree                          BoolProperty       mask=0x80000000
+  +0x61c   bProjectInputToControllerSpace                 BoolProperty       mask=0x2
+  +0x61c   bCameraReset                                   BoolProperty       mask=0x10000000
+  +0x61c   bTargetingModeActive                           BoolProperty       mask=0x2000
+  +0x61c   bSupportSecondController                       BoolProperty       mask=0x1
+  +0x61c   bShrinkingModeActive                           BoolProperty       mask=0x80000
+  +0x61c   bFirstPersonViewActive                         BoolProperty       mask=0x8
+  +0x61c   bConfirmToRespawn                              BoolProperty       mask=0x80
+  +0x61c   bHoldTiggerToMaintainTargeting                 BoolProperty       mask=0x800
+  +0x61c   bEnableCameraInertia                           BoolProperty       mask=0x8000000
+  +0x61c   bCanFloatJump                                  BoolProperty       mask=0x400000
+  +0x61c   bTriggerFloatJump                              BoolProperty       mask=0x800000
+  +0x61c   bKeepAliceInFocus                              BoolProperty       mask=0x40000000
+  +0x61c   bEnableARM                                     BoolProperty       mask=0x8000
+  +0x61c   bCanSwitchMelee                                BoolProperty       mask=0x100
+  +0x61c   bEnterFPSByRSPress                             BoolProperty       mask=0x20
+  +0x61c   bFireToActivateLockOnMode                      BoolProperty       mask=0x400
+  +0x61c   bCanDoDodge                                    BoolProperty       mask=0x20000
+  +0x61c   bCanDoDeflect                                  BoolProperty       mask=0x40000
+  +0x61c   bLockOnTriggeredByShiftKey                     BoolProperty       mask=0x1000
+  +0x61c   bTargetSwitched                                BoolProperty       mask=0x10000
+  +0x61c   bUseLockOnCameraParameters                     BoolProperty       mask=0x4000
+  +0x61c   ShrinkingCoolDown                              BoolProperty       mask=0x200000
+  +0x61c   bCanNotGrowBig                                 BoolProperty       mask=0x100000
+  +0x61c   bInputAForwardChangedSinceClimbing             BoolProperty       mask=0x200
+  +0x61c   bFastSwimTurning                               BoolProperty       mask=0x20000000
+  +0x61c   bProjectInputToPreCameraSpace                  BoolProperty       mask=0x4
+  +0x61c   bAllowForceResetCamera                         BoolProperty       mask=0x1000000
+  +0x61c   bAllowAutoResetCamera                          BoolProperty       mask=0x2000000
+  +0x61c   bAutoResetCamCountingTimer                     BoolProperty       mask=0x4000000
+  +0x61c   bJournalPause                                  BoolProperty       mask=0x40
+  +0x620   bBoostVolumeActive                             BoolProperty       mask=0x40000000
+  +0x620   bBoostVolumeFalloff                            BoolProperty       mask=0x80000000
+  +0x620   bSpecialCameraEnabled                          BoolProperty       mask=0x1
+  +0x620   bCameraInterpEnabled                           BoolProperty       mask=0x4
+  +0x620   bSteamVentRotating                             BoolProperty       mask=0x8000000
+  +0x620   bEnableWeaponEnviormentCollision               BoolProperty       mask=0x2000000
+  +0x620   bTargetUIPrevCritical                          BoolProperty       mask=0x20
+  +0x620   IsShrinking                                    BoolProperty       mask=0x200000
+  +0x620   IsUnShrinking                                  BoolProperty       mask=0x400000
+  +0x620   bPOIOverrideCamera                             BoolProperty       mask=0x40
+  +0x620   bCameraLocOnLeft                               BoolProperty       mask=0x100
+  +0x620   bSpecialTargetCamera                           BoolProperty       mask=0x2
+  +0x620   bLookingAtPointOfInterest                      BoolProperty       mask=0x200
+  +0x620   bInFloatVolume                                 BoolProperty       mask=0x100000
+  +0x620   bEnableFloat                                   BoolProperty       mask=0x40000
+  +0x620   bPOITriggered                                  BoolProperty       mask=0x80
+  +0x620   bIsHoldingPOIButton                            BoolProperty       mask=0x400
+  +0x620   bInMainMenu                                    BoolProperty       mask=0x10
+  +0x620   bPressedBackButton                             BoolProperty       mask=0x4000
+  +0x620   bTryUnShrinkNow                                BoolProperty       mask=0x4000000
+  +0x620   bCanControlWhenSlide                           BoolProperty       mask=0x8000
+  +0x620   bCanJumpWhenSlide                              BoolProperty       mask=0x10000
+  +0x620   bCanSwimTurnLeftOrRight                        BoolProperty       mask=0x8
+  +0x620   bCameraLookAtIsFromKismet                      BoolProperty       mask=0x800
+  +0x620   bHavingAnAbortableConversation                 BoolProperty       mask=0x2000
+  +0x620   bPendingConversationAbort                      BoolProperty       mask=0x1000
+  +0x620   bInRailRideMode                                BoolProperty       mask=0x10000000
+  +0x620   bFloatLeaveSteam                               BoolProperty       mask=0x1000000
+  +0x620   bCancelMatineeHintExisting                     BoolProperty       mask=0x80000
+  +0x620   bDelayCameraInSteam                            BoolProperty       mask=0x800000
+  +0x620   bBoostRoll                                     BoolProperty       mask=0x20000000
+  +0x620   bAlreadyCarried                                BoolProperty       mask=0x20000
+  +0x624   bSwitchWeaponOnly                              BoolProperty       mask=0x10
+  +0x624   bAimOnTarget                                   BoolProperty       mask=0x8000
+  +0x624   UI_bUpdateKeySettings                          BoolProperty       mask=0x80000
+  +0x624   FlagComboInputAcceptFinish                     BoolProperty       mask=0x200
+  +0x624   bLockOnStateFirstFrame                         BoolProperty       mask=0x4
+  +0x624   bJustAfterFloatFail                            BoolProperty       mask=0x8
+  +0x624   bHoldToggleLockOnButton                        BoolProperty       mask=0x40
+  +0x624   bInUIMode                                      BoolProperty       mask=0x40000
+  +0x624   bMaintainMovement                              BoolProperty       mask=0x1
+  +0x624   bToggleCheshireCatOn                           BoolProperty       mask=0x20
+  +0x624   bPauseTickForNextClockBomb                     BoolProperty       mask=0x1000
+  +0x624   bPendingShrinkRequest                          BoolProperty       mask=0x80
+  +0x624   bPendingQuitLockOnMode                         BoolProperty       mask=0x100000
+  +0x624   bPendingQuitAimingMode                         BoolProperty       mask=0x200000
+  +0x624   FlagComboBlendingStart                         BoolProperty       mask=0x400
+  +0x624   FlagHasComboInputBeforeBlendingStart           BoolProperty       mask=0x800
+  +0x624   FlagComboInputAcceptStart                      BoolProperty       mask=0x100
+  +0x624   bPickupAction                                  BoolProperty       mask=0x10000
+  +0x624   bVentLastTickMove                              BoolProperty       mask=0x2000
+  +0x624   bVentLastTickRotate                            BoolProperty       mask=0x4000
+  +0x624   bLastTickOnGround                              BoolProperty       mask=0x20000
+  +0x624   bJumpFromJumpPad                               BoolProperty       mask=0x2
+  +0x628   CommandFOVScale                                FloatProperty     
+  +0x62c   CommandCameraRoll                              IntProperty       
+  +0x630   CommandCameraRollDir                           IntProperty       
+  +0x634   CommandCameraOffset                            StructProperty    
+  +0x640   CommandCameraOffsetSpeed                       StructProperty    
+  +0x64c   CommandCameraOffsetMax                         StructProperty    
+  +0x658   CommandCameraOffsetMin                         StructProperty    
+  +0x664   UI_AliceTargetRotation                         StructProperty    
+  +0x670   PreCameraRot                                   StructProperty    
+  +0x67c   OldCameraRot                                   StructProperty    
+  +0x688   PreCameraActor                                 ObjectProperty    
+  +0x68c   AimingReticuleTarget                           ObjectProperty    
+  +0x690   AimingReticuleLocation                         StructProperty    
+  +0x69c   aTurnElapsedTime                               FloatProperty     
+  +0x6a0   aLookUpElapsedTime                             FloatProperty     
+  +0x6a4   aOldTurn                                       FloatProperty     
+  +0x6a8   aOldLookUp                                     FloatProperty     
+  +0x6ac   CrossHairLocation                              StructProperty    
+  +0x6b8   CrossHairLocation2D                            StructProperty    
+  +0x6c4   BackUpNonLockOnTarget                          ObjectProperty    
+  +0x6c8   respawn_info                                   StructProperty    
+  +0x6d4   RespawnParticleEmitter                         ObjectProperty    
+  +0x6d8   StoryModeSaveDressID                           ByteProperty      
+  +0x6d9   PendingDodge                                   ByteProperty      
+  +0x6da   WeaponHand                                     ByteProperty      
+  +0x6db   CombatInputBeforeBlendingStart                 ByteProperty      
+  +0x6dc   curSteamAnim                                   ByteProperty      
+  +0x6dd   UI_CurActiveKeyType                            ByteProperty      
+  +0x6de   UI_CurActiveKeyGroup                           ByteProperty      
+  +0x6e0   PlayedSecond                                   FloatProperty     
+  +0x6e4   DestroyedDoomBarriers                          IntProperty       
+  +0x6e8   FrozenTotalCountEnemy                          IntProperty       
+  +0x6ec   DefeatTotalRuinNpcs                            IntProperty       
+  +0x6f0   DefeatTotalCardGuardNpcs                       IntProperty       
+  +0x6f4   Achievements43Npcs                             IntProperty       
+  +0x6f8   Achievements30Npcs                             IntProperty       
+  +0x6fc   AchievementsNew38Npcs                          IntProperty       
+  +0x700   ObjectiveMgr                                   ObjectProperty    
+  +0x704   AccelThresholdToRun                            FloatProperty     
+  +0x708   AngleThresholdToCancelAccel                    FloatProperty     
+  +0x70c   AngleBetweenInputAndPlayer                     FloatProperty     
+  +0x710   PawnDirWhenRotateStarts                        StructProperty    
+  +0x71c   PlayerMovementStates                           ArrayProperty     
+  +0x728   PlayerMovementStatesClasses                    ArrayProperty     
+  +0x734   curIndexOfPlayerMovementState                  IntProperty       
+  +0x738   BackupedCamRot                                 StructProperty    
+  +0x744   TMode_CombatLockOn                             ObjectProperty    
+  +0x748   TMode_POI                                      ObjectProperty    
+  +0x74c   TMode_BreakableActor                           ObjectProperty    
+  +0x750   TMode_SkeletalMeshActor                        ObjectProperty    
+  +0x754   TargetMergeManager                             ObjectProperty    
+  +0x758   PreTargetMergeManager                          ObjectProperty    
+  +0x75c   nLastMeleeWeapon                               IntProperty       
+  +0x760   TargetNPCSocketLocation2D                      StructProperty    
+  +0x76c   TargetNPCSocket                                StructProperty    
+  +0x7a4   TargetBActorInfo                               StructProperty    
+  +0x7d4   TargetSMAInfo                                  StructProperty    
+  +0x820   PreTargetNPCSocket                             StructProperty    
+  +0x858   PreTargetBActorInfo                            StructProperty    
+  +0x888   PreTargetSMAInfo                               StructProperty    
+  +0x8d4   Snd_TargetLockOn                               ObjectProperty    
+  +0x8d8   Snd_TargetLockOff                              ObjectProperty    
+  +0x8dc   Snd_TargetLockSwitch                           ObjectProperty    
+  +0x8e0   CloseInGameMenuSound                           ObjectProperty    
+  +0x8e4   LockOnEffect                                   ObjectProperty    
+  +0x8e8   CurButtonStatus                                StructProperty    
+  +0x900   InputaUp                                       FloatProperty     
+  +0x904   ClimbingTime                                   FloatProperty     
+  +0x908   OldPitch                                       IntProperty       
+  +0x90c   fTimeToTriggerAutoResetCamera                  FloatProperty     
+  +0x910   SpecialCameraLoc                               StructProperty    
+  +0x91c   SpecialCameraRot                               StructProperty    
+  +0x928   CurSpecialCameraBehavior                       ObjectProperty    
+  +0x92c   CameraInterpFocusPoint                         StructProperty    
+  +0x938   CameraInterpFocusActor                         ObjectProperty    
+  +0x93c   WeaponLevel                                    IntProperty       
+  +0x94c   iFirstTimeWeaponUpgrade                        IntProperty       
+  +0x950   CaveCompleted                                  IntProperty       
+  +0x990   MemoryCompleted                                IntProperty       
+  +0x9a4   ChapterCompleted                               IntProperty       
+  +0x9bc   ChapterCompletedHighestDifficulty              IntProperty       
+  +0x9d4   UnlockEnemy                                    IntProperty       
+  +0xa24   UpgradeHealth                                  IntProperty       
+  +0xa3c   TheVeryLastCheckPointGot                       IntProperty       
+  +0xa40   CompletePercent                                FloatProperty     
+  +0xa44   BinkPlayed                                     ArrayProperty     
+  +0xa50   AbilityGot                                     ArrayProperty     
+  +0xa5c   MemoryFragment                                 ArrayProperty     
+  +0xa68   SountActive                                    ArrayProperty     
+  +0xa74   SecretPick                                     ArrayProperty     
+  +0xa80   PendingRangeWeaponType                         IntProperty       
+  +0xa84   LatestRangeWeaponType                          IntProperty       
+  +0xa88   LastPresenceSet                                IntProperty       
+  +0xa98   WaterWalkLandPos                               StructProperty    
+  +0xaa4   BackToSwimPos                                  StructProperty    
+  +0xab0   SwimPitch                                      FloatProperty     
+  +0xab4   SwimRoll                                       FloatProperty     
+  +0xab8   SwimUpDownDelay                                FloatProperty     
+  +0xabc   Sound_PGTOTC                                   ObjectProperty    
+  +0xac0   Sound_TCTOPG                                   ObjectProperty    
+  +0xac4   PushDir                                        StructProperty    
+  +0xad0   PushInitOffset                                 StructProperty    
+  +0xadc   CratePos                                       StructProperty    
+  +0xae8   EnabledPointsOfInterest                        ArrayProperty     
+  +0xaf4   POILookedAtList                                ArrayProperty     
+  +0xb00   CurrLookedAtPOI                                ObjectProperty    
+  +0xb04   PointOfInterestAdded                           ObjectProperty    
+  +0xb08   LastPoITime                                    FloatProperty     
+  +0xb0c   PoIRepeatTime                                  FloatProperty     
+  +0xb10   CameraMagnets                                  ArrayProperty     
+  +0xb1c   CheshireCatMagnet                              ObjectProperty    
+  +0xb20   ShowPathMagnet                                 ObjectProperty    
+  +0xb24   CameraLookAtFocusActor                         ObjectProperty    
+  +0xb28   PointOfInterestLookatInterpSpeedRange          StructProperty    
+  +0xb30   CameraEffect                                   ObjectProperty    
+  +0xb34   fBackButtonHoldTime                            FloatProperty     
+  +0xb38   CombatInputManager                             ObjectProperty    
+  +0xb3c   LeaveGlideTime                                 FloatProperty     
+  +0xb40   GlideRotation                                  StructProperty    
+  +0xb4c   GlideAccumulateYaw                             FloatProperty     
+  +0xb50   GlideYawThreshold                              FloatProperty     
+  +0xb54   LastRawJoyRight                                FloatProperty     
+  +0xb58   AssetActor                                     ObjectProperty    
+  +0xb5c   GFXMovieInput                                  ObjectProperty    
+  +0xb60   FocusedMovie                                   ObjectProperty    
+  +0xb64   SteamVentVolume                                ObjectProperty    
+  +0xb68   ventActor                                      ObjectProperty    
+  +0xb6c   AliceTurret2DManager                           ArrayProperty     
+  +0xb78   SlideParticle                                  ObjectProperty    
+  +0xb7c   ChessBoardActor                                ObjectProperty    
+  +0xb80   BlockPuzzleActor                               ObjectProperty    
+  +0xb84   CrowdAgentsCount                               IntProperty       
+  +0xb88   SlowFactor                                     IntProperty       
+  +0xb8c   SlideLoopingEmitter                            ObjectProperty    
+  +0xb90   BoostVolumeTime                                FloatProperty     
+  +0xb94   BoostVolumeForce                               StructProperty    
+  +0xba0   BoostVolumeDuration                            FloatProperty     
+  +0xba4   OriginalInputVector                            StructProperty    
+  +0xbb0   fTimeThresholdToMaintainMove                   FloatProperty     
+  +0xbb4   fTimeLeftToMaintainMove                        FloatProperty     
+  +0xbb8   CycleFloatManager                              ObjectProperty    
+  +0xbbc   SoundModeManager                               ObjectProperty    
+  +0xbc0   configDataManager                              ObjectProperty    
+  +0xbc4   persistentDataManager                          ObjectProperty    
+  +0xbc8   WeaponGroup                                    IntProperty       
+  +0xbcc   SonarManager                                   ObjectProperty    
+  +0xbd0   LastSwitchTargetTime                           FloatProperty     
+  +0xbd4   LastTickRSValue                                FloatProperty     
+  +0xbd8   slideLoopAudio                                 ComponentProperty 
+  +0xbdc   slideLoopSoundCue                              ObjectProperty    
+  +0xbe0   fAliceIdleDuration                             FloatProperty     
+  +0xbe4   fOldAliceIdleDuration                          FloatProperty     
+  +0xbe8   InteractLondonActor                            ObjectProperty    
+  +0xbec   stuckManager                                   ObjectProperty    
+  +0xbf0   GiantAliceTakeDamageCount                      IntProperty       
+  +0xbf4   AgentDamage                                    IntProperty       
+  +0xbf8   LockonModeDeltaYaw                             IntProperty       
+  +0xbfc   FacingSlideTarget                              ObjectProperty    
+  +0xc00   pinballSoundComp1                              ComponentProperty 
+  +0xc04   pinballSoundComp2                              ComponentProperty 
+  +0xc08   pinballSound1                                  ObjectProperty    
+  +0xc0c   pinballSound2                                  ObjectProperty    
+  +0xc10   meleeSlomoSoundComp                            ComponentProperty 
+  +0xc14   MeleeSlomoSoundCue                             ObjectProperty    
+  +0xc18   uniqueAudio                                    ComponentProperty 
+  +0xc1c   UI_RotateSpeed                                 FloatProperty     
+  +0xc20   UI_RemovedAliceKeys                            ArrayProperty     
+  +0xc2c   UI_AliceGFXMovie                               ObjectProperty    
+  +0xc30   UI_CurControllerType                           IntProperty       
+  +0xc34   WeaponUpgradeToLevel2XPCost                    IntProperty       
+  +0xc44   WeaponUpgradeToLevel3XPCost                    IntProperty       
+  +0xc54   WeaponUpgradeToLevel4XPCost                    IntProperty       
+  +0xc64   AliceShadowModePos_X                           FloatProperty     
+  +0xc68   UI_BinkFileName                                StrProperty       
+  +0xc74   UI_SetResCount                                 IntProperty       
+  +0xc78   __CanUnpause__Delegate                         DelegateProperty  
+
+### AlicePlayerController -- 748 functions (path / native-script / storage bytes / flags)
+  SCRIPT   AlicePlayerController.AW                                         408    Defined|Exec|HasOptionalParms|Public
+        (int WeaponID@0x0, int LevelID@0x4, class WClass@0x8)
+  SCRIPT   AlicePlayerController.AbortConversation                          91     Defined|Exec|Public
+        (bool bPressed@0x0)
+  SCRIPT   AlicePlayerController.ActivateFirstPersonView                    360    Defined|Public
+        ()
+  NATIVE   AlicePlayerController.AddAvailableDressID                        7      Native|Public
+        (int Index@0x0)
+  SCRIPT   AlicePlayerController.AddNewAliceWeapon                          451    Defined|Public|HasDefaults
+        (class WeaponClass@0x0, int LevelID@0x4, object NewWeapon@0x8, struct tempweaponpara@0xc, object OldWeapon@0x50, object tempWeaponBase@0x54)
+  SCRIPT   AlicePlayerController.AddPointOfInterest                         466    Defined|Simulated|Public
+        (object POI@0x0, int Idx@0x4, int CurrPriority@0x8)
+  STUB     AlicePlayerController.AddSkirtFloatingEffect                     3      Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.AddSonarDetectedActor                      30     Defined|Public
+        (object DesiredActor@0x0)
+  SCRIPT   AlicePlayerController.AliceControllerTick                        65     Defined|Event|Public
+        (float DeltaTime@0x0)
+  NATIVE   AlicePlayerController.AliceGameUseTextureStreaming               7      Native|Public
+        (bool bEnable@0x0)
+  NATIVE   AlicePlayerController.AliceLocErrorMsgBox                        12     Native|Public
+        (str TagTitle@0x0, str TagMsg@0xc)
+  SCRIPT   AlicePlayerController.AliceRespawn.BeginState                    60     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.AliceRespawn.EndState                      248    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.ApplyCheckpointRecord                      615    Defined|Public|HasOutParms|HasDefaults
+        (struct Record@0x0, int I@0x2c, struct SafeTeleLocation@0x30)
+  SCRIPT   AlicePlayerController.AtTimeTick                                 63     Defined|Public
+        (int iNum@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.BeginState                  241    Defined|Event|Public
+        (name PreviousStateName@0x0, object PlayerState@0x8)
+  STUB     AlicePlayerController.AttachedByNPCs.ChangeCameraMode            3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.EndState                    138    Defined|Event|Public
+        (name NextStateName@0x0)
+  STUB     AlicePlayerController.AttachedByNPCs.EyeStaffFirePress           3      Exec|Public
+        ()
+  STUB     AlicePlayerController.AttachedByNPCs.EyeStaffFireRelease         3      Exec|Public
+        ()
+  STUB     AlicePlayerController.AttachedByNPCs.HobbyHorseFirePress         3      Exec|Public
+        ()
+  STUB     AlicePlayerController.AttachedByNPCs.HobbyHorseFireRelease       3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.AttachedByNPCs.PlayAliceScareSound         35     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.AttachedByNPCs.PlayerMove                  545    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14, struct PawnFacing@0x20)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.ProcessMove                 120    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.TakeDurationDamage          1228   Defined|Public
+        (float dmg@0x0, int I@0x4, int J@0x8, object DamageEmitter@0xc)
+  STUB     AlicePlayerController.AttachedByNPCs.TeapotCannonFirePress       3      Exec|Public
+        ()
+  STUB     AlicePlayerController.AttachedByNPCs.TeapotCannonFireRelease     3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.AttachedByNPCs.TriggerDodge                45     Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.UpdateAccel                 362    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, bool bCannotMove@0x10, bool bShouldDoInstantTurning@0x14)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.UpdateAttachedNPC           939    Defined|Public
+        (float DeltaTime@0x0, int I@0x4, struct DestLoc@0x8, struct CurLoc@0x14, struct DestRot@0x20, struct curRot@0x2c, float factor@0x38)
+  SCRIPT   AlicePlayerController.AttachedByNPCs.UpdateDeltaRotation         487    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, float fSign@0x1c, float RotSpeedFactor@0x20, float DeltaYaw@0x24, float Temp@0x28)
+  STUB     AlicePlayerController.AttachedByNPCs.VorpalBladeFirePress        3      Exec|Public
+        ()
+  STUB     AlicePlayerController.AttachedByNPCs.VorpalBladeFireRelease      3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.AutoResetCameraPitch                       138    Defined|Public|HasDefaults
+        (struct NewRot@0x0, object Cam@0xc)
+  SCRIPT   AlicePlayerController.BeforeUnHideAlice                          318    Defined|Public
+        ()
+  NATIVE   AlicePlayerController.BeginRollingMode                           2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.BugItForGameController                     85     Defined|Exec|HasOptionalParms|Public
+        (str ScreenShotDescription@0x0)
+  SCRIPT   AlicePlayerController.CalcAliceIdleDuration                      109    Defined|Public
+        (float DeltaTime@0x0, object APlayerInput@0x4)
+  SCRIPT   AlicePlayerController.CalcAngleBetweenVectors                    239    Defined|Event|Public|HasDefaults
+        (struct v1@0x0, struct v2@0xc, float ReturnValue@0x18, struct vLeft@0x1c, float fAngle@0x28, float fLeftPct@0x2c)
+  SCRIPT   AlicePlayerController.CalcCameraLocInfo                          142    Defined|Public|HasDefaults
+        (struct POILoc@0x0, struct AliceEyeLoc@0xc, struct cameraLoc@0x18, struct AliceEyeRot@0x24, struct cameraRot@0x30)
+  SCRIPT   AlicePlayerController.CalculateJumpInitVelocity                  229    Defined|Public|HasDefaults
+        (float fDist2D@0x0, float fDistZ@0x4, struct Dir@0x8, struct ReturnValue@0x14, struct InitVelocity@0x20, float JumpHeight@0x2c, float GravZ@0x30, float RealVelocityZ@0x34, float TimeInAir@0x38, float SpeedSize2D@0x3c)
+  SCRIPT   AlicePlayerController.CanChangeWeapon                            202    Defined|Public
+        (object CurrentWeapon@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.CanCollectBlockPiece                       74     Defined|Public
+        (object Piece@0x0, bool ReturnValue@0x4)
+  NATIVE   AlicePlayerController.CanDoSpecialMove                           13     Final|Native|HasOptionalParms|Public
+        (byte AMove@0x0, bool bForceCheck@0x4, bool ReturnValue@0x8)
+  SCRIPT   AlicePlayerController.CanDodge                                   783    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.CanFire                                    862    Defined|Simulated|Public
+        (bool ReturnValue@0x0, object Wpn@0x4)
+  SCRIPT   AlicePlayerController.CanFirstPersonView                         335    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.CanPressRestartGame                        86     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.CanSwitchRangeWeapon                       724    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.CanUnpause                                 16     Defined|Public|Delegate
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.ChangeAimIcon                              104    Defined|Public
+        (int Id@0x0)
+  SCRIPT   AlicePlayerController.ChangeAliceEnvironment                     105    Defined|Public
+        (bool bInLondon@0x0)
+  SCRIPT   AlicePlayerController.ChangeAliceWonderlandDress                 49     Defined|Simulated|Public
+        (int DressIndex@0x0, bool bShouldBlock@0x4, object pGFXMovie@0x8, int ReturnValue@0xc)
+  SCRIPT   AlicePlayerController.ChangeAliceWonderlandDressCPP              29     Defined|Simulated|Event|Public
+        (int DressIndex@0x0, bool bShouldBlock@0x4, object pGFXMovie@0x8)
+  SCRIPT   AlicePlayerController.ChangeCameraMode                           1251   Defined|Exec|Public
+        (bool bToggleTargeting@0x0, bool bTurnOn@0x4)
+  SCRIPT   AlicePlayerController.ChangeCameraModePC                         76     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ChangeDifficultLevel                       164    Defined|Exec|HasOptionalParms|Public
+        (int Level@0x0)
+  SCRIPT   AlicePlayerController.ChangeResolution                           104    Defined|Public
+        (str Mode@0x0)
+  SCRIPT   AlicePlayerController.ChangeShrinkingMode                        1186   Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ChangeTargetFromDeadActor                  392    Defined|Public
+        (object oldTarget@0x0)
+  SCRIPT   AlicePlayerController.ChangeWeaponTo                             101    Defined|Public
+        (class WeaponClass@0x0)
+  SCRIPT   AlicePlayerController.ChangeWeaponToEyeStaff                     56     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.ChangeWeaponToHobbyHorse                   49     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ChangeWeaponToTeapotCannon                 124    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.ChangeWeaponToVorpalBlade                  49     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.CheckAutoResetCameraPitch                  458    Defined|Public
+        (int CamPitch@0x0)
+  SCRIPT   AlicePlayerController.CheckEnabledPointsOfInterest               396    Final|Defined|Public
+        (float DeltaTime@0x0, int Idx@0x4, int ActivePOI@0x8)
+  SCRIPT   AlicePlayerController.CheckIfEnterFPSAfterQuitLockOn             130    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.CheshireCatAppear                          615    Defined|Exec|Public
+        (object Cat@0x0, object TheNearestCat@0x4, float TheNearestDistance@0x8, float CatToAliceDis@0xc)
+  SCRIPT   AlicePlayerController.ClearAllTargets                            46     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ClearFocusPoint                            140    Defined|Simulated|HasOptionalParms|Public
+        (bool bFromKismet@0x0, bool bForceLeaveRotation@0x4, bool bLeaveRotation@0x8)
+  SCRIPT   AlicePlayerController.ClearOnRequestUnloadLevel                  44     Defined|Event|Public
+        (object StreamingLevel@0x0)
+  SCRIPT   AlicePlayerController.ClearPOIIconDurations                      44     Defined|Public
+        (object POI@0x0)
+  SCRIPT   AlicePlayerController.ClearPlayerPawnMovementFlags               93     Defined|Public
+        (object P@0x0)
+  SCRIPT   AlicePlayerController.ClearPreTargetInfo                         86     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ClearTargetInfo                            86     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ClientClearForcedCameraFOV                 86     Defined|Public
+        (object Cam@0x0)
+  SCRIPT   AlicePlayerController.ClientRestart                              76     Defined|Net|NetReliable|Simulated|Public|NetClient
+        (object NewPawn@0x0)
+  SCRIPT   AlicePlayerController.ClientSetCinematicMode                     447    Defined|Net|NetReliable|Simulated|Public|NetClient
+        (bool bInCinematicMode@0x0, bool bAffectsMovement@0x4, bool bAffectsTurning@0x8, bool bAffectsHUD@0xc, bool bHideCurrenWeapon@0x10, object HP@0x14, object XP@0x18)
+  SCRIPT   AlicePlayerController.ClientSetConversationMode                  36     Final|Defined|Net|NetReliable|Simulated|Event|HasOptionalParms|Public|NetClient
+        (bool bEnabled@0x0, bool bAbortable@0x4)
+  SCRIPT   AlicePlayerController.CloneAlice                                 738    Defined|Event|Public|HasDefaults
+        (name SockectName@0x0, float InitSpeed@0x8, struct SpawnLocation@0xc, struct SpawnRotator@0x18, struct AliceDir@0x24, struct HitLocation@0x30, struct HitNormal@0x3c, struct Start@0x48, struct End@0x54, struct extend@0x60)
+  SCRIPT   AlicePlayerController.CloneButtonPressed                         736    Defined|Exec|Public
+        (object wp@0x0)
+  STUB     AlicePlayerController.CloneButtonReleased                        3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.CollectBlockPiece                          37     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ComboInputAcceptFinish                     19     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePlayerController.ComboInputAcceptStart                      19     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePlayerController.ContinueToGame                             474    Defined|Public|HasDefaults
+        (struct ViewSize@0x0)
+  SCRIPT   AlicePlayerController.CreateCheckpointRecord                     571    Defined|Public|HasOutParms
+        (struct Record@0x0)
+  SCRIPT   AlicePlayerController.CycleFloatInputA                           70     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.CycleFloatInputRB                          72     Defined|Exec|Public
+        ()
+  NATIVE   AlicePlayerController.DLCExitToStore                             2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.DLCGetStatus                               7      Native|Static|Public
+        (int Item@0x0, int ReturnValue@0x4)
+  NATIVE   AlicePlayerController.DLCLoginStatusChange                       2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.DLCPurchase                                7      Native|Public
+        (int Item@0x0)
+  NATIVE   AlicePlayerController.DLCRedeemCode                              2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.DLCStartCheckThread                        2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.DLCStopCheckThread                         2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.DeactivateFirstPersonView                  210    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.Dead.BeginState                            1347   Defined|Event|Public
+        (name PreviousStateName@0x0, int SocketIndex@0x8, object Age@0xc)
+  STUB     AlicePlayerController.Dead.ChangeShrinkingMode                   3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Dead.EndState                              255    Defined|Event|Public
+        (name NextStateName@0x0)
+  STUB     AlicePlayerController.Dead.EyeStaffFireRelease                   3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Dead.HobbyHorseFireRelease                 3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Dead.PlayerMove                            138    Defined|Public
+        (float DeltaTime@0x0)
+  STUB     AlicePlayerController.Dead.StartFire                             4      Exec|HasOptionalParms|Public
+        (byte FireModeNum@0x0)
+  STUB     AlicePlayerController.Dead.Use                                   3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Dead.VorpalBladeFireRelease                3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.DelayNextClockBomb                         163    Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.DelayNextDeflect                           35     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.DelayNextDodge                             35     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.DetectCameraMagnets                        883    Defined|Public|HasDefaults
+        (float DeltaTime@0x0, int I@0x4, int J@0x8, bool bPassed@0xc, struct MagnetScreenPos@0x10, struct Magnet2D@0x20, float fDistance@0x2c, object Candidate@0x30, object Magnet@0x34)
+  SCRIPT   AlicePlayerController.DetonateClockBomb                          232    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.DisableAllDLCWeapons                       439    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.DisableCheshireCatMagnet                   35     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.DisableShowPathMagnet                      35     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.DisplayDebug                               304    Defined|Simulated|Public|HasOutParms|HasDefaults
+        (object HUD@0x0, float out_YL@0x4, float out_YPos@0x8, struct Start@0xc, struct End@0x18)
+  NATIVE   AlicePlayerController.DoCrossHairLineCheck                       12     Native|Public
+        (struct vStart@0x0, struct vEnd@0xc)
+  SCRIPT   AlicePlayerController.DoDodge                                    322    Defined|Public
+        (byte Dir@0x0)
+  SCRIPT   AlicePlayerController.DoSpecialMove                              196    Final|Defined|Event|HasOptionalParms|Public|HasDefaults
+        (byte NewMove@0x0, bool bForceMove@0x4, object InInteractionPawn@0x8, int InSpecialMoveFlags@0xc, struct NewMoveStruct@0x10)
+  SCRIPT   AlicePlayerController.DoTap2HoldAction                           77     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.Dodge                                      444    Defined|Public|HasDefaults
+        (float Angle@0x0, struct vInput@0x4, byte DodgeDir@0x10)
+  SCRIPT   AlicePlayerController.DodgeHorizontallyWhenTargeting             48     Defined|Public
+        (bool bLeft@0x0)
+  SCRIPT   AlicePlayerController.DodgeVerticallyWhenTargeting               81     Defined|Public
+        (bool bForward@0x0)
+  NATIVE   AlicePlayerController.DoesAliceGameSupportSecondController       2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.DoesSupportMSAA                            41     Defined|Public
+        (int MaxMultiSamples@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.EnableARM                                  31     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.EnableAllDLCWeapons                        439    Defined|Exec|Public
+        ()
+  NATIVE   AlicePlayerController.EnableAllDresses                           2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.EnableCameraInterp                         51     Defined|Simulated|Event|Public
+        (bool bEnable@0x0, object FocusActor@0x4)
+  SCRIPT   AlicePlayerController.EndMemoryMode                              27     Defined|Public
+        ()
+  NATIVE   AlicePlayerController.EndRollingMode                             2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.EndSlideParticle                           67     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.EndSpecialMove                             47     Final|Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.EnterFPS                                   178    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.EnterFPSByRS                               42     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.EnteringShrinkingMode                      212    Defined|Public
+        (object Alice2Pawn@0x0)
+  SCRIPT   AlicePlayerController.ExecWonderlandDeathParticleFinished        23     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.EyeStaffFirePress                          212    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.EyeStaffFireRelease                        134    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.FadeOutTest                                174    Defined|Exec|Public|HasDefaults
+        (bool bEnable@0x0, float X@0x4, float Y@0x8, float R@0xc, float G@0x10, float B@0x14, float A@0x18, float FadeTime@0x1c, struct FadeColor@0x20, struct FadeAlpha@0x24)
+  SCRIPT   AlicePlayerController.FallingSkipFloat                           39     Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.FindBestPOIToLookAt                        423    Final|Defined|Simulated|HasOptionalParms|Public
+        (object POIToTest@0x0, object ReturnValue@0x4, object POI@0x8, object BestPOI@0xc, int POIPriority@0x10, int CurrPriority@0x14, bool bSetBestPOI@0x18, object Myself@0x1c)
+  SCRIPT   AlicePlayerController.FindNonLockOnPossibleTarget                654    Defined|Public|HasDefaults
+        (object ReturnValue@0x0, object A@0x4, struct vCenterOfSearch@0x8, struct vPlayerFacing@0x14, struct vTarget@0x20, float curDist@0x2c, float MinDist@0x30, float fRadius@0x34, float fAngle@0x38, float angleThreshold@0x3c, array NPCSocketsToBeTargeted@0x40, object TA@0x4c, object TAWithMinDist@0x50, object B@0x54)
+  SCRIPT   AlicePlayerController.FireGiantWeapon                            184    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.FireToLockOn                               18     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.FirstPersonView.BeginState                 298    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.FirstPersonView.EndState                   400    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.FirstPersonView.PlayerMove                 470    Defined|Public
+        (float DeltaTime@0x0, struct vAccel@0x4, float maxStrafeSpeed@0x10)
+  SCRIPT   AlicePlayerController.FirstPersonView.TriggerDodge               32     Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.FirstPersonView.UpdateRotation             263    Defined|Public
+        (float DeltaTime@0x0, struct DeltaRot@0x4, struct PawnDeltaRot@0x10, struct ViewRotation@0x1c)
+  SCRIPT   AlicePlayerController.FlushWeaponLevelRealTime                   328    Defined|Public
+        (object Inv@0x0)
+  STUB     AlicePlayerController.ForceEndStateInCinematic                   3      Public
+        ()
+  SCRIPT   AlicePlayerController.ForceLookAtPointOfInterest                 536    Final|Defined|Simulated|HasOptionalParms|Public
+        (bool bUserInstigated@0x0, object POIToForce@0x4, object Cam@0x8, float POICamFOV@0xc, int IndexInList@0x10, bool bDoForceLookTimer@0x14)
+  SCRIPT   AlicePlayerController.ForceLookDurationExpired                   34     Final|Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ForceResetCamera                           126    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ForceUpdateTarget                          42     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.Frozen.BeginState                          194    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  STUB     AlicePlayerController.Frozen.ChangeCameraMode                    3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  SCRIPT   AlicePlayerController.Frozen.EndState                            140    Defined|Event|Public
+        (name NextStateName@0x0)
+  STUB     AlicePlayerController.Frozen.EyeStaffFirePress                   3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Frozen.EyeStaffFireRelease                 3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Frozen.HobbyHorseFirePress                 3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Frozen.HobbyHorseFireRelease               3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Frozen.PlayerMove                          312    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.Frozen.ProcessMove                         120    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  STUB     AlicePlayerController.Frozen.TeapotCannonFirePress               3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Frozen.TeapotCannonFireRelease             3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Frozen.TriggerDodge                        45     Defined|Exec|Public
+        (bool bActive@0x0)
+  STUB     AlicePlayerController.Frozen.VorpalBladeFirePress                3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Frozen.VorpalBladeFireRelease              3      Exec|Public
+        ()
+  NATIVE   AlicePlayerController.GeneratingBinkVideos                       7      Native|Public
+        (float fDeltaTime@0x0)
+  SCRIPT   AlicePlayerController.GetAdjustedAimFor                          173    Defined|Public|HasDefaults
+        (object W@0x0, struct StartFireLoc@0x4, struct ReturnValue@0x10, struct FireRot@0x1c, struct TargetLocation@0x28)
+  NATIVE   AlicePlayerController.GetAvailableDressID                        7      Native|Public
+        (int Index@0x0, int ReturnValue@0x4)
+  NATIVE   AlicePlayerController.GetCalloutPlatform                         2      Native|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetCameraMagnets                           769    Defined|HasOptionalParms|Public
+        (bool bJustPostBeginPlay@0x0, object ACM@0x4, bool bPawnCurMagnetExist@0x8)
+  SCRIPT   AlicePlayerController.GetChallengeRooms                          87     Defined|Public|HasOutParms
+        (int Current@0x0, int MaxNum@0x4)
+  SCRIPT   AlicePlayerController.GetChapterCompleted                        91     Defined|Public
+        (int ReturnValue@0x0, int ChapterCompletedNum@0x4, int I@0x8)
+  SCRIPT   AlicePlayerController.GetClockBombCountDownTime                  102    Defined|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetCurAliceWonderlandDress                 28     Defined|Simulated|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetCurrentChapterChallengeRooms            157    Defined|Public
+        (int ReturnValue@0x0, str MapName@0x4, int I@0x10, int pos@0x14)
+  SCRIPT   AlicePlayerController.GetCurrentChapterMemories                  157    Defined|Public
+        (int ReturnValue@0x0, str MapName@0x4, int I@0x10, int pos@0x14)
+  SCRIPT   AlicePlayerController.GetCurrentChapterSnouts                    157    Defined|Public
+        (int ReturnValue@0x0, str MapName@0x4, int I@0x10, int pos@0x14)
+  SCRIPT   AlicePlayerController.GetCurrentMovementState                    36     Defined|Event|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetCurrentWeaponLevel                      72     Defined|Public
+        (int ReturnValue@0x0, object Wpn@0x4)
+  SCRIPT   AlicePlayerController.GetEyeStaffLevel                           16     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetFloatAnimInfo                           25     Defined|Event|Public|HasOutParms
+        (float UpWeight@0x0, float RightWeight@0x4)
+  NATIVE   AlicePlayerController.GetGStoryMode                              2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetHobbyHorseLevel                         15     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetInputVector                             31     Defined|Public
+        (struct ReturnValue@0x0)
+  NATIVE   AlicePlayerController.GetJPNSKU                                  2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetMapName                                 3      Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.GetMemoriesCollected                       130    Defined|Public|HasOutParms
+        (int Current@0x0, int MaxNum@0x4, int I@0x8)
+  STUB     AlicePlayerController.GetMemoriesList                            3      Public
+        ()
+  SCRIPT   AlicePlayerController.GetNumOfSupportedResolutions               36     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetOriForward                              31     Defined|Event|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetOriStrafe                               31     Defined|Event|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetOverallCompletion                       24     Defined|Public
+        (float ReturnValue@0x0, float OverallCompletion@0x4)
+  SCRIPT   AlicePlayerController.GetPOILocation                             116    Defined|Public|HasOutParms
+        (struct Loc@0x0, bool ReturnValue@0xc, object Cam@0x10)
+  NATIVE   AlicePlayerController.GetPresenceID_Idle                         2      Native|Public
+        (int ReturnValue@0x0)
+  NATIVE   AlicePlayerController.GetPresenceID_Menu                         2      Native|Public
+        (int ReturnValue@0x0)
+  NATIVE   AlicePlayerController.GetPresenceID_Playing                      2      Native|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetPressedKey                              77     Defined|Public|HasOutParms
+        (name KeyName@0x0, bool ReturnValue@0x8)
+  SCRIPT   AlicePlayerController.GetRSValue                                 52     Defined|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetSlideParameters                         209    Defined|Public
+        (object PM@0x0, object Property@0x4)
+  SCRIPT   AlicePlayerController.GetSnoutsPeppered                          130    Defined|Public|HasOutParms
+        (int Current@0x0, int MaxNum@0x4, int I@0x8)
+  SCRIPT   AlicePlayerController.GetSupportedResolutions                    46     Defined|Public|HasOutParms
+        (int Index@0x0, int iResX@0x4, int iResY@0x8)
+  SCRIPT   AlicePlayerController.GetTeaPotLevel                             16     Defined|Public
+        (int ReturnValue@0x0)
+  NATIVE   AlicePlayerController.GetUserProfileSettings                     12     Native|Public
+        (int UserID@0x0, str UserSettings@0x4, int ReturnValue@0x10)
+  NATIVE   AlicePlayerController.GetVolumeGeometryInfo                      17     Native|Public|HasOutParms
+        (object Volume@0x0, float MinHeight@0x4, float MaxHeight@0x8)
+  SCRIPT   AlicePlayerController.GetVorpalBladeLevel                        15     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GetXPValue                                 31     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.GiantStomp                                 300    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.GiantStompOnButtonB                        98     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.GotoNextState                              112    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.Grabbed.BeginState                         223    Defined|Event|Public
+        (name PreviousStateName@0x0, object PlayerState@0x8)
+  STUB     AlicePlayerController.Grabbed.ChangeCameraMode                   3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  STUB     AlicePlayerController.Grabbed.ChangeShrinkingMode                3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Grabbed.EndState                           82     Defined|Event|Public
+        (name NextStateName@0x0)
+  STUB     AlicePlayerController.Grabbed.EyeStaffFirePress                  3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Grabbed.EyeStaffFireRelease                3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Grabbed.HobbyHorseFirePress                3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Grabbed.HobbyHorseFireRelease              3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Grabbed.InterpolateAlignBoxPosition        426    Defined|Public
+        (float DeltaTime@0x0, struct CurLoc@0x4, struct curFacing@0x10, float factor@0x1c)
+  SCRIPT   AlicePlayerController.Grabbed.PlayerMove                         82     Defined|Public
+        (float DeltaTime@0x0)
+  STUB     AlicePlayerController.Grabbed.TeapotCannonFirePress              3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Grabbed.TeapotCannonFireRelease            3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.Grabbed.TriggerDodge                       167    Defined|Exec|Public
+        (bool bActive@0x0)
+  STUB     AlicePlayerController.Grabbed.VorpalBladeFirePress               3      Exec|Public
+        ()
+  STUB     AlicePlayerController.Grabbed.VorpalBladeFireRelease             3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.HandleTargetSwitchCommond                  60     Defined|Public
+        (float aTurn@0x0, float aLookUp@0x4)
+  SCRIPT   AlicePlayerController.HasLineOfSightToPOI                        260    Defined|Simulated|Public|HasDefaults
+        (object POI@0x0, bool ReturnValue@0x4, object HitActor@0x8, struct ActualLookatLoc@0xc, struct HitLoc@0x18, struct HitNormal@0x24, struct StartTrace@0x30, struct StartTraceAdj@0x3c)
+  SCRIPT   AlicePlayerController.HideSkipUI                                 41     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.HideWeapon                                 28     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.HobbyHorseFirePress                        429    Defined|Exec|Public
+        (bool bIsTherePendingFire@0x0)
+  SCRIPT   AlicePlayerController.HobbyHorseFireRelease                      134    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.HoldActionDone                             60     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.HoldCheckTimer                             77     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.HoldEnoughToTriggerNewSwitch               85     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.InitInputSystem                            161    Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.InitPlayerMovementStates                   199    Defined|Public
+        (int Index@0x0, object mState@0x4)
+  SCRIPT   AlicePlayerController.InitTargetingModes                         377    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.IsAliceUnderWater                          75     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsAllowChangeWeapon                        249    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsAnyAvailableRangeWeapon                  140    Defined|Public
+        (bool ReturnValue@0x0, array WeaponList@0x4, int I@0x10)
+  SCRIPT   AlicePlayerController.IsAnyAvailableWeapon                       72     Defined|Public
+        (bool ReturnValue@0x0, array WeaponList@0x4)
+  SCRIPT   AlicePlayerController.IsCheshireCatCanAppear                     149    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsDeflecting                               27     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsDodging                                  29     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsDoingASpecialMove                        44     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsDoingSpecialMove                         45     Defined|Simulated|Public
+        (byte AMove@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.IsEyeStaffFinded                           19     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsFirstPersonViewActivated                 21     Defined|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePlayerController.IsFrechKeyboard                            2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsHobbyHorseFinded                         18     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsInFixedCamera                            16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsInGrabbedDelay                           29     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsInPOIMode                                111    Defined|Public
+        (bool ReturnValue@0x0, object Cam@0x4)
+  SCRIPT   AlicePlayerController.IsInputEnoughToTriggerDodge                22     Defined|Public
+        (struct vInput@0x0, bool ReturnValue@0xc)
+  SCRIPT   AlicePlayerController.IsJumping                                  34     Defined|Event|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsLastTickRSTriggered                      33     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsLeftStickDownPressed                     75     Defined|Public|HasDefaults
+        (bool ReturnValue@0x0, struct vInputDir@0x4)
+  SCRIPT   AlicePlayerController.IsLoadingAliceWonderlandDress              49     Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsLockOnBActor                             45     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsLockOnDeadNPC                            55     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsLockOnNPC                                67     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsMaintainingMovement                      14     Defined|Simulated|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsMeleeCharging                            9      Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsNewHoverControl                          50     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsOnAliceIdleTimeOut                       37     Defined|Public
+        (float fDuration@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.IsOnAliceQuitIdle                          20     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsOnSlidePlatform                          434    Defined|Public|HasDefaults
+        (bool ReturnValue@0x0, object TraceActor@0x4, struct HitInfo@0x8, float CurrHeight@0x24, object PM@0x28, struct Loc@0x2c, struct out_HitLocation@0x38, struct out_HitNormal@0x44, struct TraceDest@0x50, struct TraceStart@0x5c, struct TraceExtent@0x68, struct PawnLoc@0x74)
+  SCRIPT   AlicePlayerController.IsPepperGrinderAvailable                   140    Defined|Public
+        (bool ReturnValue@0x0, array WeaponList@0x4, int I@0x10)
+  NATIVE   AlicePlayerController.IsPlayingBinkFile                          7      Native|Public
+        (str Filename@0x0, bool ReturnValue@0xc)
+  SCRIPT   AlicePlayerController.IsRSTriggered                              38     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsTeaPotFinded                             19     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.IsTeapotCannonAvailable                    140    Defined|Public
+        (bool ReturnValue@0x0, array WeaponList@0x4, int I@0x10)
+  SCRIPT   AlicePlayerController.IsVorpalBladeFinded                        18     Defined|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePlayerController.IsWalkingOnOrientalRock                    7      Native|Public|HasOutParms
+        (object TracedBaseActor@0x0, bool ReturnValue@0x4)
+  NATIVE   AlicePlayerController.KynapseTakeDamager                         27     Native|Public
+        (object InstigatedBy@0x0, struct HitLocation@0x4, int Damage@0x10, class DamageType@0x14, struct Momentum@0x18)
+  SCRIPT   AlicePlayerController.LeaveChessPuzzleMode                       44     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.LeavingbShrinkingMode                      937    Defined|Public|HasDefaults
+        (object Alice2Pawn@0x0, struct NewLocation@0x4, struct CheckSize@0x10, object BaseActor@0x1c)
+  NATIVE   AlicePlayerController.LoadAllLevels                              2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.LoadCheckpoint                             2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.LoadingBinkIsFinished                      402    Defined|Event|Public
+        (object Age@0x0)
+  SCRIPT   AlicePlayerController.LoadingMapIsStart                          66     Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.LockOnModeActivated                        447    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.LockOnModeDeactivated                      805    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.LowerSalary                                37     Defined|Exec|HasOptionalParms|Public
+        (int subvalue@0x0)
+  NATIVE   AlicePlayerController.MakeOnSMActorEffect                        7      Native|Public
+        (object SMActor@0x0)
+  SCRIPT   AlicePlayerController.MeleeAttack                                443    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.MeleeFire                                  135    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ModifyRotationSpeed                        449    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, float aLookUp@0x4, float aTurn@0x8, float SpeedScale@0xc)
+  STUB     AlicePlayerController.MoveBlockPieceA                            3      Exec|Public
+        ()
+  STUB     AlicePlayerController.MoveBlockPieceB                            3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.NewTapToTriggerNewSwitch                   52     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.NotifyChangedWeapon                        124    Defined|Public
+        (object PreviousWeapon@0x0, object NewWeapon@0x4)
+  SCRIPT   AlicePlayerController.NotifyComboBlendingStart                   191    Defined|Simulated|Public
+        (object Wpn@0x0)
+  SCRIPT   AlicePlayerController.NotifyPhysicsVolumeChange                  263    Defined|Event|Public
+        (object NewVolume@0x0)
+  SCRIPT   AlicePlayerController.NotifyTakeHit                              38     Defined|Public
+        (object InstigatedBy@0x0, struct HitLocation@0x4, int Damage@0x10, class DamageType@0x14, struct Momentum@0x18)
+  SCRIPT   AlicePlayerController.OnActivateSonar                            90     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.OnAssembleBlock                            72     Defined|Simulated|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnBigMemoryCompleted                       79     Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnBinkPlay                                 31     Defined|Event|Public
+        (str MovieName@0x0)
+  SCRIPT   AlicePlayerController.OnBreakableActorDestroyed                  143    Defined|Public
+        (object BActor@0x0)
+  SCRIPT   AlicePlayerController.OnChallengeCaveCompleted                   183    Defined|Public
+        (object inAction@0x0, int I@0x4, int iChallengeNum@0x8)
+  SCRIPT   AlicePlayerController.OnChangeWonderlandDress                    147    Defined|Simulated|Public
+        (object Action@0x0, bool bStoryMode@0x4)
+  SCRIPT   AlicePlayerController.OnChapterCompleted                         314    Defined|Public
+        (object inAction@0x0, bool IsNewGamePlus@0x4)
+  SCRIPT   AlicePlayerController.OnDLCContentInstalled                      86     Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.OnDeactivateShieldBlocking                 102    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.OnDeathParticleFinished                    56     Defined|Public
+        (component PSC@0x0)
+  SCRIPT   AlicePlayerController.OnEmitCameraEffect                         36     Defined|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnExitMemorySoundMode                      62     Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnForceResetCamera                         13     Defined|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnInteractInLondon                         141    Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnLoginChange                              169    Defined|Public
+        (byte LocalUserNum@0x0)
+  SCRIPT   AlicePlayerController.OnLoginStatusChange                        38     Defined|Public
+        (byte NewStatus@0x0, byte PreviousStatus@0x1, struct NewId@0x4)
+  SCRIPT   AlicePlayerController.OnMakeBlockThin                            72     Defined|Simulated|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnManageObjectives                         38     Defined|Simulated|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnNPCDied                                  125    Defined|Public
+        (object npc@0x0, class DamageType@0x4, struct HitLocation@0x8)
+  SCRIPT   AlicePlayerController.OnPlayShrinkParticle                       111    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.OnRespawnParticleFinished                  69     Defined|Public
+        (component PSC@0x0)
+  SCRIPT   AlicePlayerController.OnSMLaned                                  24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.OnSetAbilityCamera                         169    Defined|Simulated|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnSetSonarActor                            430    Defined|Public
+        (object inAction@0x0, array objVars@0x4, object Object@0x10, object sonarActor@0x14, int iActive@0x18)
+  SCRIPT   AlicePlayerController.OnSetSoundMode                             31     Defined|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnSetVentState                             299    Defined|Public
+        (object inAction@0x0, array objVars@0x4, object Object@0x10, object vent@0x14)
+  SCRIPT   AlicePlayerController.OnShrinkingCoolDown                        11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.OnSkipBlockPuzzle                          72     Defined|Simulated|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnSwitchAliceTransitionHair                55     Defined|Simulated|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnSwitchLand                               460    Defined|Simulated|Public
+        (object Action@0x0, byte nAliceArcheType@0x4)
+  SCRIPT   AlicePlayerController.OnTeleport                                 153    Defined|Simulated|Public|HasDefaults
+        (object Action@0x0, struct Loc@0x4)
+  SCRIPT   AlicePlayerController.OnToggleCameraMagnetEffect                 62     Defined|Simulated|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnToggleCameraPreset                       165    Defined|Simulated|Event|Public
+        (object Action@0x0)
+  SCRIPT   AlicePlayerController.OnToggleCheshireCat                        369    Defined|Simulated|Event|Public
+        (object Action@0x0, object Cat@0x4, object TheNearestCat@0x8, float TheNearestDistance@0xc, float CatToAliceDis@0x10)
+  SCRIPT   AlicePlayerController.OnToggleGlide                              206    Defined|Public
+        (object Action@0x0, int GlideType@0x4)
+  SCRIPT   AlicePlayerController.OnTriggerAllGameFinish                     115    Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnTriggerBlockPuzzle                       910    Defined|Public
+        (object inAction@0x0, array objVars@0x4, int I@0x10, object Piece@0x14)
+  SCRIPT   AlicePlayerController.OnTriggerChessDizzy                        74     Defined|Simulated|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnTriggerChessPuzzle                       1111   Defined|Simulated|Public
+        (object inAction@0x0, int Idx@0x4, object AChessBoard@0x8, array objVars@0xc, object WhitePiece@0x18, object BlackPiece@0x1c, object BlockPiece@0x20, object GoalPiece@0x24, object TrapPiece@0x28)
+  SCRIPT   AlicePlayerController.OnUnlockEnemy                              79     Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnUpgradeHealth                            180    Defined|Public
+        (object inAction@0x0)
+  SCRIPT   AlicePlayerController.OnWonderlandDeathParticleFinished          34     Defined|Public
+        (component PSC@0x0)
+  SCRIPT   AlicePlayerController.OnWonderlandDeathParticleFinished2         14     Defined|Public
+        (component PSC@0x0)
+  NATIVE   AlicePlayerController.PS3UseCircleToAccept                       2      Native|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AlicePlayerController.PauseBinkFile                              7      Native|Public
+        (bool bPaused@0x0)
+  SCRIPT   AlicePlayerController.Pickup                                     719    Defined|Exec|Public
+        (object pickitem@0x0, object HealthUpgradePickupItem@0x4, object SecretPickUpItem@0x8, object BigSecretPickUpItem@0xc)
+  NATIVE   AlicePlayerController.PlayBinkFile                               27     Native|HasOptionalParms|Public
+        (str Filename@0x0, bool bBlock@0xc, bool bSoundOnly@0x10)
+  STUB     AlicePlayerController.PlayCameraAnim                             26     HasOptionalParms|Public
+        (object AnimToPlay@0x0, bool bGamePlayCamera@0x4, float Scale@0x8, float Rate@0xc, float BlendInTime@0x10, float BlendOutTime@0x14, bool bLoop@0x18, bool bIsDamageShake@0x1c)
+  SCRIPT   AlicePlayerController.PlayDeadEffect                             278    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayMemory                                 57     Defined|Public
+        (int MemoryBinkID@0x0)
+  SCRIPT   AlicePlayerController.PlaySlideParticle                          152    Defined|Public|HasDefaults
+        (struct FootLoc@0x0, object SlideParticleEmitter@0xc)
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.BeginState               39     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.EndState                 26     Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.HandleCommand            249    Defined|Public
+        (float DeltaTime@0x0, byte Command@0x4, float fJoyUp@0x8, float fJoyRight@0xc)
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.MoveBlockPieceA          54     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.MoveBlockPieceB          56     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerBlockPuzzle.PlayerMove               82     Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.PlayerChessPuzzle.BeginState               39     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerChessPuzzle.EndState                 26     Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerChessPuzzle.HandleCommand            249    Defined|Public
+        (float DeltaTime@0x0, byte Command@0x4, float fJoyUp@0x8, float fJoyRight@0xc)
+  SCRIPT   AlicePlayerController.PlayerChessPuzzle.PlayerMove               82     Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.PlayerClimbing.BeginState                  207    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  STUB     AlicePlayerController.PlayerClimbing.ChangeCameraMode            3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  STUB     AlicePlayerController.PlayerClimbing.ChangeShrinkingMode         3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerClimbing.DetermineBalancing          305    Defined|Public
+        (float AngleBtwInputAndDesiredMoveDir@0x0)
+  SCRIPT   AlicePlayerController.PlayerClimbing.EndState                    44     Defined|Event|Public
+        (name NextStateName@0x0)
+  STUB     AlicePlayerController.PlayerClimbing.MeleeFire                   3      Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerClimbing.NotifyPhysicsVolumeChange   103    Defined|Event|Public
+        (object NewVolume@0x0)
+  SCRIPT   AlicePlayerController.PlayerClimbing.PlayerMove                  1313   Defined|Public
+        (float DeltaTime@0x0, struct X@0x4, struct Y@0x10, struct Z@0x1c, struct newAccel@0x28, struct OldRotation@0x34, struct ViewRotation@0x40, bool bSaveJump@0x4c, struct MoveDirOnVolume@0x50, float Angle@0x5c, float sign@0x60)
+  SCRIPT   AlicePlayerController.PlayerClimbing.ProcessMove                 392    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  STUB     AlicePlayerController.PlayerClimbing.StartFire                   4      Exec|HasOptionalParms|Public
+        (byte FireModeNum@0x0)
+  SCRIPT   AlicePlayerController.PlayerFloat.AddSkirtFloatingEffect         514    Defined|Public
+        (float DeltaTime@0x0, float Scale@0x4, struct SkirtDisplacementOffset@0x8)
+  SCRIPT   AlicePlayerController.PlayerFloat.BeginState                     438    Defined|Event|Public
+        (name PreviousStateName@0x0, struct NewVelocity@0x8)
+  SCRIPT   AlicePlayerController.PlayerFloat.EndState                       378    Defined|Event|Public
+        (name NextStateName@0x0, struct ACP@0x8)
+  SCRIPT   AlicePlayerController.PlayerFloat.ForceEndStateInCinematic       22     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerFloat.GetFloatAnimInfo               240    Defined|Event|Public|HasOutParms
+        (float UpWeight@0x0, float RightWeight@0x4, struct AliceEyeLoc@0x8, struct AliceViewPointRot@0x14, bool bPawnFaceToCamera@0x20)
+  SCRIPT   AlicePlayerController.PlayerFloat.PlayerMove                     342    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, struct DeltaRot@0x10)
+  SCRIPT   AlicePlayerController.PlayerFloat.ProcessMove                    40     Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.PlayerFloat.UpdateAccel                    235    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct ForwardAccel@0x10, struct RightAccel@0x1c)
+  SCRIPT   AlicePlayerController.PlayerFloat.UpdateDeltaRotation            247    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, float YawSpeed@0x1c, struct NewRotation@0x20)
+  SCRIPT   AlicePlayerController.PlayerFloat.UpdateForwardAccel             165    Defined|Public|HasOutParms
+        (struct InForwardAccel@0x0, struct vForwardDir@0xc, struct AliceEyeLoc@0x18, struct AliceViewPointRot@0x24, float RawJoyUp@0x30)
+  SCRIPT   AlicePlayerController.PlayerFloat.UpdateRightAccel               410    Defined|Public|HasOutParms
+        (struct InRightAccel@0x0, struct vRightDir@0xc, struct AliceEyeLoc@0x18, struct AliceViewPointRot@0x24, float RawJoyRight@0x30)
+  SCRIPT   AlicePlayerController.PlayerFloat.UpdateRotation                 182    Defined|Public
+        (float DeltaTime@0x0, struct DeltaRot@0x4, struct ViewRotation@0x10)
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.BeginState          29     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.EndState            36     Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.delayBackHere       22     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.exitInteractState   17     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.gfxCallBack         99     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.giveupFocus         97     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.interactInLondonX   65     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.showDescrible       123    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AlicePlayerController.PlayerInteractInLondon.showPressX          122    Defined|Public
+        (float Duration@0x0)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.BeginState                   430    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.EndState                     273    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.LaunchFromJumpPad            102    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerJumpPad.PlayerMove                   443    Defined|Public
+        (float DeltaTime@0x0, struct Accel@0x4, struct Loc@0x10, struct DeltaRot@0x1c)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.UpdateAccel                  95     Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct ForwardAccel@0x10, struct RightAccel@0x1c)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.UpdateDeltaRotation          401    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, float RawJoyRight@0x1c, float YawSpeed@0x20, struct NewRotation@0x24, struct AliceViewPointRot@0x30, bool bPawnFaceToCamera@0x3c, struct AliceEyeLoc@0x40)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.UpdateForwardAccel           348    Defined|Public|HasOutParms
+        (struct InForwardAccel@0x0, struct vForwardDir@0xc, struct AliceEyeLoc@0x18, struct AliceViewPointRot@0x24, float RawJoyUp@0x30, float RawJoyRight@0x34, float DirFlag@0x38)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.UpdateRightAccel             165    Defined|Public|HasOutParms
+        (struct InRightAccel@0x0, struct vRightDir@0xc, struct AliceEyeLoc@0x18, struct AliceViewPointRot@0x24, float RawJoyRight@0x30)
+  SCRIPT   AlicePlayerController.PlayerJumpPad.UpdateRotation               182    Defined|Public
+        (float DeltaTime@0x0, struct DeltaRot@0x4, struct ViewRotation@0x10)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.BeginState              457    Defined|Event|Public
+        (name PreviousStateName@0x0, object AliceWeapon@0x8)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.DodgePC                 332    Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.EndState                342    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.IsPlayerPawnFarEnoughFromTarget 211    Defined|Public
+        (bool ReturnValue@0x0, float fDist@0x4, float fDistThreshold@0x8, object TargetPawn@0xc)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.OnActivateShieldBlocking 312    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.OnDeactivateShieldBlocking 102    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.PlayerMove              2096   Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14, bool bSaveJump@0x20)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.ProcessMove             176    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.ShieldBeakButtonPressedWhenLockOn 107    Defined|Exec|Public
+        (struct ABtnStatus@0x0)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.ShieldBeakButtonReleasedWhenLockOn 13     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.TriggerBlock            399    Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.TriggerDodge            135    Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.UpdateLockonDeltaRot    655    Defined|Event|Public
+        (struct NewDir@0x0, struct NewRot@0xc)
+  SCRIPT   AlicePlayerController.PlayerLockOnTarget.canBlock                637    Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.PlayerRoll.BeginState                      16     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerRoll.BoostRoll                       16     Defined|Exec|Public
+        (bool Boost@0x0)
+  SCRIPT   AlicePlayerController.PlayerRoll.Bump                            118    Defined|Public
+        (object Other@0x0, component OtherComp@0x4, struct HitNormal@0x8)
+  SCRIPT   AlicePlayerController.PlayerRoll.ChargePinballCannon             40     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerRoll.EndState                        37     Defined|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerRoll.HeadSwitchEject                 278    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerRoll.IsOnGround                      204    Defined|Public
+        (bool ReturnValue@0x0, struct HitLocation@0x4, struct HitNormal@0x10, struct Start@0x1c, struct End@0x28, struct R@0x34)
+  SCRIPT   AlicePlayerController.PlayerRoll.OnTeleport                      233    Defined|Simulated|Public
+        (object inAction@0x0, array objVars@0x4, int Idx@0x10, object destActor@0x14)
+  SCRIPT   AlicePlayerController.PlayerRoll.PlayerMove                      3658   Defined|Public
+        (float DeltaTime@0x0, struct Dir@0x4, struct BoostForce@0x10, struct Target@0x1c, struct Orientation@0x28, struct rotateDir@0x34, bool onGround@0x40)
+  SCRIPT   AlicePlayerController.PlayerRoll.ShootPinball                    97     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerRoll.getVolume1ByVelocity            211    Defined|Public
+        (float ReturnValue@0x0, float fVolume@0x4, struct curHeadVelocity@0x8)
+  SCRIPT   AlicePlayerController.PlayerRoll.getVolume2ByVelocity            205    Defined|Public
+        (float ReturnValue@0x0, float fVolume@0x4, struct curHeadVelocity@0x8)
+  SCRIPT   AlicePlayerController.PlayerRoll.updatePinballSound              323    Defined|Public
+        (bool bonGround@0x0, float volume1@0x4, float volume2@0x8)
+  SCRIPT   AlicePlayerController.PlayerSlide.BeginState                     259    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerSlide.Bump                           108    Defined|Public
+        (object Other@0x0, component OtherComp@0x4, struct HitNormal@0x8)
+  STUB     AlicePlayerController.PlayerSlide.ChangeCameraMode               3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  STUB     AlicePlayerController.PlayerSlide.ChangeShrinkingMode            3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSlide.EndState                       140    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerSlide.GetInputStrength               651    Defined|Public|HasOutParms
+        (struct NewSlope@0x0, struct HitNormal@0xc, struct ReturnValue@0x18, object HitActor@0x24, struct HitInfo@0x28, struct HitLocation@0x44, struct vRight@0x50, struct vUp@0x5c, struct vFront@0x68, struct vSlope@0x74, struct SlopeStrength@0x80, struct TurnStrength@0x8c, struct BoostStrength@0x98, struct BrakeStrength@0xa4, float RawJoyRight@0xb0, float RawJoyUp@0xb4, float JoyRight@0xb8)
+  STUB     AlicePlayerController.PlayerSlide.MeleeFire                      3      Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSlide.PlayerMove                     643    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, struct NewSlope@0x10, struct NewHitNormal@0x1c, struct X@0x28, struct Y@0x34, struct Z@0x40, byte DoubleClickMove@0x4c, struct DeltaRot@0x50, struct TargetRot@0x5c)
+  SCRIPT   AlicePlayerController.PlayerSlide.ProcessMove                    200    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  STUB     AlicePlayerController.PlayerSlide.StartFire                      4      Exec|HasOptionalParms|Public
+        (byte FireModeNum@0x0)
+  SCRIPT   AlicePlayerController.PlayerSlide.UpdateAccel                    38     Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct NewSlope@0x10, struct HitNormal@0x1c)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.AddSkirtFloatingEffect     303    Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.BeginState                 123    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.EndState                   191    Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.PlayerMove                 264    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, struct DeltaRot@0x10)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.ProcessMove                50     Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.UpdateAccel                805    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct vForwardDir@0x10, struct cameraLoc@0x1c, struct vCameraUp@0x28, struct vCameraRight@0x34, struct cameraRot@0x40, float RawJoyRight@0x4c, float DirFlag@0x50, float RawJoyUp@0x54)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.UpdateDeltaRotation        613    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, struct NewRotation@0x1c, float RawJoyRight@0x28, float DeltaYaw@0x2c)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.allSteamVentNone           29     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.changeAnim                 251    Defined|Public
+        (float RawJoyRight@0x0, float RawJoyUp@0x4, byte newAnim@0x8)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.getSteamVentForwardSpeed   70     Defined|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.getSteamVentRotationSpeed  70     Defined|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.getSteamVentStrafeSpeed    70     Defined|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.tryUnlockVentTrophy        211    Defined|Public
+        (float DeltaTime@0x0, float NewDuration@0x4)
+  SCRIPT   AlicePlayerController.PlayerSteamVent.updateHover                86     Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.PlayerSwimming.BeginState                  939    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerSwimming.BoostSwim                   224    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.Bump                        158    Defined|Public
+        (object Other@0x0, component OtherComp@0x4, struct HitNormal@0x8)
+  STUB     AlicePlayerController.PlayerSwimming.ChangeCameraMode            3      Exec|Public
+        (bool bToggleTargeting@0x0)
+  STUB     AlicePlayerController.PlayerSwimming.ChangeShrinkingMode         3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.EndState                    856    Defined|Event|Public
+        (name NextStateName@0x0, struct myRot@0x8, bool bWaterWalk@0x14)
+  SCRIPT   AlicePlayerController.PlayerSwimming.GetBankInfo                 121    Defined|Public|HasOutParms
+        (struct HitNormal@0x0, struct HitLocation@0xc, struct TraceEnd@0x18, struct TraceStart@0x24)
+  SCRIPT   AlicePlayerController.PlayerSwimming.IsAliceUnderWater           75     Defined|Public
+        (bool ReturnValue@0x0)
+  STUB     AlicePlayerController.PlayerSwimming.MeleeFire                   3      Public
+        ()
+  STUB     AlicePlayerController.PlayerSwimming.NextWeapon                  3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.NotifyPhysicsVolumeChange   726    Defined|Event|Public
+        (object NewVolume@0x0)
+  SCRIPT   AlicePlayerController.PlayerSwimming.OnBoostSwimCoolDownFinished 120    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.OnBoostSwimStop             83     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.OnIdleToSwimFinished        24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.OnSwimTurnFinished          111    Defined|Public
+        (object anim_node@0x0)
+  SCRIPT   AlicePlayerController.PlayerSwimming.OnTurnBack180Finished       85     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.PlayerMove                  8111   Defined|Public
+        (float DeltaTime@0x0, struct OldRotation@0x4, struct desiredRot@0x10, struct X@0x1c, struct Y@0x28, struct Z@0x34, struct newAccel@0x40, struct SwimDir@0x4c, bool TurnAroundFinished@0x58, float SwimSpeed@0x5c, float coefficient@0x60, float Temp@0x64, float AnalogSpeed@0x68, float PlaybackTime@0x6c, object anim_node@0x70)
+  STUB     AlicePlayerController.PlayerSwimming.PrevWeapon                  3      Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.ProcessMove                 847    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14, struct dis@0x20, float Speed@0x2c)
+  SCRIPT   AlicePlayerController.PlayerSwimming.ProcessSwimMove             7556   Defined|Public
+        (float DeltaTime@0x0, struct X@0x4, struct Y@0x10, struct Z@0x1c, struct newAccel@0x28, struct SwimDir@0x34, struct OldRotation@0x40, struct desiredRot@0x4c, float SwimSpeed@0x58, float coefficient@0x5c, float AnalogSpeed@0x60, float PlaybackTime@0x64, object anim_node@0x68, struct Start@0x6c, struct End@0x78, struct HitLoc@0x84, struct HitNormal@0x90, struct Rot@0x9c)
+  SCRIPT   AlicePlayerController.PlayerSwimming.RestorePitch                244    Defined|Public
+        (struct myRotation@0x0)
+  STUB     AlicePlayerController.PlayerSwimming.StartFire                   4      Exec|HasOptionalParms|Public
+        (byte FireModeNum@0x0)
+  SCRIPT   AlicePlayerController.PlayerSwimming.SwimAttack                  366    Defined|Exec|Public
+        (object fish@0x0, object Spike_fish@0x4)
+  SCRIPT   AlicePlayerController.PlayerSwimming.SwimTurnBack180             201    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.TurnAround                  1105   Defined|Public
+        (struct Rot@0x0, struct desiredRot@0xc, float DeltaTime@0x18, bool ReturnValue@0x1c, struct NewRot@0x20, float turnSpeed@0x2c, float AnalogSpeed@0x30, float factor@0x34, struct NewDir@0x38, struct DesiredDir@0x44)
+  SCRIPT   AlicePlayerController.PlayerSwimming.TurnToDesiredRotationSlowly 687    Defined|Public
+        (struct Rot@0x0, struct desiredRot@0xc, float DeltaTime@0x18, bool ReturnValue@0x1c, float diff_Yaw@0x20, float diff_Pitch@0x24, struct NewRot@0x28, float turnSpeed@0x34)
+  SCRIPT   AlicePlayerController.PlayerSwimming.TurnToIdle                  69     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerSwimming.UpdateRotation              347    Defined|Public
+        (float DeltaTime@0x0, struct DeltaRot@0x4, struct ViewRotation@0x10)
+  SCRIPT   AlicePlayerController.PlayerTick                                 2194   Defined|Event|Public
+        (float DeltaTime@0x0, object LP@0x4, object CrowdAgent@0x8, int CrowdNum@0xc, float factor@0x10)
+  SCRIPT   AlicePlayerController.PlayerWalking.BeginState                   207    Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.CheckInputForAutoClimb       390    Defined|Public
+        (struct vAccel@0x0, bool ReturnValue@0xc, float Angle@0x10, struct NewPos@0x14, object ap@0x20)
+  SCRIPT   AlicePlayerController.PlayerWalking.CheckIsHoldingSprintButton   86     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerWalking.EndState                     24     Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.NotifyPhysicsVolumeChange    287    Defined|Event|Public
+        (object NewVolume@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.PlayerMove                   1870   Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14, bool bSaveJump@0x20, struct PawnFacing@0x24, struct inputDir@0x30, float ratio@0x3c)
+  SCRIPT   AlicePlayerController.PlayerWalking.ProcessMove                  226    Defined|Public
+        (float DeltaTime@0x0, struct newAccel@0x4, byte DoubleClickMove@0x10, struct DeltaRot@0x14)
+  SCRIPT   AlicePlayerController.PlayerWalking.ShowSpline                   83     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerWalking.StartClockBombContextAction  344    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerWalking.StartContextAction           342    Defined|Exec|Public
+        ()
+  STUB     AlicePlayerController.PlayerWalking.TiggerSprint                 3      Exec|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.ToggleSonar                  64     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.PlayerWalking.TriggerDodge                 22     Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.Update2DDeltaRotation        270    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, struct TargetRot@0x1c, float RawJoyRight@0x28)
+  SCRIPT   AlicePlayerController.PlayerWalking.UpdateAccel                  864    Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, bool bCannotMove@0x10, bool bIsFalling@0x14, bool bShouldDoInstantTurning@0x18)
+  SCRIPT   AlicePlayerController.PlayerWalking.UpdateDeltaRotation          1219   Defined|Public|HasOutParms
+        (float DeltaTime@0x0, struct vAccel@0x4, struct Rot@0x10, float fSign@0x1c, float RotSpeedFactor@0x20, float DeltaYaw@0x24, float Temp@0x28, struct NewDir@0x2c, struct NewRot@0x38)
+  SCRIPT   AlicePlayerController.PlayerWalking.UpdatePawnStance             363    Defined|Public
+        (struct newAccel@0x0)
+  SCRIPT   AlicePlayerController.PlayerWalking.updateFacingTargetRot        357    Defined|Public
+        (struct vInput@0x0, struct VDir@0xc, struct rNewRot@0x18, object npc@0x24, object BKActor@0x28)
+  SCRIPT   AlicePlayerController.Possess                                    459    Defined|Event|Public
+        (object inPawn@0x0, bool bVehicleTransition@0x4, interface PlayerInterface@0x8)
+  SCRIPT   AlicePlayerController.PostApplyPersistentData                    435    Defined|Event|Public
+        (str sMapName@0x0, str sChap@0xc, int Idx@0x18, int iChap@0x1c)
+  SCRIPT   AlicePlayerController.PostBeginPlay                              744    Defined|Simulated|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.PostLoadCheckPointChangeArcheType          154    Defined|Simulated|Public
+        (byte nAliceArcheType@0x0)
+  SCRIPT   AlicePlayerController.PostMeleeAttack                            14     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PostSpawnPawn                              49     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PostSpecialMove                            14     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PostUpdateCamera                           358    Defined|Public|HasDefaults
+        (object CamActor@0x0, struct OldCameraLoc@0x4, struct CamLocation@0x10, struct CamRotation@0x1c)
+  SCRIPT   AlicePlayerController.PreMeleeAttack                             14     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.PreSavePersistentData                      36     Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.PressInputButton                           101    Defined|Public
+        (struct inBtn@0x0)
+  SCRIPT   AlicePlayerController.ProcessPOI                                 235    Defined|Simulated|HasOptionalParms|Public
+        (object POI@0x0, bool bUserInstigated@0x4, object BestPOI@0x8, object CurrPOI@0xc)
+  SCRIPT   AlicePlayerController.ProjectInputToCameraSpace                  565    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ProjectVectorToCameraSpace                 188    Defined|Public|HasDefaults
+        (struct vec@0x0, struct ReturnValue@0xc, struct X@0x18, struct Y@0x24, struct Z@0x30, struct CamLoc@0x3c, struct CamRot@0x48)
+  SCRIPT   AlicePlayerController.ProjectVectorToControllerSpace             179    Defined|Public|HasDefaults
+        (struct vec@0x0, struct ReturnValue@0xc, struct X@0x18, struct Y@0x24, struct Z@0x30, struct ControllerRot@0x3c)
+  SCRIPT   AlicePlayerController.ProjectVectorToSpace                       125    Defined|Public|HasDefaults
+        (struct vec@0x0, struct SpaceRot@0xc, struct ReturnValue@0x18, struct X@0x24, struct Y@0x30, struct Z@0x3c)
+  SCRIPT   AlicePlayerController.QuitFPS                                    202    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.QuitWeaponAttack                           236    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.RaiseSalary                                37     Defined|Exec|HasOptionalParms|Public
+        (int addvalue@0x0)
+  SCRIPT   AlicePlayerController.RangeFire                                  101    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.RangeWeaponFirePress                       1136   Defined|Exec|Public
+        (int CurWeaponType@0x0, bool bChangeWeaponSucceeded@0x4, object MeleeWeapon@0x8)
+  SCRIPT   AlicePlayerController.RangeWeaponFireRelease                     175    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.RecoverToDefaultStatus                     691    Defined|Simulated|HasOptionalParms|Public
+        (bool bResetControllerState@0x0, bool bStopFiring@0x4, bool bQuitShrinking@0x8)
+  SCRIPT   AlicePlayerController.ReleaseInputButton                         263    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.RemoveAliceWeapon                          112    Defined|Public
+        (class WeaponClass@0x0, object OldWeapon@0x4)
+  SCRIPT   AlicePlayerController.RemoveCameraEffect                         25     Defined|Public
+        (object CamEmitter@0x0)
+  SCRIPT   AlicePlayerController.RemovePointOfInterest                      94     Defined|Simulated|HasOptionalParms|Public
+        (object POI@0x0, byte ForceLookType@0x4, int Idx@0x8)
+  SCRIPT   AlicePlayerController.RemoveSonarDetectedActor                   30     Defined|Public
+        (object DesiredActor@0x0)
+  SCRIPT   AlicePlayerController.ResetAliceCanBeGrabbed                     24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetAliceStateAfterApplyCheckPoint        203    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetCameraPamameters                      80     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetDelayCameraTime                       11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetExitFloatFlag                         24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetFade                                  86     Defined|Public|HasDefaults
+        (struct FadeAlpha@0x0)
+  SCRIPT   AlicePlayerController.ResetIfCanDoDeflect                        11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetIfCanDoDodge                          11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetInputFlags                            43     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetMaterialsForNPCs                      59     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetRangeWeapons                          164    Defined|Public
+        (object Inv@0x0)
+  SCRIPT   AlicePlayerController.ResetSlideParameters                       19     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetSteamFloat                            11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ResetWeaponCurrentWeaponLevel              147    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.RespawnAlice                               989    Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.RespawnCloneDelayTimer                     24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.RestartAlice                               1027   Defined|Public
+        (int SocketIndex@0x0)
+  NATIVE   AlicePlayerController.RestorePreviousRigidBodyVelocity           2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.RightClickAttack                           143    Defined|Exec|Public
+        (bool bAttack@0x0)
+  SCRIPT   AlicePlayerController.RollTest                                   40     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SelectInputSpace                           106    Defined|Public
+        (bool bLeftStickFree@0x0)
+  SCRIPT   AlicePlayerController.ServerAbortConversation                    11     Final|Defined|Net|NetReliable|Public|NetServer
+        ()
+  SCRIPT   AlicePlayerController.SetAbility                                 46     Defined|Event|Public
+        (byte Index@0x0)
+  NATIVE   AlicePlayerController.SetAliceArcheType                          17     Native|Public
+        (object pPawn@0x0, object pAliceArcheType@0x4, float percentage@0x8)
+  SCRIPT   AlicePlayerController.SetAliceFPSCamera                          344    Defined|Public|HasDefaults
+        (float OldCameraDistance@0x0, float OldCameraMaxDistance@0x4, float OldCameraMinDistance@0x8, struct OldCameraOffset@0xc)
+  SCRIPT   AlicePlayerController.SetAliceUserDress                          33     Defined|Simulated|Public
+        (int DressIndex@0x0)
+  SCRIPT   AlicePlayerController.SetCanSwitchMelee                          11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.SetCinematicMode                           937    Defined|Public|HasDefaults
+        (bool bInCinematicMode@0x0, bool bHidePlayer@0x4, bool bAffectsHUD@0x8, bool bAffectsMovement@0xc, bool bAffectsTurning@0x10, bool bAffectsButtons@0x14, bool bHideCurrenWeapon@0x18, bool bPauseClockBomb@0x1c, struct ResetRoll@0x20, byte CinematicPhysic@0x2c)
+  SCRIPT   AlicePlayerController.SetCurAliceDressAsUserDress                44     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePlayerController.SetCurAliceDressFinished                   32     Defined|Simulated|Event|Public
+        (object pGFXMovie@0x0)
+  SCRIPT   AlicePlayerController.SetCurControllerType                       86     Defined|Public
+        (bool bGamepad@0x0, int OldControllerType@0x4)
+  SCRIPT   AlicePlayerController.SetCurrentPlayDataIndex                    61     Defined|Public
+        (int Index@0x0)
+  NATIVE   AlicePlayerController.SetFloatParticleParam                      12     Native|Public|HasOutParms
+        (object FloatPS@0x0, float fLifeTime@0x4)
+  SCRIPT   AlicePlayerController.SetFocusPoint                              133    Defined|Simulated|HasOptionalParms|Public
+        (bool bFromKismet@0x0, object FocusActor@0x4, struct InterpSpeedRange@0x8, struct InFocusFOV@0x10, float CameraFOV@0x18, bool bAlwaysFocus@0x1c, bool bAdjustCamera@0x20, bool bIgnoreTrace@0x24, name FocusBoneName@0x28)
+  NATIVE   AlicePlayerController.SetGStoryMode                              7      Native|Public
+        (bool bStoryMode@0x0)
+  SCRIPT   AlicePlayerController.SetInMainMenu                              16     Defined|Public
+        (bool DesiredInMainMenu@0x0)
+  NATIVE   AlicePlayerController.SetPCAttackType                            7      Native|Public
+        (int nType@0x0)
+  SCRIPT   AlicePlayerController.SetPause                                   65     Defined|HasOptionalParms|Public
+        (bool bPause@0x0, delegate CanUnpauseDelegate@0x4, bool ReturnValue@0x10, bool bReturn@0x14)
+  SCRIPT   AlicePlayerController.SetPendingWeaponToPiperGrinder             156    Defined|Exec|Public
+        (int CurWeaponType@0x0)
+  SCRIPT   AlicePlayerController.SetPendingWeaponToTeapotCannon             156    Defined|Exec|Public
+        (int CurWeaponType@0x0)
+  SCRIPT   AlicePlayerController.SetShowPathMagnet                          35     Defined|Public
+        (struct vLocation@0x0)
+  SCRIPT   AlicePlayerController.SetTapTimeCheck                            73     Defined|Public
+        ()
+  NATIVE   AlicePlayerController.SetTargetingModeOption                     7      Native|Public
+        (bool bHold@0x0)
+  SCRIPT   AlicePlayerController.SetWalkingCameraMode                       49     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.SetWeaponEnviormentCollision               16     Defined|Public
+        (bool bEnable@0x0)
+  SCRIPT   AlicePlayerController.SetXPValue                                 77     Defined|Public
+        (int Value@0x0)
+  SCRIPT   AlicePlayerController.SetupClockBomb                             418    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ShouldCancelSprint                         75     Defined|Public
+        (bool ReturnValue@0x0, bool bResult@0x4)
+  NATIVE   AlicePlayerController.ShouldShowSkipUI                           7      Native|Public|HasOutParms
+        (object outMatinee@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.ShowBlockCollectUI                         112    Defined|HasOptionalParms|Public
+        (int show@0x0, str sText@0x4)
+  SCRIPT   AlicePlayerController.ShowCancelMatineeHint                      236    Defined|Public
+        (bool bShow@0x0, str sText@0x4)
+  SCRIPT   AlicePlayerController.ShowContextActionUIHint                    211    Defined|HasOptionalParms|Public
+        (int show@0x0, str sText@0x4)
+  SCRIPT   AlicePlayerController.ShowCrossHair                              105    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AlicePlayerController.ShowDeathConfirmDialog                     99     Defined|Event|Public
+        ()
+  SCRIPT   AlicePlayerController.ShowDodgeToEndGrabUI                       124    Defined|Event|HasOptionalParms|Public
+        (float fTime@0x0, str Str@0x4)
+  SCRIPT   AlicePlayerController.ShowHUD                                    99     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ShowHealthUI                               242    Defined|Event|Public
+        (int curHealth@0x0, int maxHealth@0x4)
+  SCRIPT   AlicePlayerController.ShowJournalMenu                            470    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ShowKismetCustomUI                         114    Defined|Event|Public
+        (float Duration@0x0, str sText@0x4, byte Type@0x10)
+  SCRIPT   AlicePlayerController.ShowLockOnTargetUI                         105    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AlicePlayerController.ShowPOIUIHint                              110    Defined|HasOptionalParms|Public
+        (float fDuration@0x0, str sText@0x4)
+  SCRIPT   AlicePlayerController.ShowSpline.BeginState                      65     Defined|Event|Public
+        (name PreviousStateName@0x0)
+  SCRIPT   AlicePlayerController.ShowSpline.EndState                        44     Defined|Event|Public
+        (name NextStateName@0x0)
+  SCRIPT   AlicePlayerController.ShowSpline.PlayerMove                      1461   Defined|Public
+        (float DeltaTime@0x0, struct Rot@0x4, object SA@0x10, float Distance@0x14, float NearestDistance@0x18, float Speed@0x1c, struct Dir@0x20, object LookAtAct@0x2c)
+  SCRIPT   AlicePlayerController.ShowSpline.StopShowPath                    17     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.ShowWeapon                                 28     Defined|Exec|Public
+        ()
+  STUB     AlicePlayerController.SpecialMoveStarted                         3      Public
+        (byte NewMove@0x0)
+  SCRIPT   AlicePlayerController.StartFire                                  260    Defined|Exec|HasOptionalParms|Public
+        (byte FireModeNum@0x0)
+  SCRIPT   AlicePlayerController.StartHoldClockBomb                         24     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StartMaintainMovement                      62     Defined|Simulated|Public
+        (float fTime@0x0)
+  SCRIPT   AlicePlayerController.StartSlideParticle                         207    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StatUnitAndStatFPS                         56     Defined|Exec|Public
+        ()
+  NATIVE   AlicePlayerController.StopBinkFile                               2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.StopCurrentMovementState                   68     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StopForceLookAtPointOfInterest             142    Final|Defined|HasOptionalParms|Public
+        (bool bUserInstigated@0x0, object Cam@0x4, object POI@0x8)
+  SCRIPT   AlicePlayerController.StopLockOnCamera                           279    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StopMaintainMovement                       52     Defined|Simulated|Public
+        ()
+  SCRIPT   AlicePlayerController.StopMeleeFire                              115    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StopRangeFire                              339    Defined|Public
+        ()
+  STUB     AlicePlayerController.StopShowPath                               3      Public
+        ()
+  SCRIPT   AlicePlayerController.StopTap2HoldEvent                          139    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StopWeaponFire                             106    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.StopWeaponFiring                           100    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.SwimBounceOff                              136    Defined|Public
+        ()
+  NATIVE   AlicePlayerController.SwitchAliceArcheType                       12     Native|Public
+        (object pPawn@0x0, byte nAliceArcheType@0x4)
+  NATIVE   AlicePlayerController.SwitchAliceArcheTypePointer                7      Native|Public
+        (byte nAliceArcheType@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.SwitchMeleeWeapon                          122    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchPCAttackType                         169    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToArcheType                          739    Defined|Public
+        (byte nAliceArcheType@0x0, bool bResult@0x4, byte nOldAliceArcheType@0x8)
+  SCRIPT   AlicePlayerController.SwitchToEyeStaff                           44     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToHobbyHorse                         56     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToLeftLockTarget                     36     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToMovementState                      143    Defined|Public
+        (int NewState@0x0)
+  SCRIPT   AlicePlayerController.SwitchToPG                                 81     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToRightLockTarget                    36     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToTC                                 81     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchToTeapotCannon                       172    Defined|Exec|Public
+        (int CurWeaponType@0x0)
+  SCRIPT   AlicePlayerController.SwitchToVorpalBlade                        56     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.SwitchWeaponGroup                          77     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.TapCheckTimer                              64     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TargetingActorSwitched                     130    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TeapotCannonFirePress                      197    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.TeapotCannonFireRelease                    134    Defined|Exec|Public
+        ()
+  NATIVE   AlicePlayerController.TickSonarOffEffect                         17     Native|Public
+        (object TargetActor@0x0, float fStartTime@0x4, float fDeltaTime@0x8)
+  NATIVE   AlicePlayerController.TickSonarOnEffect                          17     Native|Public
+        (object TargetActor@0x0, float fStartTime@0x4, float fDeltaTime@0x8)
+  SCRIPT   AlicePlayerController.ToggleAutoTargetOnLivePawn                 44     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.ToggleCloseFollowCamera                    58     Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.TogglePOI                                  338    Defined|Exec|Public
+        (bool bEnable@0x0, object npc@0x4, object POI@0x8)
+  STUB     AlicePlayerController.TriggerBlock                               3      Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.TriggerBlockPC                             97     Defined|Exec|Public
+        (bool bActive@0x0)
+  SCRIPT   AlicePlayerController.TriggerIdleEffects                         133    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TryPOILookAt                               25     Final|Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TryPOILookAway                             69     Final|Defined|Public
+        (object CurrPOI@0x0)
+  SCRIPT   AlicePlayerController.TryRestoreWatch                            145    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TrySlideOnDodge                            802    Defined|Public|HasDefaults
+        (byte DodgeDir@0x0, bool ReturnValue@0x4, object Weapon@0x8, struct vOffset@0xc, struct DeltaPos@0x18, struct VDir@0x24, float fCollisionRadius@0x30, byte SM_Slide@0x34)
+  SCRIPT   AlicePlayerController.TryToCancelMatinee                         190    Defined|Exec|Public
+        (object Matinee@0x0)
+  SCRIPT   AlicePlayerController.TryToSwitchRangeWeapon                     302    Defined|Exec|Public
+        (bool bLeft@0x0, int CurWeaponType@0x4)
+  SCRIPT   AlicePlayerController.TryUnlockMemoryTrophy                      115    Defined|Public
+        (int I@0x0, int iBigMemoryNum@0x4)
+  SCRIPT   AlicePlayerController.TurnOffDodgeToEndGrabUI                    18     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TurnOnDodgeToEndGrabUI                     18     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.TurretCannonFire                           117    Defined|Exec|Public
+        (int I@0x0)
+  SCRIPT   AlicePlayerController.TurretMineFire                             115    Defined|Exec|Public
+        (int I@0x0)
+  SCRIPT   AlicePlayerController.UI_AdjustScreenPos                         169    Defined|Public|HasDefaults
+        (struct vPos@0x0, struct ReturnValue@0xc, int ViewSizeX@0x18, int ViewSizeY@0x1c, float FixedViewSizeX@0x20, float FixedViewSizeY@0x24, float MonitorAspectRatio@0x28, struct NewPos@0x2c)
+  SCRIPT   AlicePlayerController.UI_CameraOffsetRange                       135    Defined|Public
+        (float MinOffsetX@0x0, float MinOffsetY@0x4, float MinOffsetZ@0x8, float MaxOffsetX@0xc, float MaxOffsetY@0x10, float MaxOffsetZ@0x14)
+  SCRIPT   AlicePlayerController.UI_ClearBinkFileName                       11     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UI_EnableUIMode                            16     Defined|Public
+        (bool bEnable@0x0)
+  NATIVE   AlicePlayerController.UI_GetBenchMarkFPS                         17     Native|Public|HasOutParms
+        (float MaxFPS@0x0, float MinFPS@0x4, float AverageFPS@0x8)
+  SCRIPT   AlicePlayerController.UI_GetCameraOffset                         69     Defined|Public|HasOutParms
+        (float OffsetX@0x0, float OffsetY@0x4, float OffsetZ@0x8)
+  SCRIPT   AlicePlayerController.UI_GetCurControllerType                    13     Defined|Public
+        (int ReturnValue@0x0)
+  NATIVE   AlicePlayerController.UI_GetCurrentAspectRatio                   17     Native|Public|HasOutParms
+        (float MonitorAspectRatio@0x0, int ViewSizeX@0x4, int ViewSizeY@0x8)
+  NATIVE   AlicePlayerController.UI_IsGPUVendorNVIDIA                       2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.UI_MoveAlice                               117    Defined|Public|HasDefaults
+        (float OffsetX@0x0, float OffsetY@0x4, float OffsetZ@0x8, struct Aliceloc@0xc)
+  SCRIPT   AlicePlayerController.UI_MoveCamera                              69     Defined|Public
+        (float OffsetX@0x0, float OffsetY@0x4, float OffsetZ@0x8)
+  SCRIPT   AlicePlayerController.UI_MoveCameraSpeed                         69     Defined|Public
+        (float OffsetX@0x0, float OffsetY@0x4, float OffsetZ@0x8)
+  SCRIPT   AlicePlayerController.UI_PlayMemory                              77     Defined|HasOptionalParms|Public
+        (str Filename@0x0, bool bBlock@0xc, bool bSoundOnly@0x10, object pGFXMovie@0x14)
+  SCRIPT   AlicePlayerController.UI_RotateAlice                             36     Defined|Public
+        (float RotateSpeed@0x0)
+  SCRIPT   AlicePlayerController.UI_SetAliceRotation                        49     Defined|Public
+        (float fYaw@0x0)
+  SCRIPT   AlicePlayerController.UI_SetGFXMovie                             14     Defined|Public
+        (object pGFXMovie@0x0)
+  SCRIPT   AlicePlayerController.UI_UpdateBinkFileTick                      81     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UI_UpdateKeySettings                       303    Defined|Public
+        (bool bGamepad@0x0, name KeyName@0x4, name EnterName@0xc)
+  SCRIPT   AlicePlayerController.UI_UpdateReduceSaveIconDelayTick           44     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UI_UpdateSetResWaitTick                    82     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UT_SetStoryMode                            19     Defined|Public
+        (bool bInStoryMode@0x0)
+  SCRIPT   AlicePlayerController.UT_UnlockTrophyDressUps                    53     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UnShrinking                                981    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.UpdateAimOffset                            805    Defined|Simulated|Public|HasDefaults
+        (float DeltaTime@0x0, struct vPawn@0x4, struct vAim@0x10, struct vWeaponPos@0x1c, struct vTarget@0x28, struct vUp@0x34, float fAngle@0x40, float fAngleLimit@0x44, float fUpPct@0x48)
+  SCRIPT   AlicePlayerController.UpdateAimTargetUI                          76     Defined|Public
+        (bool bOnTarget@0x0)
+  SCRIPT   AlicePlayerController.UpdateCameraTargetingMode                  163    Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.UpdateComboInputState                      70     Defined|Public
+        (byte curInput@0x0, bool ReturnValue@0x4)
+  SCRIPT   AlicePlayerController.UpdateCrossHair                            195    Defined|Event|Public|HasDefaults
+        (struct ViewLocation@0x0, struct cameraLoc@0xc, struct ViewRotation@0x18, struct cameraRot@0x24, struct TraceCrossHairLocation@0x30)
+  SCRIPT   AlicePlayerController.UpdateCrossHairPosition                    100    Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.UpdateLockOnTargetUI                       100    Defined|Public
+        ()
+  STUB     AlicePlayerController.UpdateLockonDeltaRot                       3      Event|Public
+        ()
+  SCRIPT   AlicePlayerController.UpdateNextCriticalUI                       158    Defined|HasOptionalParms|Public
+        (object TargetActor@0x0, int SocketID@0x4, bool bNextCritical@0x8)
+  STUB     AlicePlayerController.UpdatePawnStance                           3      Public
+        (struct newAccel@0x0)
+  SCRIPT   AlicePlayerController.UpdatePreTargetingModes                    159    Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.UpdatePresence                             568    Defined|Public
+        (array StringSettingList@0x0, array PropertyList@0xc, int PresenceNeeded@0x18, int ControllerId@0x1c, bool IsXenon@0x20)
+  SCRIPT   AlicePlayerController.UpdateRangeWeaponUI                        164    Defined|Public
+        (object Inv@0x0)
+  SCRIPT   AlicePlayerController.UpdateRotation                             512    Defined|Public|HasDefaults
+        (float DeltaTime@0x0, struct DeltaRot@0x4, struct ViewRotation@0x10, float CamRotSpeed@0x1c)
+  SCRIPT   AlicePlayerController.UpdateSlideEmitter                         117    Defined|Public|HasDefaults
+        (struct FootLoc@0x0)
+  SCRIPT   AlicePlayerController.UpdateTargetingModes                       290    Defined|Public
+        (float DeltaTime@0x0)
+  SCRIPT   AlicePlayerController.UpgradeWeapon                              343    Defined|Public
+        (class WeaponClass@0x0, int newLevel@0x4, object TargetWeapon@0x8)
+  STUB     AlicePlayerController.ViewAsset                                  4      Exec|HasOptionalParms|Public
+        (int Index@0x0)
+  SCRIPT   AlicePlayerController.VorpalBladeFirePress                       461    Defined|Exec|Public
+        (bool bIsTherePendingFire@0x0)
+  SCRIPT   AlicePlayerController.VorpalBladeFireRelease                     194    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.WeaponAttack                               474    Defined|Exec|Public
+        ()
+  SCRIPT   AlicePlayerController.backtoTitle                                257    Defined|Public
+        (interface PlayerInterface@0x0)
+  SCRIPT   AlicePlayerController.belongToType                               292    Defined|Public
+        (str SourceType@0x0, str sType@0xc, bool ReturnValue@0x18)
+  SCRIPT   AlicePlayerController.calcCompletePercent                        458    Defined|Public
+        (float ReturnValue@0x0, int I@0x4, int iMemoryNum@0x8, int iChallengeNum@0xc, int totalMemory@0x10, int totalSnout@0x14, int totalChallenge@0x18, int totalSecret@0x1c, float chapWeight@0x20)
+  SCRIPT   AlicePlayerController.canClockBomb                               62     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.closeMoveCircle                            99     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.closeRedeemPurchasePop                     26     Defined|Public
+        ()
+  STUB     AlicePlayerController.exitInteractState                          3      Public
+        ()
+  SCRIPT   AlicePlayerController.forceUpdateRangeWeaponUI                   164    Defined|Public
+        (object Inv@0x0)
+  SCRIPT   AlicePlayerController.getAliceGameEngine                         49     Defined|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.getAliceStateName                          116    Defined|Public
+        (str ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.getBKActorInInputCone                      322    Defined|Event|Public|HasDefaults
+        (struct inputDir@0x0, object ReturnValue@0xc, object resultActor@0x10, object BActor@0x14, float angleThreshold@0x18, float fAngle@0x1c, float fDist@0x20, float fMinDist@0x24, struct vDist@0x28)
+  SCRIPT   AlicePlayerController.getControlLayout                           44     Defined|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.getFacingSlideTarget                       13     Defined|Event|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.getInputVectorSlideToTarget                31     Defined|Event|Public
+        (struct ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.getNPCInInputCone                          348    Defined|Event|Public|HasDefaults
+        (struct inputDir@0x0, object ReturnValue@0xc, object resultNPC@0x10, object npc@0x14, float angleThreshold@0x18, float fAngle@0x1c, float fDist@0x20, float fMinDist@0x24, struct vDist@0x28)
+  SCRIPT   AlicePlayerController.getSafeTeleportLoc                         31     Defined|Public
+        (struct ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.hideHUD                                    99     Defined|Exec|Public
+        ()
+  STUB     AlicePlayerController.interactInLondonX                          3      Exec|Public
+        ()
+  NATIVE   AlicePlayerController.interface_LoadConfigData                   2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.interface_ResetConfigData                  2      Native|Public
+        ()
+  NATIVE   AlicePlayerController.interface_SaveConfigData                   2      Native|Public
+        ()
+  SCRIPT   AlicePlayerController.interface_gotoState                        13     Defined|Public
+        (name NewState@0x0)
+  SCRIPT   AlicePlayerController.isContextActorPressurePad                  66     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.isJumpPadJumping                           66     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.isNewCycleControl                          31     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.isShowPersistentData                       36     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.isShowTrophy                               36     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.isShowVentCylinder                         36     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AlicePlayerController.notifyInputKey                             428    Defined|Public
+        (int ControllerId@0x0, name Key@0x4, byte Event@0xc, float AmountDepressed@0x10, bool bGamepad@0x14, object Matinee@0x18)
+  SCRIPT   AlicePlayerController.notifyUIUpgradeHealth                      97     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.onAliceJump                                37     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.playUniqueSound                            117    Defined|Public
+        (object newSound@0x0)
+  SCRIPT   AlicePlayerController.reloadTitleMenu                            26     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.setControlLayout                           36     Defined|Exec|Public
+        (int Index@0x0)
+  SCRIPT   AlicePlayerController.setFacingSlideTarget                       14     Defined|Event|Public
+        (object Target@0x0)
+  SCRIPT   AlicePlayerController.setMemoryFragment                          41     Defined|Public
+        (str fragmentName@0x0)
+  SCRIPT   AlicePlayerController.setSafeTeleportLoc                         32     Defined|Public
+        (struct safeLoc@0x0)
+  SCRIPT   AlicePlayerController.setSecretPick                              31     Defined|Public
+        (str secrettag@0x0)
+  SCRIPT   AlicePlayerController.setSountActive                             33     Defined|Public
+        (name snouttag@0x0)
+  SCRIPT   AlicePlayerController.setUnshrinkBlockActor                      36     Defined|Event|Public
+        (object blocker@0x0)
+  SCRIPT   AlicePlayerController.shouldAliceCollide                         169    Defined|Event|HasOptionalParms|Public
+        (object touchedActor@0x0, component HitComponent@0x4, bool ReturnValue@0x8, object collectActor@0xc, component smComponent@0x10)
+  SCRIPT   AlicePlayerController.shouldBlockLockOn                          200    Defined|HasOptionalParms|Public
+        (object touchedActor@0x0, component HitComponent@0x4, bool ReturnValue@0x8, object collectActor@0xc, component smComponent@0x10)
+  SCRIPT   AlicePlayerController.showBlockPuzzleLeftStep                    104    Defined|Public
+        (int Left@0x0)
+  SCRIPT   AlicePlayerController.showBlockPuzzleUI                          105    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AlicePlayerController.showCat                                    293    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AlicePlayerController.showChessPuzzleLeftStep                    104    Defined|Public
+        (int Left@0x0)
+  SCRIPT   AlicePlayerController.showMoveCircle                             99     Defined|Public
+        ()
+  SCRIPT   AlicePlayerController.traceTest                                  152    Defined|Public|HasDefaults
+        (struct Start@0x0, struct End@0xc, struct HitLocation@0x18, struct HitNormal@0x24, object Wall@0x30)
+  SCRIPT   AlicePlayerController.tryUnlockAbilityTrophy                     185    Defined|Public
+        (byte Index@0x0)
+  SCRIPT   AlicePlayerController.tryUnlockChapterCompleted                  748    Defined|Public
+        (byte chapterIndex@0x0, int iDifficulty@0x4, int I@0x8, int ChapterIdx@0xc, int LowerstChapterDifficulty@0x10)
+  SCRIPT   AlicePlayerController.tryUnlockFamilyMemoryTrophy                189    Defined|Public
+        (int I@0x0, int iAllFamilyMemory@0x4, int iFamilyMemory@0x8, str sType@0xc, str sName@0x18)
+  STUB     AlicePlayerController.updateFacingTargetRot                      3      Public
+        ()
+  NATIVE   AlicePlayerController.updatePCPlayerProfileData                  2      Native|Public
+        ()

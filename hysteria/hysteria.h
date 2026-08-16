@@ -26,6 +26,7 @@ typedef HRESULT (WINAPI *EndScene_t)(IDirect3DDevice9*);
 typedef HRESULT (WINAPI *Reset_t)(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*);
 
 void logmsg(const char *fmt, ...);
+void instance_bypass_init(void);
 
 extern unsigned int g_gnames, g_gobjects;
 extern int g_nameOff;
@@ -78,6 +79,7 @@ void  cfg_set_bool(const char *mod, const char *key, int val);
 void  cfg_save(const char *mod);
 void  api_hud_text(int x, int y, unsigned argb, const char *t);
 void  api_hud_rect(int x, int y, int w, int h, unsigned argb);
+void  api_hud_text_size(const char *s, int *w, int *h);
 
 extern long g_mouseDX, g_mouseDY;
 extern int g_mouseCapture, g_mouseSuppress;
@@ -92,6 +94,15 @@ int editor_props(void *obj, AEditProp *out, int max);
 
 #include "hysteria_api.h"
 HysteriaAPI* hysteria_api_get(void);
+
+extern int g_gameLogWant, g_gameLogRate;
+void gamelog_update(void);
+int  gamelog_set(int on);
+int  gamelog_enable(int on);
+int  gamelog_active(void);
+int  gamelog_rate(int linesPerSecond);
+void gamelog_uninstall(void);
+void gamelog_set_cb(AGameLogCb cb);
 void ui_panels_clear(void);
 void ui_install_api(void);
 

@@ -1,0 +1,40 @@
+class CannonCrabProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    bPersistentProjectile=True
+    AmbientSound="SFX_CannonCrab.sfx_cannoncrab_ball_loop01_Cue"
+    ProjFlightEffectTemplate="FX_NPC_CannonCrab.P_CannonC_ProjFireBall"
+    ProjFlightEffects="Default__CannonCrabProjectile.Particle"
+    AccelRate=3500.0
+    CheckRadius=30.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=350.0
+    MaxShotDist=10000.0
+    CameraExplosionEffectClass="AliceEmit_CameraCannonCrab"
+    RadiusDamageTime=0.1
+    KnockBackID=4
+    ProjTrace="Default__CannonCrabProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__CannonCrabProjectile.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    AngleToleranceXY=60.0
+    AngleToleranceZ=60.0
+    Speed=2500.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=12.0
+    DamageRadius=100.0
+    MyDamageType="DmgType_CannonCrab"
+    CylinderComponent="Default__CannonCrabProjectile.CollisionCylinder"
+    Components(0)="Default__CannonCrabProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=0.0
+    CollisionComponent="Default__CannonCrabProjectile.CollisionCylinder"
+}

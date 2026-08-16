@@ -1,0 +1,40 @@
+class EyepotProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    bForceTraceGround=True
+    AmbientSound="SFX_Eyepot.sfx_npc_eyepot_projectile_loop_Cue"
+    ProjFlightEffectTemplate="FX_NPC_Eyepot.P_Eyepot_TeaProjectile"
+    ProjFlightEffects="Default__EyepotProjectile.Particle"
+    AccelRate=5000.0
+    CheckRadius=50.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Heavy"
+    MinShotDist=600.0
+    MaxShotDist=4000.0
+    CameraExplosionEffectClass="AliceEmit_CameraEyepotWaterSpray"
+    RadiusDamageTime=0.1
+    KnockBackID=4
+    ProjTrace="Default__EyepotProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__EyepotProjectile.RangeAttackActorinfo"
+    GroundTraceGapForWalkingPawn=100.0
+    GroundTraceGapForFlyingPawn=20.0
+    Speed=1400.0
+    MaxSpeed=10000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=200.0
+    MyDamageType="DmgType_Tea"
+    CylinderComponent="Default__EyepotProjectile.CollisionCylinder"
+    Components(0)="Default__EyepotProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__EyepotProjectile.CollisionCylinder"
+}

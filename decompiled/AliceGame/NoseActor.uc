@@ -1,0 +1,29 @@
+class NoseActor extends NoseActorBase
+    placeable
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    AudioActive="Default__NoseActor.Active"
+    AudioIdle="Default__NoseActor.Idle"
+    AudioCharge="Default__NoseActor.Charge"
+    AudioRelief="Default__NoseActor.Relief"
+    DestroyParticle="Default__NoseActor.DP"
+    IdleParticle="Default__NoseActor.IP"
+    ChargeParticle="Default__NoseActor.CP"
+    SkeletalMeshComponent="Default__NoseActor.SkeletalMeshComponent0"
+    LightEnvironment="Default__NoseActor.MyLightEnvironment"
+    FacialAudioComp="Default__NoseActor.FaceAudioComponent"
+    Components(0)="Default__NoseActor.MyLightEnvironment"
+    Components(1)="Default__NoseActor.SkeletalMeshComponent0"
+    Components(2)="Default__NoseActor.FaceAudioComponent"
+    Components(3)="Default__NoseActor.CollisionCylinder"
+    Components(4)="Default__NoseActor.Active"
+    Components(5)="Default__NoseActor.Idle"
+    Components(6)="Default__NoseActor.Relief"
+    Components(7)="Default__NoseActor.Charge"
+    Components(8)="Default__NoseActor.DP"
+    Components(9)="Default__NoseActor.IP"
+    Components(10)="Default__NoseActor.CP"
+    CollisionComponent="Default__NoseActor.CollisionCylinder"
+}

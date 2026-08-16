@@ -1,0 +1,37 @@
+class SamuraiWaspProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    AmbientSound="SFX_SamWasp.sfx_swasp_bow_arrow_loop01_Cue"
+    ProjFlightEffectTemplate="FX_NPC_SamuraiWasp.P_NPC_SamuraiWasp_Projectile"
+    ProjFlightEffects="Default__SamuraiWaspProjectile.Particle"
+    AccelRate=6000.0
+    CheckRadius=50.0
+    CameraEffectRadius=10000.0
+    DamageStrength="EDSTR_Medium"
+    MinShotDist=600.0
+    MaxShotDist=4000.0
+    RadiusDamageTime=0.2
+    KnockBackID=4
+    ProjTrace="Default__SamuraiWaspProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__SamuraiWaspProjectile.RangeAttackActorinfo"
+    GroundTraceGapForWalkingPawn=100.0
+    GroundTraceGapForFlyingPawn=20.0
+    Speed=2000.0
+    MaxSpeed=10000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=20.0
+    MyDamageType="DmgType_SamuraiWasp"
+    CylinderComponent="Default__SamuraiWaspProjectile.CollisionCylinder"
+    Components(0)="Default__SamuraiWaspProjectile.CollisionCylinder"
+    LifeSpan=3.0
+    CollisionComponent="Default__SamuraiWaspProjectile.CollisionCylinder"
+}

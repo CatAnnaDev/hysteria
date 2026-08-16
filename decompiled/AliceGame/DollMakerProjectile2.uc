@@ -1,0 +1,39 @@
+class DollMakerProjectile2 extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    AmbientSound="SFX_Dollmaker.sfx_dollmaker_projectile_looping"
+    ProjFlightEffectTemplate="FX_NPC_DollMaker.P_Dollmaker_Projectile"
+    ProjFlightEffects="Default__DollMakerProjectile2.Particle"
+    AccelRate=2500.0
+    CheckRadius=25.0
+    CameraEffectRadius=10000.0
+    RadiusAttackRetrigerTime=1.0
+    DamageStrength="EDSTR_Medium"
+    MinShotDist=350.0
+    MaxShotDist=4000.0
+    RadiusDamageTime=1.6
+    KnockBackID=2
+    RadiusDamageValue=8.0
+    ProjTrace="Default__DollMakerProjectile2.ProjectileTrace"
+    RangeAttackActorList="Default__DollMakerProjectile2.RangeAttackActorinfo"
+    bReboundableNPCProjectile=1
+    Speed=3000.0
+    MaxSpeed=5500.0
+    bRotationFollowsVelocity=True
+    Damage=16.0
+    DamageRadius=80.0
+    MyDamageType="DmgType_DollMaker"
+    CylinderComponent="Default__DollMakerProjectile2.CollisionCylinder"
+    Components(0)="Default__DollMakerProjectile2.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__DollMakerProjectile2.CollisionCylinder"
+}

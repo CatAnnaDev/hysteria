@@ -398,6 +398,10 @@ void ui_render(IDirect3DDevice9 *dev, int W, int H) {
         hui_checkbox("Log player events", &g_modLog);
         hui_checkbox("Live log console (in-game)", &g_consoleVisible);
         if (hui_button("Reload mods (Mods/*.dll)")) g_modReloadReq = 1;
+        char gl[64]; wsprintfA(gl, "Logs du jeu: %s (%d/s)", gamelog_active() ? "CAPTURE" : "off", g_gameLogRate);
+        ui_label_at(gl);
+        { int on = gamelog_active(); hui_checkbox("Capturer les logs du script (F4)", &on);
+          if (on != gamelog_active()) gamelog_set(on); }
     }
     if (hui_section("Live Editor")) {
         static char filter[64]; static int flen = 0;

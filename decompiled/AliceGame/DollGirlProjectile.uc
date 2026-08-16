@@ -1,0 +1,34 @@
+class DollGirlProjectile extends NpcProjectile
+    notplaceable
+    config(Weapon)
+    hidecategories(Navigation);
+
+defaultproperties
+{
+    bNPCProjectileHitNPC=1
+    DamageForNPCs=0
+    bCheckProjectileLight=True
+    bWaitForEffects=True
+    ProjFlightEffectTemplate="GFX_Eyepot.TeaStreamer_Texture_NoDirection"
+    ProjFlightEffects="Default__DollGirlProjectile.Particle"
+    AccelRate=2000.0
+    CheckRadius=20.0
+    CameraEffectRadius=10000.0
+    MinShotDist=400.0
+    MaxShotDist=10000.0
+    RadiusDamageTime=0.1
+    KnockBackID=6
+    ProjTrace="Default__DollGirlProjectile.ProjectileTrace"
+    RangeAttackActorList="Default__DollGirlProjectile.RangeAttackActorinfo"
+    Speed=500.0
+    MaxSpeed=5000.0
+    bRotationFollowsVelocity=True
+    Damage=8.0
+    DamageRadius=200.0
+    MyDamageType="DmgType_DollGirl"
+    CylinderComponent="Default__DollGirlProjectile.CollisionCylinder"
+    Components(0)="Default__DollGirlProjectile.CollisionCylinder"
+    DrawScale=1.2
+    LifeSpan=3.0
+    CollisionComponent="Default__DollGirlProjectile.CollisionCylinder"
+}

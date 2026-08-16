@@ -1,0 +1,77 @@
+class SphinxSequenceEventBase extends Object
+    native
+    notplaceable
+    hidecategories(Movement,Collision,Advanced,Attachment,Display,Object);
+
+enum SphinxSequenceEventType
+{
+    e_SphinxSequenceET_PlayAnim,
+    e_SphinxSequenceET_PlaySound,
+    e_SphinxSequenceET_WaitTime,
+    e_SphinxSequenceET_PlayParticle,
+    e_SphinxSequenceET_PreAttackDist,
+    e_SphinxSequenceET_EventRagdoll,
+    e_SphinxSequenceET_DestroyComponent,
+    e_SphinxSequenceET_ChangeMaterial,
+    e_SphinxSequenceET_FadeComponent,
+    e_SphinxSequenceET_SpawnPickup,
+    e_SphinxSequenceET_LockTargets,
+    e_SphinxSequenceET_UnattachComponent,
+    e_SphinxSequenceET_ActiveShield,
+    e_SphinxSequenceET_ChangeAnimTreeBlendingBranch,
+    e_SphinxSequenceAC_ConditionJump,
+    e_SphinxSequenceET_ChangeConditionIndex,
+    e_SphinxSequenceET_RemoteEvent,
+    e_SphinxSequenceAC_Exit,
+    e_SphinxSequenceET_ModifyPawnHealth,
+    e_SphinxSequenceET_SetNoDamageEffect,
+    e_SphinxSequenceET_SetKnockBackPara,
+    e_SphinxSequenceET_SetPhysic,
+    e_SphinxSequenceET_PlayMorphTarget,
+    e_SphinxSequenceET_RandomJump,
+    e_SphinxSequenceET_ChangeCollisionPhAT,
+    e_SphinxSequenceET_AttchAlice,
+    e_SphinxSequenceET_RunAnotherPackage,
+    e_SphinxSequenceET_ModifyRotateAndSpeed,
+    e_SphinxSequenceET_ToggleSkeletalControl,
+    e_SphinxSequenceET_AnnounceInFightProcess,
+    e_SphinxSequenceET_ToggleCriticalUI,
+    e_SphinxSequenceET_ChangeDamageAnim,
+    e_SphinxSequenceET_ChangeAttachedActorDamageAnim,
+    e_SphinxSequenceET_ChangeCollisionType,
+    e_SphinxSequenceET_SetHideComponent,
+    e_SphinxSequenceET_SetSonarActive,
+    e_SphinxSequenceET_SetSonarInfo,
+    e_SphinxSequenceET_SetNPCScale,
+    e_SphinxSequenceET_KillAttachedActor,
+    e_SphinxSequenceET_ToggleAttachedActor,
+    e_SphinxSequenceET_ToggleAttachedActorHidden,
+    e_SphinxSequenceET_PlayAnimOnAttachedActor,
+    e_SphinxSequenceET_SetHideSelf,
+    e_SphinxSequenceET_ToggleSubConditionActive,
+    e_SphinxSequenceET_ToggleLoopSound,
+    e_SphinxSequenceET_ToggleLoopParticle,
+    e_SphinxSequenceET_ToggleBlockingCheckWithDesiredBlockingVolumn,
+    e_SphinxSequenceET_ToggleBlockingCheckWithAlice,
+    e_SphinxSequenceET_SetNPCDeath,
+    e_SphinxSequenceET_SetNPCFightAgentParam,
+    e_SphinxSequenceET_ToggleNPCGodMode,
+    e_SphinxSequenceET_ChangeMovingPhAT,
+    e_SphinxSequenceET_SwitchCollisionBetweenPhATAndCylider,
+    e_SphinxSequenceET_Teleport,
+    e_SphinxSequenceET_SetGDGlobeValue,
+    e_SphinxSequenceET_SetGotoLocation,
+    e_SphinxSequenceET_MoveToGotoLocation,
+    e_SphinxSequenceET_BlendToLocation,
+    e_SphinxSequenceET_SetAccelerate,
+    e_SphinxSequenceET_ActiveUIPrompt,
+    e_SphinxSequenceET_ToggleMessageEvent,
+    e_SphinxSequenceET_ModifyPawnMaxHealth,
+    e_SphinxSequenceET_MoveToOriginalSpawnLocation,
+};
+
+var const SphinxSequenceEventType SequenceType;
+
+defaultproperties
+{
+}

@@ -22,7 +22,7 @@ const char *log_path(void){
     return path;
 }
 void logmsg(const char *fmt, ...){
-    char b[512]; va_list ap; va_start(ap,fmt); int n=wvsprintfA(b,fmt,ap); va_end(ap);
+    char b[1200]; va_list ap; va_start(ap,fmt); int n=wvsprintfA(b,fmt,ap); va_end(ap);
     HANDLE h=CreateFileA(log_path(),FILE_APPEND_DATA,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
     if(h!=INVALID_HANDLE_VALUE){DWORD w;SetFilePointer(h,0,NULL,FILE_END);WriteFile(h,b,n,&w,NULL);CloseHandle(h);}
     console_push(b);
@@ -284,8 +284,10 @@ static DWORD WINAPI diag_thread(LPVOID a){(void)a;
 BOOL WINAPI DllMain(HINSTANCE h,DWORD reason,LPVOID r){(void)r;
     if(reason==DLL_PROCESS_ATTACH){ DisableThreadLibraryCalls(h);
         logmsg("\r\n==== hysteria ATTACH pid=%lu ====\r\n", GetCurrentProcessId());
+        instance_bypass_init();
         CreateThread(NULL,0,setup_thread,NULL,0,NULL);
         CreateThread(NULL,0,diag_thread,NULL,0,NULL);
     }
+    else if(reason==DLL_PROCESS_DETACH && !r) gamelog_uninstall();
     return TRUE;
 }

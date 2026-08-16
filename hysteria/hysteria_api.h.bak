@@ -1,0 +1,310 @@
+#ifndef HYSTERIA_API_H
+#define HYSTERIA_API_H
+
+// Hysteria modding API (Alice: Madness Returns, UE3).
+// A mod is a DLL exporting:  void ModMain(HysteriaAPI* api)
+// Build it (C/C++/Rust), drop it in Mods/, then "Reload mods" in the overlay.
+//
+//   static HysteriaAPI* A;
+//   static void on_dmg(AEvent* e){ if(e->self==A->player_pawn()) e->block=1; }   // godmode
+//   __declspec(dllexport) void ModMain(HysteriaAPI* api){
+//       A=api; A->log("hi"); A->on("TakeDamage", on_dmg);
+//   }
+//
+// AObj is an opaque game object handle. Getters return non-zero on success.
+
+#define HYSTERIA_API_VERSION 18
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef void *AObj;   // a live UObject (actor, pawn, component, ...)
+typedef void *AFunc;  // a UFunction
+
+typedef struct AEvent {
+  AObj self;             // object the function was called on
+  AFunc func;            // the function being called
+  void *params;          // its parameter block (use param_get/set_*)
+  void *result;          // return-value storage (use ret_* in on_post)
+  int block;             // set to 1 in an "on" handler to cancel the original call
+  const char *func_name; // function name (e.g. "TakeDamage")
+} AEvent;
+
+// --- v18: Actor.Spawn, argument by argument, with a diagnosis ---
+// Actor.Spawn is native and has NO native index, so which vehicle carries its arguments is
+// build-dependent: ASPAWN_PATH_EXEC drives the exec function directly, ASPAWN_PATH_PE goes
+// through UObject::ProcessEvent. ReturnValue is poisoned before the call, so a spawn that
+// yields nothing can still be told apart from a spawn whose exec never ran at all.
+enum {
+  ASPAWN_PATH_EXEC = 0,  // call the native exec function directly (default)
+  ASPAWN_PATH_PE   = 1   // go through ProcessEvent
+};
+enum {
+  ASPAWN_OK          = 0,  // result holds the new actor
+  ASPAWN_BADARGS     = 1,  // no info, no class name, or no usable spawner
+  ASPAWN_NOCLASS     = 2,  // className resolves to no UClass
+  ASPAWN_NOFUNC      = 3,  // the spawner exposes no Spawn function
+  ASPAWN_BADPARMS    = 4,  // Spawn's parameter block has an implausible size
+  ASPAWN_NOSPAWNCLASS= 5,  // the SpawnClass parameter could not be located
+  ASPAWN_NORETURN    = 6,  // the ReturnValue parameter could not be located
+  ASPAWN_NOPATH      = 7,  // no native implementation to drive (exec path only)
+  ASPAWN_NOTRUN      = 8,  // the poison survived: the exec function never ran
+  ASPAWN_REFUSED     = 9   // the exec function ran and the engine returned None
+};
+
+typedef struct ASpawnInfo {
+  AObj         spawner;         // in: the Actor Spawn is called on (0 = player pawn, then PC)
+  const char  *className;       // in: SpawnClass, by name
+  AObj         owner;           // in: SpawnOwner (0 = none)
+  const char  *tag;             // in: SpawnTag (0 or "" = None)
+  const float *loc;             // in: SpawnLocation (0 = the spawner's own)
+  const int   *rot;             // in: SpawnRotation (0 = the spawner's own)
+  AObj         actorTemplate;   // in: archetype to copy defaults from (0 = class defaults)
+  int          noCollisionFail; // in: 1 spawns even on an occupied spot
+  int          path;            // in: ASPAWN_PATH_*
+  AObj         result;          // out: the spawned actor, 0 on failure
+  int          stage;           // out: ASPAWN_*
+  int          ran;             // out: 1 if the exec function consumed the parameter block
+} ASpawnInfo;
+
+typedef void (*AEventCb)(AEvent *e);
+typedef void (*AIterCb)(AObj o);
+typedef void *ACall;  // an in-progress call (call_begin -> call_arg_* -> call_invoke -> call_out_*)
+
+typedef struct HysteriaAPI {
+  int version;  // == HYSTERIA_API_VERSION
+
+  // --- reflection: find and walk the live object graph (~120k objects) ---
+  AObj (*find_object)(const char *nameOrFull);   // by leaf name or full path "Pkg.Outer.Name"
+  AObj (*find_class)(const char *className);      // the UClass object
+  void (*iter_objects)(const char *className, AIterCb cb);  // cb for each instance of (a subclass of) className
+  const char *(*name_of)(AObj o);                // object's name
+  const char *(*class_of)(AObj o);               // object's class name
+  void (*full_name)(AObj o, char *out, int cap); // full path into out[cap]
+  int (*is_a)(AObj o, const char *className);     // 1 if o is-a className
+
+  // --- properties by name (resolved through the class hierarchy) ---
+  int (*get_int)(AObj o, const char *prop, int *out);
+  int (*set_int)(AObj o, const char *prop, int v);
+  int (*get_float)(AObj o, const char *prop, float *out);
+  int (*set_float)(AObj o, const char *prop, float v);
+  int (*get_bool)(AObj o, const char *prop, int *out);
+  int (*set_bool)(AObj o, const char *prop, int v);
+  AObj (*get_obj)(AObj o, const char *prop);     // an ObjectProperty's value
+
+  // --- events: intercept any game function ---
+  void (*on)(const char *funcName, AEventCb cb);       // before the call: edit params, set e->block=1 to cancel
+  void (*on_post)(const char *funcName, AEventCb cb);  // after the call: read/edit the return value
+
+  // --- a function's parameters (inside a handler, via e) ---
+  int (*param_get_int)(AEvent *e, const char *name, int *out);
+  int (*param_set_int)(AEvent *e, const char *name, int v);
+  int (*param_get_float)(AEvent *e, const char *name, float *out);
+  int (*param_set_float)(AEvent *e, const char *name, float v);
+  int (*param_get_bool)(AEvent *e, const char *name, int *out);
+  int (*param_set_bool)(AEvent *e, const char *name, int v);
+  AObj (*param_get_obj)(AEvent *e, const char *name);
+  int (*ret_get_int)(AEvent *e, int *out);       // return value (use in on_post)
+  int (*ret_set_int)(AEvent *e, int v);
+  int (*ret_set_float)(AEvent *e, float v);
+
+  // --- invocation: make the game do things ---
+  void (*call)(AObj o, const char *func, void *params); // raw, with a param block
+  void (*call_str)(AObj o, const char *func, const char *arg); // single-string arg
+  void (*console)(AObj playerController, const char *cmd);     // run any console/exec command
+  AObj (*spawn)(const char *className, float x, float y, float z);
+  void (*destroy)(AObj actor);
+
+  // --- shortcuts ---
+  AObj (*player_controller)(void);
+  AObj (*player_pawn)(void);
+  void (*log)(const char *msg);  // -> C:\hysteria.log and the in-game console
+
+  // --- draw your own panel in the overlay menu (call these inside your draw cb) ---
+  void (*ui_panel)(const char *title, void (*draw)(void)); // register a tab; draw() runs each frame
+  int (*ui_button)(const char *label);                     // returns 1 when clicked
+  void (*ui_checkbox)(const char *label, int *v);
+  void (*ui_slider_int)(const char *label, int *v, int min, int max);
+  void (*ui_slider_float)(const char *label, float *v, float min, float max, float step);
+  void (*ui_label)(const char *text);
+
+  // --- per-frame + input: the simplest way to write a continuous mod ---
+  void (*on_tick)(void (*cb)(void)); // cb runs every frame
+  int (*key_down)(int vk);           // 1 while a virtual-key is held (VK_* from windows.h)
+  int (*key_pressed)(int vk);        // 1 only on the frame the key is first pressed
+
+  // --- generic typed invocation: call ANY function with ANY params, by name ---
+  // ACall c = api->call_begin(obj, "MyFunc");
+  // api->call_arg_int(c, "Amount", 5); api->call_arg_obj(c, "Target", pawn);
+  // api->call_invoke(c); int r; api->call_out_int(c, "ReturnValue", &r);
+  ACall (*call_begin)(AObj o, const char *func);          // start a call; 0 if the function isn't found
+  void (*call_arg_int)(ACall c, const char *param, int v);
+  void (*call_arg_float)(ACall c, const char *param, float v);
+  void (*call_arg_bool)(ACall c, const char *param, int v);
+  void (*call_arg_obj)(ACall c, const char *param, AObj v);
+  void (*call_arg_str)(ACall c, const char *param, const char *v);
+  void (*call_invoke)(ACall c);                           // run it
+  int (*call_out_int)(ACall c, const char *param, int *out);   // read an out-param / "ReturnValue"
+  int (*call_out_float)(ACall c, const char *param, float *out);
+  int (*call_out_bool)(ACall c, const char *param, int *out);
+  AObj (*call_out_obj)(ACall c, const char *param);
+
+  // --- extra typed property access (byte / vector / rotator) + engine objects + raw ---
+  int (*get_byte)(AObj o, const char *prop, int *out);
+  int (*set_byte)(AObj o, const char *prop, int v);
+  int (*get_vec)(AObj o, const char *prop, float out[3]);   // a struct of 3 floats (Location, Velocity)
+  int (*set_vec)(AObj o, const char *prop, const float v[3]);
+  int (*get_rot)(AObj o, const char *prop, int out[3]);     // an FRotator (Pitch,Yaw,Roll ints)
+  int (*set_rot)(AObj o, const char *prop, const int v[3]);
+  AObj (*world_info)(void);                                 // the WorldInfo (TimeDilation, WorldGravityZ...)
+  int (*read_raw)(AObj o, int offset, void *buf, int n);    // escape hatch: raw bytes at a known offset
+  int (*write_raw)(AObj o, int offset, const void *buf, int n);
+
+  // --- raw mouse (captured at the dinput8 proxy, before the game's deadzone/accel/smoothing) ---
+  int (*mouse_delta)(int *dx, int *dy);  // accumulated raw delta since last call, then resets; gameplay only
+  void (*mouse_capture)(int on);         // 1 = swallow the game's look axis so you drive the camera yourself
+
+  // --- v8: per-object dispatch + struct/vector/array call args ---
+  // hook a function only when it's called ON a specific object (no need to filter e->self yourself):
+  //   api->on_object(myEnemy, "TakeDamage", cb);   // cb fires only for myEnemy
+  void (*on_object)(AObj target, const char *funcName, AEventCb cb);       // pre-hook, filtered to target
+  void (*on_object_post)(AObj target, const char *funcName, AEventCb cb);  // post-hook, filtered to target
+  // fill struct/array params on a call builder by name (FVector, FRotator, or raw bytes):
+  void (*call_arg_vec)(ACall c, const char *param, const float v[3]);      // an FVector param
+  void (*call_arg_rot)(ACall c, const char *param, const int v[3]);        // an FRotator param
+  void (*call_arg_raw)(ACall c, const char *param, const void *data, int n); // raw bytes (any struct/array)
+  int (*call_out_vec)(ACall c, const char *param, float out[3]);           // read an FVector out-param
+
+  // --- v9: per-mod persistent config (a key=value file Mods/<modName>.cfg next to the mod DLL) ---
+  //   at load: int x = api->cfg_get_int("mymod","x",0);
+  //   on change: api->cfg_set_int("mymod","x",x); api->cfg_save("mymod");
+  // get_* return the default if the key is absent; save() only writes when something changed.
+  int   (*cfg_get_int)(const char *modName, const char *key, int def);
+  float (*cfg_get_float)(const char *modName, const char *key, float def);
+  int   (*cfg_get_bool)(const char *modName, const char *key, int def);
+  void  (*cfg_set_int)(const char *modName, const char *key, int v);
+  void  (*cfg_set_float)(const char *modName, const char *key, float v);
+  void  (*cfg_set_bool)(const char *modName, const char *key, int v);
+  void  (*cfg_save)(const char *modName);
+
+  // --- v10: draw your own on-screen HUD text (call each frame from on_tick; cleared every frame) ---
+  // argb = 0xAARRGGBB. Always visible (not tied to the overlay menu). Use for meters/timers/state.
+  void  (*hud_text)(int x, int y, unsigned argb, const char *text);
+  // v11: filled HUD rectangle (for bars/panels). argb = 0xAARRGGBB; alpha blended.
+  void  (*hud_rect)(int x, int y, int w, int h, unsigned argb);
+  // v12: current backbuffer size in pixels (for centering / full-screen overlays). returns 1 on success.
+  int   (*screen_size)(int *w, int *h);
+
+  // --- v13: scheduling, threads, object-await, spawn listeners ---
+  // Timers run on the GAME thread between frames. Return an id (0 on failure); stop with cancel_timer.
+  int  (*after_ms)(int ms, void (*cb)(void *user), void *user);   // fire cb once after ms
+  int  (*every_ms)(int ms, void (*cb)(void *user), void *user);   // fire cb every ms
+  void (*cancel_timer)(int id);
+  // Fire cb ONCE on the game thread when an instance of className first exists (NULL = when player pawn is ready).
+  void (*when_object)(const char *className, void (*cb)(AObj o, void *user), void *user);
+  // Fire cb on the game thread for every NEW instance of className (deduped by identity).
+  void (*on_spawn)(const char *className, void (*cb)(AObj o, void *user), void *user);
+  // Run fn on a detached background thread. Do NOT touch game objects there; marshal back with
+  // run_on_game_thread. Returns 1 on success. (Avoid reloading mods while a thread is still running.)
+  int  (*thread_spawn)(void (*fn)(void *user), void *user);
+  void (*sleep_ms)(int ms);                                       // sleep, for use inside a thread
+  // Queue cb to run on the next frame on the GAME thread (safe to touch game objects). Thread-safe.
+  void (*run_on_game_thread)(void (*cb)(void *user), void *user);
+
+  // --- v13: fuller UI builder (call inside a ui_panel draw cb) ---
+  void (*ui_separator)(void);
+  void (*ui_spacing)(int px);
+  void (*ui_text_colored)(unsigned argb, const char *text);
+  void (*ui_progress)(const char *label, float frac);            // 0..1 progress bar with a label
+  int  (*ui_combo)(const char *label, int *idx, const char *const *opts, int n); // click cycles; 1 if changed
+  int  (*ui_input_int)(const char *label, int *v, int step, int mn, int mx);     // [-] v [+]; 1 if changed
+  int  (*ui_tree)(const char *label);                            // collapsing sub-header; returns open
+
+  // --- v14: set an object/class param inside an "on" handler (mirror of param_get_obj) ---
+  int  (*param_set_obj)(AEvent *e, const char *name, AObj v);
+
+  // --- v15: FName call argument. UnrealScript 'name' params are an index into
+  // the global name table, not a string; call_arg_str would write garbage.
+  // Resolves at runtime, so no build-specific index is baked in.
+  void (*call_arg_name)(ACall c, const char *param, const char *value);
+
+  int   (*set_obj)(AObj o, const char *prop, AObj v);
+
+  int   (*get_str)(AObj o, const char *prop, char *out, int cap);
+  int   (*set_str)(AObj o, const char *prop, const char *v);
+  int   (*get_name)(AObj o, const char *prop, char *out, int cap);
+  int   (*set_name)(AObj o, const char *prop, const char *v);
+
+  int   (*prop_offset)(AObj o, const char *prop);
+  int   (*prop_type)(AObj o, const char *prop);
+  int   (*prop_size)(AObj o, const char *prop);
+
+  int   (*array_num)(AObj o, const char *prop);
+  void *(*array_data)(AObj o, const char *prop);
+  int   (*array_stride)(AObj o, const char *prop);
+  AObj  (*array_obj)(AObj o, const char *prop, int i);
+  int   (*array_get)(AObj o, const char *prop, int i, void *buf, int n);
+  int   (*array_set)(AObj o, const char *prop, int i, const void *buf, int n);
+
+  void  (*iter_components)(AObj actor, AIterCb cb);
+  AObj  (*find_component)(AObj actor, const char *className);
+
+  AObj  (*get_outer)(AObj o);
+  AObj  (*get_class_obj)(AObj o);
+  AObj  (*get_super)(AObj cls);
+  AObj  (*class_default)(const char *className);
+
+  int   (*object_count)(void);
+  AObj  (*object_at)(int i);
+  int   (*is_valid)(AObj o);
+
+  int         (*name_id)(const char *s);
+  const char *(*name_str)(int id);
+
+  int   (*param_get_str)(AEvent *e, const char *n, char *out, int cap);
+  int   (*param_set_str)(AEvent *e, const char *n, const char *v);
+  int   (*param_get_name)(AEvent *e, const char *n, char *out, int cap);
+  int   (*param_set_name)(AEvent *e, const char *n, const char *v);
+  int   (*param_get_vec)(AEvent *e, const char *n, float out[3]);
+  int   (*param_set_vec)(AEvent *e, const char *n, const float v[3]);
+  int   (*param_get_rot)(AEvent *e, const char *n, int out[3]);
+  int   (*param_set_rot)(AEvent *e, const char *n, const int v[3]);
+  int   (*ret_get_float)(AEvent *e, float *out);
+  AObj  (*ret_get_obj)(AEvent *e);
+  int   (*ret_set_obj)(AEvent *e, AObj v);
+
+  int   (*call_ready)(void);
+  AFunc (*find_func)(AObj o, const char *name);
+  void  (*call_func)(AObj o, AFunc f, void *params);
+  void  (*call_end)(ACall c);
+  int   (*call_out_str)(ACall c, const char *p, char *out, int cap);
+  int   (*call_out_name)(ACall c, const char *p, char *out, int cap);
+
+  void  (*hud_text_size)(const char *s, int *w, int *h);
+
+  // --- v17: full Actor.Spawn (archetype + no-collision), on the native path ---
+  // Actor.Spawn is native WITHOUT a native index, so ProcessEvent refuses to feed it its
+  // arguments and it always yields None. spawn_ex drives the exec function directly.
+  //   AObj p = api->spawn_ex(pc, "AlicePawn", loc, rot, archetype, 1);
+  // spawner: the Actor Spawn is called on (0 = player pawn, else the PlayerController).
+  // loc/rot: may be 0 to keep the spawner's own Location/Rotation.
+  // actorTemplate: the archetype to copy defaults from (0 = class defaults).
+  // noCollisionFail: 1 spawns even when the spot is occupied.
+  AObj  (*spawn_ex)(AObj spawner, const char *className, const float loc[3], const int rot[3],
+                    AObj actorTemplate, int noCollisionFail);
+
+  // --- v18: Actor.Spawn with every argument, either call path, and a reason when it fails ---
+  // Fill an ASpawnInfo, call spawn_probe, read back result/stage/ran. Returns 1 only on ASPAWN_OK.
+  // Its parameter block is a local, so a nested call fired by PreBeginPlay/PostBeginPlay cannot
+  // recycle it the way the shared call_begin pool can.
+  int   (*spawn_probe)(ASpawnInfo *info);
+} HysteriaAPI;
+
+typedef void (*ModMain_t)(HysteriaAPI *api);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

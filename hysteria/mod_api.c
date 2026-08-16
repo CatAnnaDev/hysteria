@@ -34,13 +34,18 @@ static int is_a_ptr(void *cls, const char *name){
     return 0;
 }
 
-typedef struct { void *owner; unsigned h; int off; char typ; unsigned mask; } MCache;
-static MCache g_mc[512]; static int g_mcN=0;
+#define MCACHE_MAX 2048
+typedef struct { void *owner; unsigned h; int off; char typ; unsigned mask; char nm[48]; } MCache;
+static MCache g_mc[MCACHE_MAX]; static int g_mcN=0; static int g_mcFullLogged=0;
+static int api_name_id(const char *s);
 static unsigned shash(const char *s){ unsigned h=5381; while(*s) h=h*33u+(unsigned char)*s++; return h; }
 
+static int g_mcPoff=-2;
 static int prop_in(void *owner, const char *name, int *off, char *typ, unsigned *mask){
     unsigned h=shash(name);
-    for(int i=0;i<g_mcN;i++) if(g_mc[i].owner==owner && g_mc[i].h==h){
+    if(M_POFF<0){ *off=-1; if(typ)*typ=0; if(mask)*mask=0; return 0; }
+    if(M_POFF!=g_mcPoff){ g_mcPoff=M_POFF; g_mcN=0; g_mcFullLogged=0; }
+    for(int i=0;i<g_mcN;i++) if(g_mc[i].owner==owner && g_mc[i].h==h && lstrcmpA(g_mc[i].nm,name)==0){
         *off=g_mc[i].off; if(typ)*typ=g_mc[i].typ; if(mask)*mask=g_mc[i].mask; return g_mc[i].off>=0; }
     int rOff=-1; char rTyp=0; unsigned rMask=0;
     if(g_gobjects && owner){
@@ -56,7 +61,15 @@ static int prop_in(void *owner, const char *name, int *off, char *typ, unsigned 
             break;
         }
     }
-    if(g_mcN<512){ g_mc[g_mcN].owner=owner; g_mc[g_mcN].h=h; g_mc[g_mcN].off=rOff; g_mc[g_mcN].typ=rTyp; g_mc[g_mcN].mask=rMask; g_mcN++; }
+    if(g_mcN<MCACHE_MAX){
+        g_mc[g_mcN].owner=owner; g_mc[g_mcN].h=h; g_mc[g_mcN].off=rOff;
+        g_mc[g_mcN].typ=rTyp; g_mc[g_mcN].mask=rMask;
+        lstrcpynA(g_mc[g_mcN].nm,name,sizeof g_mc[g_mcN].nm);
+        g_mcN++;
+    } else if(!g_mcFullLogged){
+        g_mcFullLogged=1;
+        logmsg("[hysteria][mod] cache de proprietes sature (%d), les acces non caches rescannent\r\n",MCACHE_MAX);
+    }
     *off=rOff; if(typ)*typ=rTyp; if(mask)*mask=rMask; return rOff>=0;
 }
 static int resolve_member(void *o, const char *name, void **base, int *off, char *typ, unsigned *mask){
@@ -135,26 +148,138 @@ static void api_iter(const char*className,AIterCb cb){ if(!g_gobjects||!cb)retur
     for(int i=0;i<cnt;i++){void*o=data[i]; if(mem_ok(o,O_CLASS+4)&&is_a_ptr(class_of(o),className))cb(o);} }
 static AObj api_pc(void){ return g_pc; }
 static AObj api_pawn(void){ return g_modPawn; }
-static void api_log(const char*m){ logmsg("[hysteria][mod] %s\r\n", m?m:""); }
+static void api_log(const char*m){ char t[900]; lstrcpynA(t,m?m:"",sizeof t); logmsg("[hysteria][mod] %s\r\n",t); }
 
-static void *find_function(void *o, const char *name){
-    if(!g_gobjects||!o)return 0;
-    void *chain[24]; int nc=0; void *cls=class_of(o);
-    for(int i=0;i<24 && is_class(cls);i++){ chain[nc++]=cls; if(g_superOff<0)break; cls=*(void**)((char*)cls+g_superOff); if(!cls)break; }
-    void **data=*(void***)g_gobjects;int cnt=mem_ok(data,8)?*(int*)(g_gobjects+4):0;if(cnt>2000000)cnt=2000000;
-    for(int j=0;j<cnt;j++){ void *f=data[j];
-        if(!mem_ok(f,O_OUTER+4))continue;
-        const char *fc=obj_class_name(f); if(!fc||fc[0]!='F'||lstrcmpA(fc,"Function")!=0)continue;
-        if(lstrcmpA(obj_name(f),name)!=0)continue;
-        void *ow=*(void**)((char*)f+O_OUTER);
-        for(int k=0;k<nc;k++) if(chain[k]==ow) return f;
+typedef struct { void *cls; unsigned h; char nm[48]; void *fn; } FnCache;
+static FnCache g_fnc[256]; static int g_fncN=0;
+
+static void *func_in_class(void *cls, const char *name){
+    void **data; int cnt, j;
+    if(!g_gobjects||!cls) return 0;
+    data=*(void***)g_gobjects;
+    cnt=mem_ok(data,8)?*(int*)(g_gobjects+4):0;
+    if(cnt>2000000) cnt=2000000;
+    for(j=0;j<cnt;j++){
+        void *f=data[j]; const char *fc;
+        if(!mem_ok(f,O_OUTER+4)) continue;
+        if(*(void**)((char*)f+O_OUTER)!=cls) continue;
+        fc=obj_class_name(f);
+        if(!fc||fc[0]!='F'||lstrcmpA(fc,"Function")!=0) continue;
+        if(lstrcmpA(obj_name(f),name)!=0) continue;
+        return f;
     }
     return 0;
 }
+
+static void *find_function(void *o, const char *name){
+    void *cls, *c, *f=0; unsigned h; int i, lvl;
+    if(!o||!name) return 0;
+    cls=class_of(o); h=shash(name);
+    for(i=0;i<g_fncN;i++)
+        if(g_fnc[i].cls==cls && g_fnc[i].h==h && lstrcmpA(g_fnc[i].nm,name)==0) return g_fnc[i].fn;
+    for(c=cls, lvl=0; lvl<24 && is_class(c); lvl++){
+        f=func_in_class(c,name);
+        if(f) break;
+        if(g_superOff<0) break;
+        c=*(void**)((char*)c+g_superOff);
+        if(!c) break;
+    }
+    if(g_fncN<256){
+        g_fnc[g_fncN].cls=cls; g_fnc[g_fncN].h=h;
+        lstrcpynA(g_fnc[g_fncN].nm,name,sizeof g_fnc[g_fncN].nm);
+        g_fnc[g_fncN].fn=f; g_fncN++;
+    }
+    return f;
+}
+
+static volatile DWORD g_peTid=0;
+static volatile int   g_peDepth=0;
+void pe_call(void *obj, void *fn, void *parms, void *res){
+    void **vt, *pe; DWORD tid;
+    if(!obj||!fn||!g_modFound) return;
+    tid=GetCurrentThreadId();
+    if(g_peTid!=tid){ g_peTid=tid; g_peDepth=0; }
+    if(g_peDepth>8) return;
+    if(!mem_ok(obj,4)) return;
+    vt=*(void***)obj;
+    if(!mem_ok(vt,(VT_PROCESSEVENT+1)*4)) return;
+    pe=vt[VT_PROCESSEVENT];
+    g_peDepth++;
+    if(pe==g_peTarget && g_peTramp) g_peTramp(obj,0,fn,parms,res);
+    else if(mem_ok(pe,16))          ((PE_t)pe)(obj,0,fn,parms,res);
+    g_peDepth--;
+}
+
+int fn_inative(void *fn){
+    return mem_ok((char*)fn+UF_INATIVE,2) ? *(unsigned short*)((char*)fn+UF_INATIVE) : 0;
+}
+
+static int g_nativeByPtrLogged=0;
+int fn_native(void *fn){
+    return (fn && mem_ok((char*)fn+UF_FUNCTIONFLAGS,4)
+            && (*(unsigned*)((char*)fn+UF_FUNCTIONFLAGS)&FUNC_NATIVE)) ? 1 : 0;
+}
+
+void *fn_native_impl(void *fn){
+    void **gnatives, *impl;
+    unsigned short iN;
+    if(!fn_native(fn)) return 0;
+    iN=(unsigned short)fn_inative(fn);
+    if(iN && iN<0x1000){
+        gnatives=(void**)ADDR_GNATIVES;
+        if(mem_ok(&gnatives[iN],4)){
+            impl=gnatives[iN];
+            if(impl && (unsigned)(ULONG_PTR)impl!=ADDR_EXEC_UNDEFINED && mem_ok(impl,16)) return impl;
+        }
+    }
+    impl=mem_ok((char*)fn+UF_FUNC,4)?*(void**)((char*)fn+UF_FUNC):0;
+    if(!impl || (unsigned)(ULONG_PTR)impl==ADDR_EXEC_UNDEFINED || !mem_ok(impl,16)) return 0;
+    if(!g_nativeByPtrLogged){
+        g_nativeByPtrLogged=1;
+        logmsg("[hysteria][mod] natif sans index: %s -> exec %08x\r\n",obj_name(fn),(unsigned)(ULONG_PTR)impl);
+    }
+    return impl;
+}
+
+int call_intrinsic(void *obj, void *fn, void *parms, void *result){
+    unsigned char code[9*24+4], frame[0x28];
+    void *impl, *child;
+    int cn=0, i;
+    if(!obj||!fn) return 0;
+    impl=fn_native_impl(fn);
+    if(!impl) return 0;
+
+    child=mem_ok((char*)fn+UF_CHILDREN,4)?*(void**)((char*)fn+UF_CHILDREN):0;
+    for(i=0;i<24 && child;i++){
+        unsigned pf;
+        if(!mem_ok((char*)child+UPROP_OFFSET,4)) break;
+        pf=*(unsigned*)((char*)child+UPROP_FLAGS);
+        if((pf&(CPF_PARM|CPF_RETURNPARM))!=CPF_PARM) break;
+        code[cn++]=EX_LOCALVARIABLE;
+        *(void**)(code+cn)=child; cn+=4;
+        *(int*)(code+cn)=0;       cn+=4;
+        child=*(void**)((char*)child+UFIELD_NEXT);
+    }
+    code[cn++]=EX_ENDFUNCTIONPARMS;
+    code[cn++]=EX_FILLER;
+
+    for(i=0;i<0x28;i++) frame[i]=0;
+    *(unsigned*)(frame+0x00)=ADDR_FFRAME_VTBL;
+    *(int*)(frame+0x04)=1;
+    *(int*)(frame+0x0C)=1;
+    *(void**)(frame+0x10)=fn;
+    *(void**)(frame+0x14)=obj;
+    *(void**)(frame+0x18)=code;
+    *(void**)(frame+0x1C)=parms;
+    ((Native_t)impl)(obj,0,frame,result);
+    return 1;
+}
 static void api_call(AObj o,const char*func,void*params){
-    if(!g_modFound||!g_peTramp||!o)return;
-    void *f=find_function(o,func); if(!f)return;
-    g_peTramp(o,0,f,params,0);
+    void *f;
+    if(!g_modFound||!o)return;
+    f=find_function(o,func); if(!f)return;
+    if(fn_native(f)){ call_intrinsic(o,f,params,0); return; }
+    pe_call(o,f,params,0);
 }
 static void api_call_str(AObj o,const char*func,const char*arg){
     if(!o||!func)return;
@@ -168,7 +293,7 @@ static void api_console(AObj pc,const char*cmd){ if(!pc)pc=g_pc; api_call_str(pc
 typedef struct { int used; AObj o; void *fn; unsigned char blk[1024]; WCHAR sb[4][512]; int sbN; } CallSlot;
 static CallSlot g_calls[8]; static int g_callRR=0;
 static ACall api_call_begin(AObj o,const char*func){
-    if(!g_modFound||!g_peTramp||!o||!func)return 0;
+    if(!g_modFound||!o||!func)return 0;
     void*f=find_function(o,func); if(!f)return 0;
     CallSlot*s=&g_calls[g_callRR]; g_callRR=(g_callRR+1)&7;
     for(int i=0;i<1024;i++)s->blk[i]=0; s->sbN=0; s->o=o; s->fn=f; s->used=1; return (ACall)s;
@@ -185,6 +310,11 @@ static void api_call_arg_str(ACall c,const char*p,const char*v){ CallSlot*s=c; i
     if(!s||!s->used||s->sbN>=4||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+12>1024)return;
     WCHAR*w=s->sb[s->sbN]; int wl=MultiByteToWideChar(CP_ACP,0,v?v:"",-1,w,512); if(wl<=0)return;
     s->sbN++; *(void**)(s->blk+off)=w; *(int*)(s->blk+off+4)=wl; *(int*)(s->blk+off+8)=wl; }
+static void api_call_arg_name(ACall c,const char*p,const char*v){ CallSlot*s=c; int off;char t;unsigned m;
+    if(!s||!s->used||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+8>1024)return;
+    int id=(!v||!v[0])?0:api_name_id(v);
+    if(id<0)return;
+    *(int*)(s->blk+off)=id; *(int*)(s->blk+off+4)=0; }
 static void api_call_arg_vec(ACall c,const char*p,const float v[3]){ CallSlot*s=c; int off;char t;unsigned m;
     if(s&&s->used&&v&&prop_in(s->fn,p,&off,&t,&m)&&off>=0&&off+12<=1024){ float*f=(float*)(s->blk+off); f[0]=v[0];f[1]=v[1];f[2]=v[2]; } }
 static void api_call_arg_rot(ACall c,const char*p,const int v[3]){ CallSlot*s=c; int off;char t;unsigned m;
@@ -193,7 +323,16 @@ static void api_call_arg_raw(ACall c,const char*p,const void*d,int n){ CallSlot*
     if(s&&s->used&&d&&n>0&&prop_in(s->fn,p,&off,&t,&m)&&off>=0&&off+n<=1024){ for(int i=0;i<n;i++)((char*)s->blk)[off+i]=((const char*)d)[i]; } }
 static int api_call_out_vec(ACall c,const char*p,float out[3]){ CallSlot*s=c; int off;char t;unsigned m;
     if(!s||!s->used||!out||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+12>1024)return 0; float*f=(float*)(s->blk+off); out[0]=f[0];out[1]=f[1];out[2]=f[2]; return 1; }
-static void api_call_invoke(ACall c){ CallSlot*s=c; if(s&&s->used&&g_peTramp)g_peTramp(s->o,0,s->fn,s->blk,0); }
+static void api_call_invoke(ACall c){
+    CallSlot*s=c; int off; char t; unsigned m; void *res=0;
+    if(!s||!s->used) return;
+    if(fn_native(s->fn)){
+        if(prop_in(s->fn,"ReturnValue",&off,&t,&m)&&off>=0&&off+4<=1024) res=s->blk+off;
+        call_intrinsic(s->o,s->fn,s->blk,res);
+        return;
+    }
+    pe_call(s->o,s->fn,s->blk,0);
+}
 static int api_call_out_int(ACall c,const char*p,int*out){ CallSlot*s=c; int off;char t;unsigned m;
     if(!s||!s->used||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+4>1024)return 0; *out=*(int*)(s->blk+off); return 1; }
 static int api_call_out_float(ACall c,const char*p,float*out){ CallSlot*s=c; int off;char t;unsigned m;
@@ -208,32 +347,103 @@ static int api_ret_set_int(AEvent*e,int v){ return api_pset_int(e,"ReturnValue",
 static int api_ret_set_float(AEvent*e,float v){ return api_pset_float(e,"ReturnValue",v); }
 
 static void api_destroy(AObj o){
-    if(!o)return; void*f=find_function(o,"Destroy"); if(!f)return;
-    unsigned char blk[16]; for(int i=0;i<16;i++)blk[i]=0;
-    g_peTramp(o,0,f,blk,0);
+    void *f, *res=0; unsigned char blk[32]; int i, off; char t; unsigned m;
+    if(!o||!g_modFound)return;
+    f=find_function(o,"Destroy"); if(!f)return;
+    for(i=0;i<32;i++)blk[i]=0;
+    if(prop_in(f,"ReturnValue",&off,&t,&m)&&off>=0&&off+4<=32) res=blk+off;
+    if(!call_intrinsic(o,f,blk,res)) pe_call(o,f,blk,0);
+}
+static AObj api_spawn_ex(AObj spawner,const char*className,const float loc[3],const int rot[3],
+                        AObj actorTemplate,int noCollisionFail){
+    AObj cls; void *f; unsigned char blk[256];
+    int i, off, rvOff, psize; char t; unsigned m;
+    if(!g_modFound||!className)return 0;
+    if(!spawner) spawner=g_modPawn?g_modPawn:g_pc;
+    if(!spawner)return 0;
+    cls=api_find_class(className); if(!cls)return 0;
+    f=find_function(spawner,"Spawn"); if(!f)return 0;
+    psize=mem_ok((char*)f+UF_PROPERTIESSIZE,4)?*(int*)((char*)f+UF_PROPERTIESSIZE):0;
+    if(psize<=0||psize>(int)sizeof blk)return 0;
+    for(i=0;i<psize;i++)blk[i]=0;
+    if(!prop_in(f,"SpawnClass",&off,&t,&m)||off<0||off+4>psize)return 0;
+    *(void**)(blk+off)=cls;
+    if(loc&&prop_in(f,"SpawnLocation",&off,&t,&m)&&off>=0&&off+12<=psize){
+        float*L=(float*)(blk+off); L[0]=loc[0];L[1]=loc[1];L[2]=loc[2]; }
+    if(rot&&prop_in(f,"SpawnRotation",&off,&t,&m)&&off>=0&&off+12<=psize){
+        int*R=(int*)(blk+off); R[0]=rot[0];R[1]=rot[1];R[2]=rot[2]; }
+    if(actorTemplate&&prop_in(f,"ActorTemplate",&off,&t,&m)&&off>=0&&off+4<=psize)
+        *(void**)(blk+off)=actorTemplate;
+    if(noCollisionFail&&prop_in(f,"bNoCollisionFail",&off,&t,&m)&&off>=0&&m&&off+4<=psize)
+        *(unsigned*)(blk+off)|=m;
+    if(!prop_in(f,"ReturnValue",&rvOff,&t,&m)||rvOff<0||rvOff+4>psize)return 0;
+    if(!call_intrinsic(spawner,f,blk,blk+rvOff))return 0;
+    return *(void**)(blk+rvOff);
 }
 static AObj api_spawn(const char*className,float x,float y,float z){
-    if(!g_modFound||!g_peTramp)return 0;
-    AObj cls=api_find_class(className); if(!cls)return 0;
-    AObj spawner=g_modPawn?g_modPawn:g_pc; if(!spawner)return 0;
-    void*f=find_function(spawner,"Spawn"); if(!f)return 0;
-    unsigned char blk[256]; for(int i=0;i<256;i++)blk[i]=0;
-    int off; char t; unsigned m;
-    if(prop_in(f,"SpawnClass",&off,&t,&m)) *(void**)(blk+off)=cls;
-    if((x||y||z) && prop_in(f,"SpawnLocation",&off,&t,&m)){ float*L=(float*)(blk+off); L[0]=x;L[1]=y;L[2]=z; }
-    g_peTramp(spawner,0,f,blk,0);
-    if(prop_in(f,"ReturnValue",&off,&t,&m)) return *(void**)(blk+off);
-    return 0;
+    float loc[3]; loc[0]=x; loc[1]=y; loc[2]=z;
+    return api_spawn_ex(0,className,loc,0,0,1);
+}
+
+#define ASPAWN_POISON 0xDEADBEEFu
+static int api_spawn_probe(ASpawnInfo*in){
+    void *f, *spawner; unsigned char blk[256];
+    int i, off, rvOff, psize; char t; unsigned m; AObj cls;
+    if(!in)return 0;
+    in->result=0; in->ran=0; in->stage=ASPAWN_BADARGS;
+    if(!g_modFound||!in->className)return 0;
+    spawner=in->spawner?in->spawner:(g_modPawn?g_modPawn:g_pc);
+    if(!spawner)return 0;
+    cls=api_find_class(in->className);
+    if(!cls){ in->stage=ASPAWN_NOCLASS; return 0; }
+    f=find_function(spawner,"Spawn");
+    if(!f){ in->stage=ASPAWN_NOFUNC; return 0; }
+    psize=mem_ok((char*)f+UF_PROPERTIESSIZE,4)?*(int*)((char*)f+UF_PROPERTIESSIZE):0;
+    if(psize<=0||psize>(int)sizeof blk){ in->stage=ASPAWN_BADPARMS; return 0; }
+    for(i=0;i<psize;i++)blk[i]=0;
+    if(!prop_in(f,"SpawnClass",&off,&t,&m)||off<0||off+4>psize){ in->stage=ASPAWN_NOSPAWNCLASS; return 0; }
+    *(void**)(blk+off)=cls;
+    if(in->owner&&prop_in(f,"SpawnOwner",&off,&t,&m)&&off>=0&&off+4<=psize)
+        *(void**)(blk+off)=in->owner;
+    if(in->tag&&in->tag[0]&&prop_in(f,"SpawnTag",&off,&t,&m)&&off>=0&&off+8<=psize){
+        int id=api_name_id(in->tag);
+        if(id>=0){ *(int*)(blk+off)=id; *(int*)(blk+off+4)=0; }
+    }
+    if(in->loc&&prop_in(f,"SpawnLocation",&off,&t,&m)&&off>=0&&off+12<=psize){
+        float*L=(float*)(blk+off); L[0]=in->loc[0]; L[1]=in->loc[1]; L[2]=in->loc[2];
+    }
+    if(in->rot&&prop_in(f,"SpawnRotation",&off,&t,&m)&&off>=0&&off+12<=psize){
+        int*R=(int*)(blk+off); R[0]=in->rot[0]; R[1]=in->rot[1]; R[2]=in->rot[2];
+    }
+    if(in->actorTemplate&&prop_in(f,"ActorTemplate",&off,&t,&m)&&off>=0&&off+4<=psize)
+        *(void**)(blk+off)=in->actorTemplate;
+    if(in->noCollisionFail&&prop_in(f,"bNoCollisionFail",&off,&t,&m)&&off>=0&&m&&off+4<=psize)
+        *(unsigned*)(blk+off)|=m;
+    if(!prop_in(f,"ReturnValue",&rvOff,&t,&m)||rvOff<0||rvOff+4>psize){ in->stage=ASPAWN_NORETURN; return 0; }
+    *(unsigned*)(blk+rvOff)=ASPAWN_POISON;
+    if(in->path==ASPAWN_PATH_PE) pe_call(spawner,f,blk,0);
+    else if(!call_intrinsic(spawner,f,blk,blk+rvOff)){ in->stage=ASPAWN_NOPATH; return 0; }
+    if(*(unsigned*)(blk+rvOff)==ASPAWN_POISON){ in->stage=ASPAWN_NOTRUN; return 0; }
+    in->ran=1;
+    in->result=*(void**)(blk+rvOff);
+    if(!in->result){ in->stage=ASPAWN_REFUSED; return 0; }
+    in->stage=ASPAWN_OK;
+    return 1;
 }
 
 typedef struct { char name[64]; int nameId; int phase; AEventCb cb; void *target; } Reg;
 static Reg g_reg[256]; static int g_regN=0;
 static volatile int g_reloading=0;
+static unsigned char g_fidBits[8192];
+static int g_unresolvedN=0;
 static void add_hook(const char*funcName,AEventCb cb,int phase,void *target){
-    if(g_regN>=256||!cb||!funcName)return;
+    if(g_regN>=256||!cb||!funcName){ logmsg("[hysteria][mod] hooks satures\r\n"); return; }
     lstrcpynA(g_reg[g_regN].name,funcName,sizeof g_reg[g_regN].name);
     g_reg[g_regN].nameId=find_name(funcName);
-    g_reg[g_regN].phase=phase; g_reg[g_regN].cb=cb; g_reg[g_regN].target=target; g_regN++;
+    g_reg[g_regN].phase=phase; g_reg[g_regN].cb=cb; g_reg[g_regN].target=target;
+    if(g_reg[g_regN].nameId>=0) g_fidBits[g_reg[g_regN].nameId&8191]|=(unsigned char)(phase?2:1);
+    else g_unresolvedN++;
+    g_regN++;
     logmsg("[hysteria][mod] hook %s '%s' (id=%d)\r\n",phase?"post":"pre",funcName,g_reg[g_regN-1].nameId);
 }
 static void api_on(const char*funcName,AEventCb cb){ add_hook(funcName,cb,0,0); }
@@ -244,12 +454,14 @@ static void api_on_object_post(AObj target,const char*funcName,AEventCb cb){ add
 static int dispatch_phase(void *obj, void *fn, void *parms, void *res, int phase){
     if(g_reloading || !g_regN || !mem_ok((char*)fn+O_NAME,4)) return 0;
     int fid=*(int*)((char*)fn+O_NAME);
+    if(!g_unresolvedN && !(g_fidBits[fid&8191]&(phase?2:1))) return 0;
     const char *fname=NULL; int blocked=0;
     for(int i=0;i<g_regN;i++){
         if(g_reg[i].phase!=phase) continue;
         int match;
         if(g_reg[i].nameId>=0) match=(g_reg[i].nameId==fid);
-        else { if(!fname) fname=obj_name(fn); match=(lstrcmpA(g_reg[i].name,fname)==0); if(match) g_reg[i].nameId=fid; }
+        else { if(!fname) fname=obj_name(fn); match=(lstrcmpA(g_reg[i].name,fname)==0);
+               if(match){ g_reg[i].nameId=fid; g_fidBits[fid&8191]|=(unsigned char)(phase?2:1); if(g_unresolvedN) g_unresolvedN--; } }
         if(!match) continue;
         if(g_reg[i].target && g_reg[i].target!=obj) continue;
         if(!fname) fname=obj_name(fn);
@@ -332,8 +544,9 @@ static void api_on_spawn(const char *cls, ObjCb cb, void *u){
 typedef struct { UserCb cb; void *user; } GTask;
 static GTask g_gq[256]; static int g_gqHead=0, g_gqTail=0;
 static CRITICAL_SECTION g_gqCs; static int g_gqInit=0;
+void mod_gq_init(void){ if(!g_gqInit){ InitializeCriticalSection(&g_gqCs); g_gqInit=1; } }
 static void api_run_on_game_thread(UserCb cb, void *user){
-    if(!cb) return; if(!g_gqInit){ InitializeCriticalSection(&g_gqCs); g_gqInit=1; }
+    if(!cb||!g_gqInit) return;
     EnterCriticalSection(&g_gqCs);
     int nt=(g_gqTail+1)&255; if(nt!=g_gqHead){ g_gq[g_gqTail].cb=cb; g_gq[g_gqTail].user=user; g_gqTail=nt; }
     LeaveCriticalSection(&g_gqCs);
@@ -361,7 +574,9 @@ static int api_thread_spawn(UserCb fn, void *user){
 }
 static void api_sleep_ms(int ms){ Sleep(ms>0?(DWORD)ms:0); }
 
-void mod_pump(void){ gq_pump(); timers_pump(); watchers_pump(); }
+static volatile LONG g_gamePumpSeen=0;
+void mod_pump_game(void){ g_gamePumpSeen=1; gq_pump(); timers_pump(); watchers_pump(); }
+void mod_pump(void){ if(g_gamePumpSeen) return; gq_pump(); timers_pump(); watchers_pump(); }
 void mod_pump_reset(void){
     for(int i=0;i<64;i++) g_timers[i].alive=0;
     g_watchN=0; g_seenN=0; g_curWatch=0;
@@ -370,6 +585,254 @@ void mod_pump_reset(void){
 
 int g_scrW = 0, g_scrH = 0;
 static int api_screen_size(int *w, int *h){ if(w)*w=g_scrW; if(h)*h=g_scrH; return (g_scrW>0 && g_scrH>0); }
+
+static int g_elemOff = -1;
+static void calib_prop_layout(void){
+    if(g_elemOff>=0 || M_POFF<0) return;
+    void *pLoc=find_prop("Location","Actor");
+    void *pHp =find_prop("Health","Pawn");
+    if(!pLoc||!pHp) return;
+    for(int o=M_POFF-0x30;o<M_POFF;o+=4){
+        if(o<0) continue;
+        if(!mem_ok((char*)pLoc+o,4)||!mem_ok((char*)pHp+o,4)) continue;
+        if(*(int*)((char*)pLoc+o)==12 && *(int*)((char*)pHp+o)==4){ g_elemOff=o; break; }
+    }
+    logmsg("[hysteria][mod] UProperty::ElementSize off=0x%x (Offset=0x%x)\r\n", g_elemOff, M_POFF);
+}
+
+typedef struct { void *owner; unsigned h; void *prop; } PCache;
+static PCache g_pc2[512]; static int g_pc2N=0;
+static void *prop_obj_in(void *owner, const char *name){
+    unsigned h=shash(name);
+    for(int i=0;i<g_pc2N;i++) if(g_pc2[i].owner==owner && g_pc2[i].h==h) return g_pc2[i].prop;
+    void *found=0;
+    if(g_gobjects && owner){
+        void **data=*(void***)g_gobjects; int cnt=mem_ok(data,8)?*(int*)(g_gobjects+4):0;
+        if(cnt>2000000)cnt=2000000;
+        for(int i=0;i<cnt;i++){ void *o=data[i];
+            if(!mem_ok(o,O_OUTER+4) || !is_property(o)) continue;
+            if(*(void**)((char*)o+O_OUTER)!=owner) continue;
+            if(lstrcmpA(obj_name(o),name)!=0) continue;
+            found=o; break;
+        }
+    }
+    if(g_pc2N<512){ g_pc2[g_pc2N].owner=owner; g_pc2[g_pc2N].h=h; g_pc2[g_pc2N].prop=found; g_pc2N++; }
+    return found;
+}
+static void *resolve_prop_obj(void *o, const char *name){
+    void *cls=class_of(o);
+    for(int i=0;i<24 && is_class(cls);i++){
+        void *p=prop_obj_in(cls,name); if(p) return p;
+        if(g_superOff<0) break;
+        cls=*(void**)((char*)cls+g_superOff); if(!cls) break;
+    }
+    return 0;
+}
+static void *array_inner(void *arrProp){
+    if(!arrProp||M_POFF<0) return 0;
+    for(int o=M_POFF+4;o<=M_POFF+0x24;o+=4){
+        if(!mem_ok((char*)arrProp+o,4)) continue;
+        void *p=*(void**)((char*)arrProp+o);
+        if(!mem_ok(p,O_OUTER+4)||!is_property(p)) continue;
+        if(*(void**)((char*)p+O_OUTER)==arrProp) return p;
+    }
+    return 0;
+}
+static char type_letter(void *prop){
+    const char *c=prop?obj_class_name(prop):0; if(!c) return 0;
+    if(!lstrcmpA(c,"IntProperty"))       return 'i';
+    if(!lstrcmpA(c,"FloatProperty"))     return 'f';
+    if(!lstrcmpA(c,"BoolProperty"))      return 'b';
+    if(!lstrcmpA(c,"ByteProperty"))      return 'y';
+    if(!lstrcmpA(c,"ObjectProperty"))    return 'o';
+    if(!lstrcmpA(c,"ComponentProperty")) return 'c';
+    if(!lstrcmpA(c,"ClassProperty"))     return 'o';
+    if(!lstrcmpA(c,"InterfaceProperty")) return 'o';
+    if(!lstrcmpA(c,"StrProperty"))       return 's';
+    if(!lstrcmpA(c,"NameProperty"))      return 'n';
+    if(!lstrcmpA(c,"ArrayProperty"))     return 'a';
+    if(!lstrcmpA(c,"StructProperty"))    return 'S';
+    return 0;
+}
+
+typedef struct { unsigned h; int id; char s[40]; } NCache;
+static NCache g_nc[256]; static int g_ncN=0;
+static int api_name_id(const char *s){
+    if(!s||!s[0]) return 0;
+    unsigned h=shash(s);
+    for(int i=0;i<g_ncN;i++) if(g_nc[i].h==h && lstrcmpA(g_nc[i].s,s)==0) return g_nc[i].id;
+    int id=find_name(s);
+    if(g_ncN<256){ g_nc[g_ncN].h=h; g_nc[g_ncN].id=id;
+                   lstrcpynA(g_nc[g_ncN].s,s,sizeof g_nc[g_ncN].s); g_ncN++; }
+    if(id<0) logmsg("[hysteria][mod] name '%s' absent de GNames\r\n", s);
+    return id;
+}
+static const char *api_name_str(int id){ return uname(id); }
+
+static int api_set_obj(AObj o,const char*p,AObj v){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m)||!mem_ok((char*)b+off,4))return 0;
+    *(void**)((char*)b+off)=v; return 1; }
+
+static int fstr_read(const void *slot,char *out,int cap){
+    if(!out||cap<=0) return 0; out[0]=0;
+    if(!mem_ok(slot,12)) return 0;
+    const WCHAR *d=*(const WCHAR*const*)slot; int n=((const int*)slot)[1];
+    if(!d||n<=0) return 1;
+    if(!mem_ok(d,2)) return 0;
+    int w=WideCharToMultiByte(CP_ACP,0,d,n,out,cap-1,NULL,NULL);
+    if(w<0)w=0; if(w>cap-1)w=cap-1; out[w]=0;
+    while(w>0 && out[w-1]==0) w--;
+    out[w]=0; return 1;
+}
+static int fstr_write_inplace(void *slot,const char *v){
+    if(!mem_ok(slot,12)) return 0;
+    WCHAR *d=*(WCHAR**)slot; int mx=((int*)slot)[2];
+    if(!d||mx<=0||!mem_ok(d,2)) return 0;
+    WCHAR tmp[512]; int wl=MultiByteToWideChar(CP_ACP,0,v?v:"",-1,tmp,512);
+    if(wl<=0||wl>mx) return 0;
+    if(!mem_ok(d,wl*2)) return 0;
+    for(int i=0;i<wl;i++) d[i]=tmp[i];
+    ((int*)slot)[1]=wl; return 1;
+}
+static int api_get_str(AObj o,const char*p,char*out,int cap){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m))return 0; return fstr_read((char*)b+off,out,cap); }
+static int api_set_str(AObj o,const char*p,const char*v){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m))return 0; return fstr_write_inplace((char*)b+off,v); }
+
+static int api_get_name(AObj o,const char*p,char*out,int cap){ void*b;int off;char t;unsigned m;
+    if(!o||!out||cap<=0||!resolve_member(o,p,&b,&off,&t,&m)||!mem_ok((char*)b+off,8))return 0;
+    lstrcpynA(out,uname(*(int*)((char*)b+off)),cap); return 1; }
+static int api_set_name(AObj o,const char*p,const char*v){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m)||!mem_ok((char*)b+off,8))return 0;
+    int id=api_name_id(v); if(id<0) return 0;
+    *(int*)((char*)b+off)=id; *(int*)((char*)b+off+4)=0; return 1; }
+
+static int api_prop_offset(AObj o,const char*p){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m))return -1; return off; }
+static int api_prop_type(AObj o,const char*p){
+    return o?(int)(unsigned char)type_letter(resolve_prop_obj(o,p)):0; }
+static int api_prop_size(AObj o,const char*p){
+    void *pr=o?resolve_prop_obj(o,p):0; if(!pr) return 0;
+    calib_prop_layout();
+    if(g_elemOff<0||!mem_ok((char*)pr+g_elemOff,4)) return 0;
+    int es=*(int*)((char*)pr+g_elemOff); return (es>0&&es<0x100000)?es:0; }
+
+static void *arr_slot(AObj o,const char*p){ void*b;int off;char t;unsigned m;
+    if(!o||!resolve_member(o,p,&b,&off,&t,&m)||!mem_ok((char*)b+off,12))return 0;
+    return (char*)b+off; }
+static int api_array_num(AObj o,const char*p){ void*s=arr_slot(o,p); if(!s)return 0;
+    int n=((int*)s)[1]; return (n>0&&n<0x1000000)?n:0; }
+static void *api_array_data(AObj o,const char*p){ void*s=arr_slot(o,p); if(!s)return 0;
+    void *d=*(void**)s; return mem_ok(d,1)?d:0; }
+static int api_array_stride(AObj o,const char*p){
+    void *pr=o?resolve_prop_obj(o,p):0; void *in=array_inner(pr); if(!in) return 0;
+    calib_prop_layout();
+    if(g_elemOff<0||!mem_ok((char*)in+g_elemOff,4)) return 0;
+    int es=*(int*)((char*)in+g_elemOff); return (es>0&&es<0x10000)?es:0; }
+static AObj api_array_obj(AObj o,const char*p,int i){
+    void *d=api_array_data(o,p); int n=api_array_num(o,p);
+    if(!d||i<0||i>=n||!mem_ok((char*)d+i*4,4)) return 0;
+    return *(void**)((char*)d+i*4); }
+static int api_array_get(AObj o,const char*p,int i,void*buf,int n){
+    void *d=api_array_data(o,p); int cnt=api_array_num(o,p);
+    int st=api_array_stride(o,p); if(st<=0) st=n;
+    if(!d||!buf||n<=0||i<0||i>=cnt||!mem_ok((char*)d+(size_t)i*st,n)) return 0;
+    for(int k=0;k<n;k++)((char*)buf)[k]=((char*)d+(size_t)i*st)[k]; return 1; }
+static int api_array_set(AObj o,const char*p,int i,const void*buf,int n){
+    void *d=api_array_data(o,p); int cnt=api_array_num(o,p);
+    int st=api_array_stride(o,p); if(st<=0) st=n;
+    if(!d||!buf||n<=0||i<0||i>=cnt||!mem_ok((char*)d+(size_t)i*st,n)) return 0;
+    for(int k=0;k<n;k++)((char*)d+(size_t)i*st)[k]=((const char*)buf)[k]; return 1; }
+
+static void iter_one_array(AObj a,const char*prop,AIterCb cb,AObj*seen,int*sn,int cap){
+    int n=api_array_num(a,prop);
+    for(int i=0;i<n;i++){
+        AObj c=api_array_obj(a,prop,i); if(!c||!mem_ok(c,O_CLASS+4)) continue;
+        int dup=0; for(int k=0;k<*sn;k++) if(seen[k]==c){ dup=1; break; }
+        if(dup) continue;
+        if(*sn<cap) seen[(*sn)++]=c;
+        cb(c);
+    }
+}
+static void api_iter_components(AObj a,AIterCb cb){
+    if(!a||!cb) return;
+    AObj seen[256]; int sn=0;
+    iter_one_array(a,"Components",cb,seen,&sn,256);
+    iter_one_array(a,"AllComponents",cb,seen,&sn,256);
+}
+static const char *g_fcClass; static AObj g_fcHit;
+static void fc_cb(AObj o){ if(!g_fcHit && is_a_ptr(class_of(o),g_fcClass)) g_fcHit=o; }
+static AObj api_find_component(AObj a,const char*cls){
+    if(!a||!cls) return 0; g_fcClass=cls; g_fcHit=0;
+    api_iter_components(a,fc_cb); g_fcClass=0; return g_fcHit; }
+
+static AObj api_get_outer(AObj o){ return mem_ok(o,O_OUTER+4)?*(void**)((char*)o+O_OUTER):0; }
+static AObj api_get_class_obj(AObj o){ return class_of(o); }
+static AObj api_get_super(AObj cls){
+    if(!is_class(cls)||g_superOff<0||!mem_ok((char*)cls+g_superOff,4)) return 0;
+    return *(void**)((char*)cls+g_superOff); }
+static AObj api_class_default(const char*cn){
+    if(!cn) return 0; char b[96]; wsprintfA(b,"Default__%s",cn); return api_find_object(b); }
+static int api_object_count(void){
+    if(!g_gobjects) return 0; void**d=*(void***)g_gobjects;
+    int c=mem_ok(d,8)?*(int*)(g_gobjects+4):0; return (c>0&&c<2000000)?c:0; }
+static AObj api_object_at(int i){
+    if(!g_gobjects||i<0||i>=api_object_count()) return 0;
+    void **d=*(void***)g_gobjects; void *o=d[i]; return mem_ok(o,O_CLASS+4)?o:0; }
+
+static int api_is_valid(AObj o){
+    if(!o||!mem_ok(o,O_CLASS+4)||!g_gobjects) return 0;
+    int idx=*(int*)((char*)o+UOBJ_INTERNALINTEGER);
+    if(idx<0||idx>=api_object_count()) return 0;
+    void **d=*(void***)g_gobjects;
+    return mem_ok(&d[idx],4) && d[idx]==o;
+}
+
+static void *pslot(AEvent*e,const char*n,int need){ int off;char t;unsigned m;
+    if(!e||!e->params||!prop_in(e->func,n,&off,&t,&m)||off<0||!mem_ok((char*)e->params+off,need))
+        return 0;
+    return (char*)e->params+off; }
+static int api_pget_str(AEvent*e,const char*n,char*out,int cap){
+    void*s=pslot(e,n,12); return s?fstr_read(s,out,cap):0; }
+static int api_pset_str(AEvent*e,const char*n,const char*v){
+    void*s=pslot(e,n,12); return s?fstr_write_inplace(s,v):0; }
+static int api_pget_name(AEvent*e,const char*n,char*out,int cap){ void*s=pslot(e,n,8);
+    if(!s||!out||cap<=0)return 0; lstrcpynA(out,uname(*(int*)s),cap); return 1; }
+static int api_pset_name(AEvent*e,const char*n,const char*v){ void*s=pslot(e,n,8);
+    if(!s)return 0; int id=api_name_id(v); if(id<0)return 0;
+    ((int*)s)[0]=id; ((int*)s)[1]=0; return 1; }
+static int api_pget_vec(AEvent*e,const char*n,float o3[3]){ float*f=pslot(e,n,12);
+    if(!f||!o3)return 0; o3[0]=f[0];o3[1]=f[1];o3[2]=f[2]; return 1; }
+static int api_pset_vec(AEvent*e,const char*n,const float v[3]){ float*f=pslot(e,n,12);
+    if(!f||!v)return 0; f[0]=v[0];f[1]=v[1];f[2]=v[2]; return 1; }
+static int api_pget_rot(AEvent*e,const char*n,int o3[3]){ int*r=pslot(e,n,12);
+    if(!r||!o3)return 0; o3[0]=r[0];o3[1]=r[1];o3[2]=r[2]; return 1; }
+static int api_pset_rot(AEvent*e,const char*n,const int v[3]){ int*r=pslot(e,n,12);
+    if(!r||!v)return 0; r[0]=v[0];r[1]=v[1];r[2]=v[2]; return 1; }
+static int api_ret_get_float(AEvent*e,float*o){ return api_pget_float(e,"ReturnValue",o); }
+static AObj api_ret_get_obj(AEvent*e){ return api_pget_obj(e,"ReturnValue"); }
+static int api_ret_set_obj(AEvent*e,AObj v){ return api_pset_obj(e,"ReturnValue",v); }
+
+static int api_call_ready(void){ return (g_modFound && g_peTramp)?1:0; }
+static AFunc api_find_func(AObj o,const char*name){ return find_function(o,name); }
+static void api_call_func(AObj o,AFunc f,void*params){
+    if(!api_call_ready()||!o||!f) return;
+    if(fn_native(f)){ call_intrinsic(o,f,params,0); return; }
+    pe_call(o,f,params,0); }
+static void api_call_end(ACall c){ CallSlot*s=c; if(s) s->used=0; }
+static int api_call_out_str(ACall c,const char*p,char*out,int cap){
+    CallSlot*s=c; int off;char t;unsigned m;
+    if(!s||!s->used||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+12>1024)return 0;
+    return fstr_read(s->blk+off,out,cap); }
+static int api_call_out_name(ACall c,const char*p,char*out,int cap){
+    CallSlot*s=c; int off;char t;unsigned m;
+    if(!s||!s->used||!out||cap<=0||!prop_in(s->fn,p,&off,&t,&m)||off<0||off+8>1024)return 0;
+    lstrcpynA(out,uname(*(int*)(s->blk+off)),cap); return 1; }
+
+static int  api_gamelog(int on){ return gamelog_enable(on); }
+static int  api_gamelog_active(void){ return gamelog_active(); }
+static int  api_gamelog_rate(int lps){ return gamelog_rate(lps); }
+static void api_on_gamelog(AGameLogCb cb){ gamelog_set_cb(cb); }
 
 static HysteriaAPI g_api = {
     .version=HYSTERIA_API_VERSION,
@@ -382,6 +845,7 @@ static HysteriaAPI g_api = {
     .param_get_float=api_pget_float, .param_set_float=api_pset_float,
     .param_get_bool=api_pget_bool, .param_set_bool=api_pset_bool, .param_get_obj=api_pget_obj,
     .param_set_obj=api_pset_obj,
+    .call_arg_name=api_call_arg_name,
     .ret_get_int=api_ret_get_int, .ret_set_int=api_ret_set_int, .ret_set_float=api_ret_set_float,
     .call=api_call, .call_str=api_call_str, .console=api_console, .spawn=api_spawn, .destroy=api_destroy,
     .player_controller=api_pc, .player_pawn=api_pawn, .log=api_log,
@@ -405,6 +869,28 @@ static HysteriaAPI g_api = {
     .after_ms=api_after_ms, .every_ms=api_every_ms, .cancel_timer=api_cancel_timer,
     .when_object=api_when_object, .on_spawn=api_on_spawn,
     .thread_spawn=api_thread_spawn, .sleep_ms=api_sleep_ms, .run_on_game_thread=api_run_on_game_thread,
+    .set_obj=api_set_obj,
+    .get_str=api_get_str, .set_str=api_set_str,
+    .get_name=api_get_name, .set_name=api_set_name,
+    .prop_offset=api_prop_offset, .prop_type=api_prop_type, .prop_size=api_prop_size,
+    .array_num=api_array_num, .array_data=api_array_data, .array_stride=api_array_stride,
+    .array_obj=api_array_obj, .array_get=api_array_get, .array_set=api_array_set,
+    .iter_components=api_iter_components, .find_component=api_find_component,
+    .get_outer=api_get_outer, .get_class_obj=api_get_class_obj, .get_super=api_get_super,
+    .class_default=api_class_default,
+    .object_count=api_object_count, .object_at=api_object_at, .is_valid=api_is_valid,
+    .name_id=api_name_id, .name_str=api_name_str,
+    .param_get_str=api_pget_str, .param_set_str=api_pset_str,
+    .param_get_name=api_pget_name, .param_set_name=api_pset_name,
+    .param_get_vec=api_pget_vec, .param_set_vec=api_pset_vec,
+    .param_get_rot=api_pget_rot, .param_set_rot=api_pset_rot,
+    .ret_get_float=api_ret_get_float, .ret_get_obj=api_ret_get_obj, .ret_set_obj=api_ret_set_obj,
+    .call_ready=api_call_ready, .find_func=api_find_func, .call_func=api_call_func,
+    .call_end=api_call_end, .call_out_str=api_call_out_str, .call_out_name=api_call_out_name,
+    .hud_text_size=api_hud_text_size,
+    .spawn_ex=api_spawn_ex, .spawn_probe=api_spawn_probe,
+    .gamelog=api_gamelog, .gamelog_active=api_gamelog_active,
+    .gamelog_rate=api_gamelog_rate, .on_gamelog=api_on_gamelog,
 };
 
 static HMODULE g_loaded[64]; static int g_loadedN=0;
@@ -523,16 +1009,19 @@ int editor_props(void *obj, AEditProp *out, int max){
     return n;
 }
 HysteriaAPI* hysteria_api_get(void){ return &g_api; }
-void load_mods(void){ static int done=0; if(done)return; done=1; ui_install_api(); scan_and_load(); }
+void load_mods(void){ static int done=0; if(done)return; done=1; mod_gq_init(); ui_install_api(); scan_and_load(); }
 void mod_do_reload(void){
     g_reloading=1;
+    gamelog_set_cb(0);
     g_regN=0;
     g_ticksN=0;
     mod_pump_reset();
     ui_panels_clear();
     for(int i=0;i<g_loadedN;i++) if(g_loaded[i]) FreeLibrary(g_loaded[i]);
     g_loadedN=0;
-    g_mcN=0;
+    g_mcN=0; g_mcFullLogged=0; g_pc2N=0; g_fncN=0; g_ncN=0;
+    for(int i=0;i<8192;i++) g_fidBits[i]=0;
+    g_unresolvedN=0;
     logmsg("[hysteria][mod] === reloading mods ===\r\n");
     scan_and_load();
     g_reloading=0;

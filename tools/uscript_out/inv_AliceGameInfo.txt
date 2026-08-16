@@ -1,0 +1,271 @@
+### AliceGameInfo -- 66 own properties (offsets from live-process dump)
+  +0x3cc   AliceArcheType                                 ObjectProperty    
+  +0x3d0   AliceCachedArcheType                           ObjectProperty    
+  +0x3f4   SpeechManager                                  ObjectProperty    
+  +0x3f8   GenericRemoteSpeaker                           ObjectProperty    
+  +0x3fc   GFxHUDMenu                                     ObjectProperty    
+  +0x400   inGameMenu                                     ObjectProperty    
+  +0x404   GameplayEventsWriterClassName                  StrProperty       
+  +0x410   GameplayEventsWriter                           ObjectProperty    
+  +0x414   bTickDelaySaveLoad                             BoolProperty       mask=0x8
+  +0x414   bLogGameplayEvents                             BoolProperty       mask=0x1
+  +0x414   DemoMode                                       BoolProperty       mask=0x2
+  +0x414   PlayTestMode                                   BoolProperty       mask=0x4
+  +0x418   ChapterSnoutNum                                IntProperty       
+  +0x430   MaxMemoriesNum                                 IntProperty       
+  +0x434   MaxAliceFamilyMemories                         IntProperty       
+  +0x438   MaxChallengeRoomsNum                           IntProperty       
+  +0x43c   MemoriesBinkFileName                           ArrayProperty     
+  +0x448   ChapterComplete                                IntProperty       
+  +0x460   OverallCompletion                              IntProperty       
+  +0x464   CurrentSnoutNum                                IntProperty       
+  +0x468   CurrentAliceFamilyMemories                     IntProperty       
+  +0x46c   TrohpyChallengeRoomCount                       IntProperty       
+  +0x470   TrophyInteractiveObjectCount                   IntProperty       
+  +0x474   HealthUpgradePickupCount                       IntProperty       
+  +0x478   UseGoldenPathCount                             IntProperty       
+  +0x47c   MemoriesCollected                              ArrayProperty     
+  +0x488   CurrentChapterSnoutNum                         IntProperty       
+  +0x4a0   CurrentMemoriesNum                             IntProperty       
+  +0x4b8   CurrentChallengeRoomCount                      IntProperty       
+  +0x4d0   CompleteGameOnAnyDifficult                     IntProperty       
+  +0x4d4   SkipCinematicCounter                           IntProperty       
+  +0x4d8   UseHysteriaCounter                             IntProperty       
+  +0x4dc   IsNewGamePlus                                  IntProperty       
+  +0x4e0   DamageMultiplierArray                          FloatProperty     
+  +0x4f0   AliceWeaponDamageMultiplier                    FloatProperty     
+  +0x500   DLCContent                                     ArrayProperty     
+  +0x50c   DLC_VB_UnLock                                  IntProperty       
+  +0x510   DLC_VB_Enable                                  IntProperty       
+  +0x514   DLC_TC_UnLock                                  IntProperty       
+  +0x518   DLC_TC_Enable                                  IntProperty       
+  +0x51c   DLC_HH_UnLock                                  IntProperty       
+  +0x520   DLC_HH_Enable                                  IntProperty       
+  +0x524   DLC_ES_UnLock                                  IntProperty       
+  +0x528   DLC_ES_Enable                                  IntProperty       
+  +0x52c   DressAbilityActive_Oriental                    IntProperty       
+  +0x530   DressAbilityActive_Water                       IntProperty       
+  +0x534   DressAbilityActive_Hatter                      IntProperty       
+  +0x538   DressAbilityActive_Default                     IntProperty       
+  +0x53c   DressAbilityActive_Queen                       IntProperty       
+  +0x540   DressAbilityActive_Doll                        IntProperty       
+  +0x544   DressAbilityActive_QFlesh                      IntProperty       
+  +0x548   DressAbilityActive_MatHatter                   IntProperty       
+  +0x54c   DressAbilityActive_Chess                       IntProperty       
+  +0x550   DressAbilityActive_WRabbit                     IntProperty       
+  +0x554   DressAbilityActive_Cheshire                    IntProperty       
+  +0x558   DressAbilityActive_Caterpillar                 IntProperty       
+  +0x55c   totalVentDuration                              FloatProperty     
+  +0x560   AliceArcheTypeID                               ByteProperty      
+  +0x564   Achievement29                                  IntProperty       
+  +0x568   Achievement41                                  IntProperty       
+  +0x56c   CurrentGameDifficulty                          IntProperty       
+  +0x570   LowestGameDifficulty                           IntProperty       
+  +0x574   SaveUI_GFXMoive                                ObjectProperty    
+  +0x578   SaveLoadCounter                                IntProperty       
+  +0x57c   SaveLoadStartTime                              FloatProperty     
+  +0x580   DelaySaveLoadString                            StrProperty       
+
+### AliceGameInfo -- 101 functions (path / native-script / storage bytes / flags)
+  SCRIPT   AliceGameInfo.CDLevel                                            23     Defined|Exec|HasOptionalParms|Public
+        (int Level@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponDLC_ES                                 76     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponDLC_HH                                 76     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponDLC_TC                                 76     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponDLC_VB                                 76     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponNormal_ES                              65     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponNormal_HH                              65     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponNormal_TC                              65     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.ChangeWeaponNormal_VB                              65     Defined|Public
+        (object APC@0x0)
+  SCRIPT   AliceGameInfo.CheckpointLoadComplete                             60     Defined|Event|Public
+        (object PC@0x0)
+  SCRIPT   AliceGameInfo.DelayDisappearUI                                   144    Defined|Public
+        (float Seconds@0x0)
+  NATIVE   AliceGameInfo.DeleteGameData                                     7      Native|Public
+        (object GFxMovie@0x0)
+  SCRIPT   AliceGameInfo.EndLogging                                         48     Defined|Public
+        (str Reason@0x0)
+  SCRIPT   AliceGameInfo.GenericPlayerInitialization                        174    Defined|Public
+        (object C@0x0, object PC@0x4)
+  NATIVE   AliceGameInfo.GetAppSeconds                                      2      Native|Public
+        (float ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Caterpillar                  16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Cheshire                     16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Chess                        16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Default                      16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Doll                         16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Hatter                       16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_MatHatter                    16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Oriental                     16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_QFlesh                       16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Queen                        16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_WRabbit                      16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetDressAbilityActive_Water                        16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_ES_Enable                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_ES_UnLock                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_HH_Enable                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_HH_UnLock                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_TC_Enable                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_TC_UnLock                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_VB_Enable                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetIsDLC_VB_UnLock                                 16     Defined|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.GetLocalizeString                                  38     Defined|Public
+        (str strTag@0x0, str ReturnValue@0xc)
+  SCRIPT   AliceGameInfo.GetWeaponIDByClass                                 109    Defined|Public
+        (class WeaponClass@0x0, int ReturnValue@0x4, int Id@0x8)
+  NATIVE   AliceGameInfo.HaveLastCheckpointFile                             2      Native|Public
+        (bool ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.HideExistingSaveHint                               59     Defined|Event|Public
+        ()
+  SCRIPT   AliceGameInfo.HideSaveHintImmediately                            69     Defined|Event|Public
+        ()
+  SCRIPT   AliceGameInfo.InitGame                                           19     Defined|Event|Public|HasOutParms
+        (str Options@0x0, str ErrorMessage@0xc)
+  NATIVE   AliceGameInfo.InitLoadPersistentSaveData                         2      Native|Public
+        ()
+  NATIVE   AliceGameInfo.IsInSavingLoadingProcess                           2      Native|Public
+        (bool ReturnValue@0x0)
+  NATIVE   AliceGameInfo.LoadLastCheckpointFromTitleMenu                    2      Native|Public
+        ()
+  NATIVE   AliceGameInfo.MakeFullSave                                       2      Native|Public
+        ()
+  SCRIPT   AliceGameInfo.MakeFullSaveCM                                     13     Defined|Exec|Public
+        ()
+  SCRIPT   AliceGameInfo.NotifyChangedWeapon                                146    Defined|Public
+        (object PreviousWeapon@0x0, object NewWeapon@0x4)
+  SCRIPT   AliceGameInfo.NotifyDialogueFinish                               32     Defined|Event|Public
+        (object Speaker@0x0, object Sound@0x4)
+  SCRIPT   AliceGameInfo.NotifyDialogueStart                                46     Defined|Event|Public
+        (object Speaker@0x0, object Addressee@0x4, object Audio@0x8, byte PRI@0xc)
+  NATIVE   AliceGameInfo.PauseAllNpcTick                                    7      Native|Public
+        (array ExceptNpcs@0x0)
+  STUB     AliceGameInfo.PostApplyPersistentData                            3      Event|Public
+        ()
+  SCRIPT   AliceGameInfo.PostBeginPlay                                      293    Defined|Event|Public
+        (class GameplayEventsWriterClass@0x0)
+  SCRIPT   AliceGameInfo.PreBeginPlay                                       68     Defined|Event|Public
+        ()
+  STUB     AliceGameInfo.PreSavePersistentData                              3      Event|Public
+        ()
+  SCRIPT   AliceGameInfo.ReSetUIAfterLoadCheckPoint                         63     Defined|Public
+        ()
+  SCRIPT   AliceGameInfo.Restart                                            13     Defined|Exec|Public
+        ()
+  NATIVE   AliceGameInfo.ResumeAllNpcTick                                   2      Native|Public
+        ()
+  NATIVE   AliceGameInfo.SaveConfigSaveData                                 7      Native|Public
+        (object GFxMovie@0x0)
+  NATIVE   AliceGameInfo.SavePersistentSaveData                             7      Native|Public
+        (object GFxMovie@0x0)
+  NATIVE   AliceGameInfo.SavePersistentSaveDataAndCheckPoint                7      Native|Public
+        (object GFxMovie@0x0)
+  NATIVE   AliceGameInfo.SavePersistentSaveDataAndConfigData                7      Native|Public
+        (object GFxMovie@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Caterpillar                  17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Cheshire                     17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Chess                        17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Default                      17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Doll                         17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Hatter                       17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_MatHatter                    17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Oriental                     17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_QFlesh                       17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Queen                        17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_WRabbit                      17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetDressAbilityActive_Water                        17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_ES_Enable                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_ES_UnLock                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_HH_Enable                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_HH_UnLock                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_TC_Enable                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_TC_UnLock                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_VB_Enable                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.SetIsDLC_VB_UnLock                                 17     Defined|Public
+        (bool Set@0x0)
+  SCRIPT   AliceGameInfo.ShowPickTips                                       187    Defined|Public
+        (bool bShow@0x0)
+  SCRIPT   AliceGameInfo.ShowPickupMemoryFragmentTip                        154    Defined|Public
+        (int TotalCount@0x0, int PickUpType@0x4)
+  SCRIPT   AliceGameInfo.ShowPickupNewWeaponTip                             78     Defined|Public
+        (class WeaponClass@0x0)
+  SCRIPT   AliceGameInfo.ShowSaveOrLoadHint                                 284    Defined|Event|Public
+        (str SaveOrLoad@0x0, bool ShowOrHide@0xc, float Seconds@0x10)
+  SCRIPT   AliceGameInfo.ShowStreamHint                                     61     Defined|Event|Public
+        (bool ShowOrHide@0x0)
+  SCRIPT   AliceGameInfo.ShowWeaponUpgradeTip                               78     Defined|Public
+        (int oldLevel@0x0, int newLevel@0x4, class WeaponClass@0x8)
+  SCRIPT   AliceGameInfo.SpawnDefaultPawnFor                                277    Defined|Public|HasDefaults
+        (object NewPlayer@0x0, object StartSpot@0x4, object ReturnValue@0x8, class DefaultPlayerClass@0xc, object ResultPawn@0x10, struct StartRotation@0x14)
+  SCRIPT   AliceGameInfo.ToggleCritical                                     69     Defined|Event|Public
+        (bool Actived@0x0)
+  SCRIPT   AliceGameInfo.UnLockAllChapter                                   26     Defined|Exec|Public
+        ()
+  SCRIPT   AliceGameInfo.UpdateAliceHealth                                  73     Defined|Public
+        (int curHealth@0x0, int maxHealth@0x4)
+  SCRIPT   AliceGameInfo.UpdateEyestaffAmmo                                 73     Defined|Public
+        (float newAmmoCount@0x0, float maxCount@0x4)
+  SCRIPT   AliceGameInfo.UpdateTeapotCannonAmmo                             73     Defined|Public
+        (float newAmmoCount@0x0, float maxCount@0x4)
+  SCRIPT   AliceGameInfo.UpdateTeethNumber                                  69     Defined|Public
+        (int XPValue@0x0)
+  SCRIPT   AliceGameInfo.forceUpdateEyestaffAmmo                            63     Defined|Public
+        ()
+  SCRIPT   AliceGameInfo.forceUpdateTeapotCannonAmmo                        63     Defined|Public
+        ()
+  NATIVE   AliceGameInfo.getAliceGameEngine                                 2      Native|Public
+        (object ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.getCurrentGameDifficulty                           65     Defined|Event|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.getLowestGameDifficulty                            65     Defined|Event|Public
+        (int ReturnValue@0x0)
+  SCRIPT   AliceGameInfo.setCurrentGameDifficulty                           71     Defined|Public
+        (int I@0x0)
+  SCRIPT   AliceGameInfo.setLowestGameDifficulty                            71     Defined|Public
+        (int I@0x0)

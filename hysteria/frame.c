@@ -79,9 +79,10 @@ void frame_render(IDirect3DDevice9 *dev){
     }
 
     scan_gnames();
-    if(g_gnames && !g_gobjects) g_gobjects=g_gnames+0x54;
+    if(g_gnames && !g_gobjects){ g_gobjects=g_gnames+0x54; scan_gobjects(); }
     if(!g_gnames){ if(hud) draw_text(dev,22,66,D3DCOLOR_XRGB(120,220,255),"Engine: scanning..."); goto done; }
     probe_engine_offsets();
+    gamelog_update();
 
     { static int pcTick=0;
       int bad=!mem_ok(g_pc,C_PAWN+4)||!contains(obj_class_name(g_pc),"PlayerController");
@@ -146,4 +147,13 @@ done:
     g_hudN=0;
     console_render(dev);
     ui_render(dev,W,H);
+}
+
+void api_hud_text_size(const char *s, int *w, int *h){
+    RECT rc={0,0,0,0};
+    if(w)*w=0; if(h)*h=0;
+    if(!s||!s[0]||!g_font) return;
+    ID3DXFont_DrawTextA(g_font,NULL,s,-1,&rc,DT_LEFT|DT_CALCRECT|DT_SINGLELINE,0);
+    if(w)*w=rc.right-rc.left;
+    if(h)*h=rc.bottom-rc.top;
 }

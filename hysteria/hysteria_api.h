@@ -13,7 +13,7 @@
 //
 // AObj is an opaque game object handle. Getters return non-zero on success.
 
-#define HYSTERIA_API_VERSION 14
+#define HYSTERIA_API_VERSION 19
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +30,45 @@ typedef struct AEvent {
   int block;             // set to 1 in an "on" handler to cancel the original call
   const char *func_name; // function name (e.g. "TakeDamage")
 } AEvent;
+
+// --- v18: Actor.Spawn, argument by argument, with a diagnosis ---
+// Actor.Spawn is native and has NO native index, so which vehicle carries its arguments is
+// build-dependent: ASPAWN_PATH_EXEC drives the exec function directly, ASPAWN_PATH_PE goes
+// through UObject::ProcessEvent. ReturnValue is poisoned before the call, so a spawn that
+// yields nothing can still be told apart from a spawn whose exec never ran at all.
+enum {
+  ASPAWN_PATH_EXEC = 0,  // call the native exec function directly (default)
+  ASPAWN_PATH_PE   = 1   // go through ProcessEvent
+};
+enum {
+  ASPAWN_OK          = 0,  // result holds the new actor
+  ASPAWN_BADARGS     = 1,  // no info, no class name, or no usable spawner
+  ASPAWN_NOCLASS     = 2,  // className resolves to no UClass
+  ASPAWN_NOFUNC      = 3,  // the spawner exposes no Spawn function
+  ASPAWN_BADPARMS    = 4,  // Spawn's parameter block has an implausible size
+  ASPAWN_NOSPAWNCLASS= 5,  // the SpawnClass parameter could not be located
+  ASPAWN_NORETURN    = 6,  // the ReturnValue parameter could not be located
+  ASPAWN_NOPATH      = 7,  // no native implementation to drive (exec path only)
+  ASPAWN_NOTRUN      = 8,  // the poison survived: the exec function never ran
+  ASPAWN_REFUSED     = 9   // the exec function ran and the engine returned None
+};
+
+typedef struct ASpawnInfo {
+  AObj         spawner;         // in: the Actor Spawn is called on (0 = player pawn, then PC)
+  const char  *className;       // in: SpawnClass, by name
+  AObj         owner;           // in: SpawnOwner (0 = none)
+  const char  *tag;             // in: SpawnTag (0 or "" = None)
+  const float *loc;             // in: SpawnLocation (0 = the spawner's own)
+  const int   *rot;             // in: SpawnRotation (0 = the spawner's own)
+  AObj         actorTemplate;   // in: archetype to copy defaults from (0 = class defaults)
+  int          noCollisionFail; // in: 1 spawns even on an occupied spot
+  int          path;            // in: ASPAWN_PATH_*
+  AObj         result;          // out: the spawned actor, 0 on failure
+  int          stage;           // out: ASPAWN_*
+  int          ran;             // out: 1 if the exec function consumed the parameter block
+} ASpawnInfo;
+
+typedef void (*AGameLogCb)(const char *tag, const char *text, const char *source);
 
 typedef void (*AEventCb)(AEvent *e);
 typedef void (*AIterCb)(AObj o);
@@ -186,6 +225,87 @@ typedef struct HysteriaAPI {
 
   // --- v14: set an object/class param inside an "on" handler (mirror of param_get_obj) ---
   int  (*param_set_obj)(AEvent *e, const char *name, AObj v);
+
+  // --- v15: FName call argument. UnrealScript 'name' params are an index into
+  // the global name table, not a string; call_arg_str would write garbage.
+  // Resolves at runtime, so no build-specific index is baked in.
+  void (*call_arg_name)(ACall c, const char *param, const char *value);
+
+  int   (*set_obj)(AObj o, const char *prop, AObj v);
+
+  int   (*get_str)(AObj o, const char *prop, char *out, int cap);
+  int   (*set_str)(AObj o, const char *prop, const char *v);
+  int   (*get_name)(AObj o, const char *prop, char *out, int cap);
+  int   (*set_name)(AObj o, const char *prop, const char *v);
+
+  int   (*prop_offset)(AObj o, const char *prop);
+  int   (*prop_type)(AObj o, const char *prop);
+  int   (*prop_size)(AObj o, const char *prop);
+
+  int   (*array_num)(AObj o, const char *prop);
+  void *(*array_data)(AObj o, const char *prop);
+  int   (*array_stride)(AObj o, const char *prop);
+  AObj  (*array_obj)(AObj o, const char *prop, int i);
+  int   (*array_get)(AObj o, const char *prop, int i, void *buf, int n);
+  int   (*array_set)(AObj o, const char *prop, int i, const void *buf, int n);
+
+  void  (*iter_components)(AObj actor, AIterCb cb);
+  AObj  (*find_component)(AObj actor, const char *className);
+
+  AObj  (*get_outer)(AObj o);
+  AObj  (*get_class_obj)(AObj o);
+  AObj  (*get_super)(AObj cls);
+  AObj  (*class_default)(const char *className);
+
+  int   (*object_count)(void);
+  AObj  (*object_at)(int i);
+  int   (*is_valid)(AObj o);
+
+  int         (*name_id)(const char *s);
+  const char *(*name_str)(int id);
+
+  int   (*param_get_str)(AEvent *e, const char *n, char *out, int cap);
+  int   (*param_set_str)(AEvent *e, const char *n, const char *v);
+  int   (*param_get_name)(AEvent *e, const char *n, char *out, int cap);
+  int   (*param_set_name)(AEvent *e, const char *n, const char *v);
+  int   (*param_get_vec)(AEvent *e, const char *n, float out[3]);
+  int   (*param_set_vec)(AEvent *e, const char *n, const float v[3]);
+  int   (*param_get_rot)(AEvent *e, const char *n, int out[3]);
+  int   (*param_set_rot)(AEvent *e, const char *n, const int v[3]);
+  int   (*ret_get_float)(AEvent *e, float *out);
+  AObj  (*ret_get_obj)(AEvent *e);
+  int   (*ret_set_obj)(AEvent *e, AObj v);
+
+  int   (*call_ready)(void);
+  AFunc (*find_func)(AObj o, const char *name);
+  void  (*call_func)(AObj o, AFunc f, void *params);
+  void  (*call_end)(ACall c);
+  int   (*call_out_str)(ACall c, const char *p, char *out, int cap);
+  int   (*call_out_name)(ACall c, const char *p, char *out, int cap);
+
+  void  (*hud_text_size)(const char *s, int *w, int *h);
+
+  // --- v17: full Actor.Spawn (archetype + no-collision), on the native path ---
+  // Actor.Spawn is native WITHOUT a native index, so ProcessEvent refuses to feed it its
+  // arguments and it always yields None. spawn_ex drives the exec function directly.
+  //   AObj p = api->spawn_ex(pc, "AlicePawn", loc, rot, archetype, 1);
+  // spawner: the Actor Spawn is called on (0 = player pawn, else the PlayerController).
+  // loc/rot: may be 0 to keep the spawner's own Location/Rotation.
+  // actorTemplate: the archetype to copy defaults from (0 = class defaults).
+  // noCollisionFail: 1 spawns even when the spot is occupied.
+  AObj  (*spawn_ex)(AObj spawner, const char *className, const float loc[3], const int rot[3],
+                    AObj actorTemplate, int noCollisionFail);
+
+  // --- v18: Actor.Spawn with every argument, either call path, and a reason when it fails ---
+  // Fill an ASpawnInfo, call spawn_probe, read back result/stage/ran. Returns 1 only on ASPAWN_OK.
+  // Its parameter block is a local, so a nested call fired by PreBeginPlay/PostBeginPlay cannot
+  // recycle it the way the shared call_begin pool can.
+  int   (*spawn_probe)(ASpawnInfo *info);
+
+  int   (*gamelog)(int on);
+  int   (*gamelog_active)(void);
+  int   (*gamelog_rate)(int linesPerSecond);
+  void  (*on_gamelog)(AGameLogCb cb);
 } HysteriaAPI;
 
 typedef void (*ModMain_t)(HysteriaAPI *api);

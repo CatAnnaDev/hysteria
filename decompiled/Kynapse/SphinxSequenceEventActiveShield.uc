@@ -1,0 +1,14 @@
+class SphinxSequenceEventActiveShield extends SphinxSequenceEventBase
+    native
+    notplaceable
+    editinlinenew
+    hidecategories(Movement,Collision,Advanced,Attachment,Display,Object,Movement,Collision,Advanced,Attachment,Display,Object);
+
+var() const bool Actived;
+var() const int ShieldIndex;
+
+defaultproperties
+{
+    Actived=True
+    SequenceType="e_SphinxSequenceET_ActiveShield"
+}
